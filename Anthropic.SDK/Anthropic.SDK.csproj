@@ -9,8 +9,8 @@
 	  <Description>A simple C# / .NET library to use with Anthropic's Claude API.  Independently developed, this is not an official library and I am not affiliated with Anthropic.  An Anthropic account is required.</Description>
 	  <Copyright>This library is licensed MIT, in the public domain</Copyright>
 	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
-	  <PackageProjectUrl>https://github.com/OkGoDoIt/anthropic-sdk</PackageProjectUrl>
-	  <RepositoryUrl>https://github.com/tghamm/anthropic-sdk</RepositoryUrl>
+	  <PackageProjectUrl>https://github.com/tghamm/Anthropic.SDK</PackageProjectUrl>
+	  <RepositoryUrl>https://github.com/tghamm/Anthropic.SDK</RepositoryUrl>
 	  <PackageTags>Claude, AI, ML, API, Anthropic</PackageTags>
 	  <Title>Claude API</Title>
 	  <PackageReleaseNotes>
