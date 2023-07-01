@@ -22,9 +22,9 @@ namespace Anthropic.SDK.Tests
                 Model = "claude-1.3"
             };
 
-            var res = await client.Completions.GetClaudeCompletionAsync(parameters);
-            Assert.IsNotNull(res.Completion);
-            Debug.WriteLine(res.Completion);
+            var response = await client.Completions.GetClaudeCompletionAsync(parameters);
+            Assert.IsNotNull(response.Completion);
+            Debug.WriteLine(response.Completion);
         }
 
         [TestMethod]
