@@ -2,7 +2,7 @@
 
 [![.NET](https://github.com/tghamm/Anthropic.SDK/actions/workflows/dotnet.yml/badge.svg)](https://github.com/tghamm/Anthropic.SDK/actions/workflows/dotnet.yml)
 
-Anthropic.SDK is an unnofficial C# client designed for interacting with the Claude AI API. This powerful interface simplifies the integration of the Claude AI into your C# applications.  It targets netstandard2.0, and .net6.0.
+Anthropic.SDK is an unofficial C# client designed for interacting with the Claude AI API. This powerful interface simplifies the integration of the Claude AI into your C# applications.  It targets netstandard2.0, and .net6.0.
 
 ## Table of Contents
 
