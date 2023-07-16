@@ -8,7 +8,7 @@ namespace Anthropic.SDK.Completions
         public string Prompt { get; set; }
 
         [JsonPropertyName("temperature")]
-        public double? Temperature { get; set; }
+        public decimal? Temperature { get; set; }
 
         [JsonPropertyName("max_tokens_to_sample")]
         public int MaxTokensToSample { get; set; }
@@ -20,7 +20,7 @@ namespace Anthropic.SDK.Completions
         public int? TopK { get; set; }
 
         [JsonPropertyName("top_p")]
-        public float? TopP { get; set; }
+        public decimal? TopP { get; set; }
 
         [JsonPropertyName("metadata")]
         public dynamic Metadata { get; set; }

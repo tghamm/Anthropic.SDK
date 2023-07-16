@@ -15,6 +15,11 @@ namespace Anthropic.SDK
         public string ApiVersion { get; set; } = "v1";
 
         /// <summary>
+        /// Version of the Anthropic API
+        /// </summary>
+        public string AnthropicVersion { get; set; } = "2023-06-01";
+
+        /// <summary>
         /// The API authentication information to use for API calls
         /// </summary>
         public APIAuthentication Auth { get; set; }
