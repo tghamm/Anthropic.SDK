@@ -48,14 +48,17 @@ var prompt = $"\n\nHuman:Write me a sonnet about Joe Biden.\n\nAssistant:";
 var parameters = new SamplingParameters()
 {
     // required    
-    Model = "claude-1.3"
+    Model = "claude-2.0"
     Prompt = prompt,
-    //optional
     MaxTokensToSample = 512,
+
+    //optional
     Temperature = 1,
+    Top_k = 1,
+    Top_p = 1
     StopSequences = new[] { "\n\nHuman:" },
     Stream = false,
-    Model = "claude-2.0"
+
 };
 
 var response = await client.Completions.GetClaudeCompletionAsync(parameters);
