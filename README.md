@@ -55,9 +55,7 @@ var parameters = new SamplingParameters()
     Temperature = 1,
     StopSequences = new[] { "\n\nHuman:" },
     Stream = false,
-    TopK: 5
-    TopP: 0.7
-    Metadata = new [] {user_id = "13803d75-b4b5-4c3e-b2a2-6f21399b021b"}
+    Model = "claude-2.0"
 };
 
 var response = await client.Completions.GetClaudeCompletionAsync(parameters);
@@ -74,10 +72,10 @@ var parameters = new SamplingParameters()
 {
     MaxTokensToSample = 512,
     Prompt = prompt,
-    Temperature = 0.0f,
+    Temperature = 0.0m,
     StopSequences = new[] { "\n\nHuman:" },
     Stream = true,
-    Model = "claude-1.3"
+    Model = "claude-2.0"
 };
 
 await foreach (var res in client.Completions.StreamClaudeCompletionAsync(parameters))
