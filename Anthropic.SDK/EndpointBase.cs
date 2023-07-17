@@ -58,7 +58,7 @@ namespace Anthropic.SDK
             var client = clientFactory != null ? clientFactory.CreateClient() : new HttpClient();
 
             client.DefaultRequestHeaders.Add("x-api-key", Client.Auth.ApiKey);
-            client.DefaultRequestHeaders.Add("anthropic-version", "2023-06-01");
+            client.DefaultRequestHeaders.Add("anthropic-version", Client.AnthropicVersion);
             client.DefaultRequestHeaders.Add("User-Agent", UserAgent);
             
             return client;
