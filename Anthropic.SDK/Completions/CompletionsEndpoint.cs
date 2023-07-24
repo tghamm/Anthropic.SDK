@@ -63,7 +63,7 @@ namespace Anthropic.SDK.Completions
                 throw new ArgumentException("The 'request.MaxTokensToSample' parameter is required and must be greater than zero.", nameof(request));
             }
 
-            if (request.StopSequences != null && request.StopSequences.Length >= 0)
+            if (request.StopSequences != null && request.StopSequences.Length == 0)
             {
                 throw new ArgumentException("The 'request.StopSequences' parameter must contain at least one stop sequence.", nameof(request));
             }
