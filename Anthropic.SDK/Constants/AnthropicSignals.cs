@@ -9,11 +9,11 @@ namespace Anthropic.SDK.Constants
         /// <summary>
         /// The prefix for a human-generated message in a prompt.
         /// </summary>
-        public const string HumanSignal = "\\n\\nHuman: ";
+        public const string HumanSignal = "\n\nHuman:";
 
         /// <summary>
         /// The prefix for an AI-generated message in a prompt.
         /// </summary>
-        public const string AssistantSignal = "\\n\\nAssistant: ";
+        public const string AssistantSignal = "\n\nAssistant:";
     }
 }

@@ -13,11 +13,6 @@
         public const string Claude_v1 = "claude-1";
 
         /// <summary>
-        /// Claude V1.0 latest full version.
-        /// </summary>
-        public const string Claude_v1_0 = "claude-1.0";
-
-        /// <summary>
         /// Claude V1.2 latest full version.
         /// </summary>
         public const string Claude_v1_2 = "claude-1.2";
