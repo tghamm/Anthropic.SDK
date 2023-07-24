@@ -1,15 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Security.Authentication;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Anthropic.SDK.Completions
 {
-    public class CompletionsEndpoint: EndpointBase
+    public class CompletionsEndpoint : EndpointBase
     {
         /// <summary>
         /// Constructor of the api endpoint.  Rather than instantiating this yourself, access it through an instance of <see cref="AnthropicClient"/> as <see cref="AnthropicClient.Completions"/>.
@@ -25,6 +21,8 @@ namespace Anthropic.SDK.Completions
         /// <param name="parameters"></param>
         public async Task<CompletionResponse> GetClaudeCompletionAsync(SamplingParameters parameters)
         {
+            parameters.Stream = false;
+            ValidateParameters(parameters);
             var response = await HttpRequest(Url, HttpMethod.Post, parameters);
             return response;
         }
@@ -35,11 +33,55 @@ namespace Anthropic.SDK.Completions
         /// <param name="parameters"></param>
         public async IAsyncEnumerable<CompletionResponse> StreamClaudeCompletionAsync(SamplingParameters parameters)
         {
+            parameters.Stream = true;
+            ValidateParameters(parameters);
             await foreach (var result in HttpStreamingRequest(Url, HttpMethod.Post, parameters))
             {
                 yield return result;
             }
         }
 
+        /// <summary>
+        /// Validates that the specified request parameters are valid.
+        /// </summary>
+        /// <param name="request">The SamplingParameters object to validate.</param>
+        /// <exception cref="ArgumentException">Thrown if any of the required parameters are missing or invalid.</exception>
+        private static void ValidateParameters(SamplingParameters request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Prompt))
+            {
+                throw new ArgumentException("The 'request.Prompt' parameter is required.", nameof(request));
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Model))
+            {
+                throw new ArgumentException("The 'request.Model' parameter is required.", nameof(request));
+            }
+
+            if (request.MaxTokensToSample != default(int) && request.MaxTokensToSample <= 0)
+            {
+                throw new ArgumentException("The 'request.MaxTokensToSample' parameter is required and must be greater than zero.", nameof(request));
+            }
+
+            if (request.StopSequences != null && request.StopSequences.Length >= 0)
+            {
+                throw new ArgumentException("The 'request.StopSequences' parameter must contain at least one stop sequence.", nameof(request));
+            }
+
+            if (request.Temperature != null && (request.Temperature < 0 || request.Temperature > 1))
+            {
+                throw new ArgumentException("The 'request.Temperature' parameter must be between 0 and 1, inclusive.", nameof(request));
+            }
+
+            if (request.TopK != null && request.TopK < 0)
+            {
+                throw new ArgumentException("The 'request.TopK' parameter must be greater than or equal to 0.", nameof(request));
+            }
+
+            if (request.TopP != null && (request.TopP < 0 || request.TopP > 1))
+            {
+                throw new ArgumentException("The 'request.TopP' parameter must be between 0 and 1, inclusive.", nameof(request));
+            }
+        }
     }
 }
