@@ -14,12 +14,12 @@
 	  <PackageTags>Claude, AI, ML, API, Anthropic</PackageTags>
 	  <Title>Claude API</Title>
 	  <PackageReleaseNotes>
-		  Adds model constants and signal types as well as better validations.
+		  Adds new model constants.
 	  </PackageReleaseNotes>
 	  <PackageId>Anthropic.SDK</PackageId>
-	  <Version>1.1.1</Version>
-	  <AssemblyVersion>1.1.1.0</AssemblyVersion>
-	  <FileVersion>1.1.1.0</FileVersion>
+	  <Version>1.1.2</Version>
+	  <AssemblyVersion>1.1.2.0</AssemblyVersion>
+	  <FileVersion>1.1.2.0</FileVersion>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
 	  <PackageReadmeFile>README.md</PackageReadmeFile>
 	  <ProduceReferenceAssembly>True</ProduceReferenceAssembly>

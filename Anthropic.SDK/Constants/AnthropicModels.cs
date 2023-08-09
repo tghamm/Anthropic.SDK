@@ -40,8 +40,13 @@
         public const string ClaudeInstant_v1 = "claude-instant-1";
 
         /// <summary>
-        /// Claude Instant V1.1 latest full version.
+        /// Claude Instant V1.1 full version.
         /// </summary>
         public const string ClaudeInstant_v1_1 = "claude-instant-1.1";
+
+        /// <summary>
+        /// Claude Instant V1.2 latest full version.
+        /// </summary>
+        public const string ClaudeInstant_v1_2 = "claude-instant-1.2";
     }
 }
