@@ -43,7 +43,7 @@ namespace Anthropic.SDK.Tests
                 Temperature = 0.0m,
                 StopSequences = new[] { AnthropicSignals.HumanSignal },
                 Stream = true,
-                Model = AnthropicModels.ClaudeInstant_v1_1
+                Model = AnthropicModels.ClaudeInstant_v1_2
             };
 
             await foreach (var res in client.Completions.StreamClaudeCompletionAsync(parameters))
