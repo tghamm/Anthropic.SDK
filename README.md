@@ -13,6 +13,7 @@ Anthropic.SDK is an unofficial C# client designed for interacting with the Claud
 - [Examples](#examples)
   - [Non-Streaming Call](#non-streaming-call)
   - [Streaming Call](#streaming-call)
+  - [Token Counts](#token-counts)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -88,6 +89,34 @@ await foreach (var res in client.Completions.StreamClaudeCompletionAsync(paramet
 {
     Console.Write(res.Completion);
 }
+```
+
+### Token Counts
+
+Token calculation does not use the typical `cl100k_base` that most OpenAI models use, and instead uses it's own byte-pair encoding.  A simple extension method has been added to accurately calculate the number of tokens used by both a prompt and a response.  See an example below.
+
+```csharp
+var client = new AnthropicClient();
+var prompt = AnthropicSignals.HumanSignal + "Write me a sonnet about Joe Biden." + 
+         AnthropicSignals.AssistantSignal;
+
+var parameters = new SamplingParameters()
+{
+    // required    
+    Model = AnthropicModels.Claude_v2_0
+    Prompt = prompt,
+    MaxTokensToSample = 512,
+
+    //optional
+    Temperature = 1,
+    Top_k = 1,
+    Top_p = 1
+    StopSequences = new[] { AnthropicSignals.HumanSignal },
+    Stream = false
+};
+
+var response = await client.Completions.GetClaudeCompletionAsync(parameters);
+Console.WriteLine($@"Tokens Used: Input - {prompt.GetClaudeTokenCount()}. Output - {response.Completion.GetClaudeTokenCount()}.");
 ```
 
 ## Contributing
