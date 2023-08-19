@@ -46,11 +46,15 @@
 		</None>
 	</ItemGroup>
 	<ItemGroup>
-	  <None Update="Tokens\anthropic_merges.txt">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Tokens\anthropic_vocab.json">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
+	  <Content Include="Tokens\anthropic_merges.txt">
+		  <Pack>true</Pack>
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		  <PackageCopyToOutput>true</PackageCopyToOutput>
+	  </Content>
+	  <Content Include="Tokens\anthropic_vocab.json">
+		  <Pack>true</Pack>
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		  <PackageCopyToOutput>true</PackageCopyToOutput>
+	  </Content>
 	</ItemGroup>
 </Project>
