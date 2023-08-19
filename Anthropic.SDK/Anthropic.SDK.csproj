@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
       <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
@@ -17,9 +17,9 @@
 		  Adds new model constants.
 	  </PackageReleaseNotes>
 	  <PackageId>Anthropic.SDK</PackageId>
-	  <Version>1.1.2</Version>
-	  <AssemblyVersion>1.1.2.0</AssemblyVersion>
-	  <FileVersion>1.1.2.0</FileVersion>
+	  <Version>1.2.0</Version>
+	  <AssemblyVersion>1.2.0.0</AssemblyVersion>
+	  <FileVersion>1.2.0.0</FileVersion>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
 	  <PackageReadmeFile>README.md</PackageReadmeFile>
 	  <ProduceReferenceAssembly>True</ProduceReferenceAssembly>
@@ -34,6 +34,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
+    <PackageReference Include="Microsoft.ML.Tokenizers" Version="0.20.1" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
 	<PackageReference Include="System.Text.Json" Version="6.0.7" />
@@ -43,5 +44,13 @@
 			<Pack>True</Pack>
 			<PackagePath>\</PackagePath>
 		</None>
+	</ItemGroup>
+	<ItemGroup>
+	  <None Update="Tokens\anthropic_merges.txt">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Tokens\anthropic_vocab.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 </Project>

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Anthropic.SDK.Completions;
 using System.Reflection;
 using Anthropic.SDK.Constants;
+using Anthropic.SDK.Tokens;
 
 namespace Anthropic.SDK.Tests
 {
@@ -27,6 +28,8 @@ namespace Anthropic.SDK.Tests
             var response = await client.Completions.GetClaudeCompletionAsync(parameters);
             Assert.IsNotNull(response.Completion);
             Debug.WriteLine(response.Completion);
+            Debug.WriteLine(
+                $@"Tokens Used: Input - {prompt.GetClaudeTokenCount()}. Output - {response.Completion.GetClaudeTokenCount()}.");
         }
 
         [TestMethod]
@@ -43,13 +46,16 @@ namespace Anthropic.SDK.Tests
                 Temperature = 0.0m,
                 StopSequences = new[] { AnthropicSignals.HumanSignal },
                 Stream = true,
-                Model = AnthropicModels.ClaudeInstant_v1_2
+                Model = AnthropicModels.Claude_v2
             };
-
+            var totalOutput = string.Empty;
             await foreach (var res in client.Completions.StreamClaudeCompletionAsync(parameters))
             {
                 Debug.Write(res.Completion);
+                totalOutput += res.Completion;
             }
+            Debug.WriteLine(
+                $@"Tokens Used: Input - {prompt.GetClaudeTokenCount()}. Output - {totalOutput.GetClaudeTokenCount()}.");
         }
     }
 }
