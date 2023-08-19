@@ -14,7 +14,7 @@
 	  <PackageTags>Claude, AI, ML, API, Anthropic</PackageTags>
 	  <Title>Claude API</Title>
 	  <PackageReleaseNotes>
-		  Adds new model constants.
+		  Adds token counter extension method helper.
 	  </PackageReleaseNotes>
 	  <PackageId>Anthropic.SDK</PackageId>
 	  <Version>1.2.0</Version>
