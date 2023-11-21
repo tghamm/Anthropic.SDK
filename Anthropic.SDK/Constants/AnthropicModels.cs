@@ -28,6 +28,11 @@
         public const string Claude_v2 = "claude-2";
 
         /// <summary>
+        /// Claude V2.1 latest full version.
+        /// </summary>
+        public const string Claude_v2_1 = "claude-2.1";
+
+        /// <summary>
         /// Claude V2.0 latest full version.
         /// </summary>
         public const string Claude_v2_0 = "claude-2.0";
