@@ -13,8 +13,9 @@ namespace Anthropic.SDK.Tests
         public async Task TestClaudeCompletion()
         {
             var client = new AnthropicClient();
-            var prompt = AnthropicSignals.HumanSignal + "Write me a sonnet about Joe Biden." +
-                         AnthropicSignals.AssistantSignal;
+            var prompt = 
+                $@"You are an expert at date information.  Please return your response in JSON only.Return a JSON object like {{ ""date"": ""08/01/2023"" }} 
+                {AnthropicSignals.HumanSignal} What is the date the USA gained Independence? {AnthropicSignals.AssistantSignal}";
             var parameters = new SamplingParameters()
             {
                 MaxTokensToSample = 512,
@@ -22,7 +23,7 @@ namespace Anthropic.SDK.Tests
                 Temperature = 0.0m,
                 StopSequences = new[] { AnthropicSignals.HumanSignal },
                 Stream = false,
-                Model = AnthropicModels.Claude_v2
+                Model = AnthropicModels.Claude_v2_1
             };
 
             var response = await client.Completions.GetClaudeCompletionAsync(parameters);

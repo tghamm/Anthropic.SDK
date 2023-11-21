@@ -19,7 +19,7 @@ Anthropic.SDK is an unofficial C# client designed for interacting with the Claud
 
 ## Installation
 
-Install Anthropic.SDK via the [NuGet](https://www.nuget.org/) package manager:
+Install Anthropic.SDK via the [NuGet](https://www.nuget.org/packages/Anthropic.SDK) package manager:
 
 ```bash
 PM> Install-Package Anthropic.SDK
@@ -41,29 +41,27 @@ To start using the Claude AI API, simply create an instance of the `AnthropicCli
 
 ### Non-Streaming Call
 
-Here's an example of a non-streaming call to the Claude AI API:
+Here's an example of a non-streaming call to the Claude AI API (with a System Prompt to the new Claude 2.1 model):
 
 ```csharp
 var client = new AnthropicClient();
-var prompt = AnthropicSignals.HumanSignal + "Write me a sonnet about Joe Biden." + 
-         AnthropicSignals.AssistantSignal;
-
+var prompt = 
+    $@"You are an expert at date information.  Please return your response in JSON only.Return a JSON object like {{ ""date"": ""08/01/2023"" }} 
+    {AnthropicSignals.HumanSignal} What is the date the USA gained Independence? {AnthropicSignals.AssistantSignal}";
 var parameters = new SamplingParameters()
 {
-    // required    
-    Model = AnthropicModels.Claude_v2_0
-    Prompt = prompt,
     MaxTokensToSample = 512,
-
-    //optional
-    Temperature = 1,
-    Top_k = 1,
-    Top_p = 1
+    Prompt = prompt,
+    Temperature = 0.0m,
     StopSequences = new[] { AnthropicSignals.HumanSignal },
-    Stream = false
+    Stream = false,
+    Model = AnthropicModels.Claude_v2_1
 };
 
 var response = await client.Completions.GetClaudeCompletionAsync(parameters);
+Console.WriteLine(response.Completion);
+Console.WriteLine(
+    $@"Tokens Used: Input - {prompt.GetClaudeTokenCount()}. Output - {response.Completion.GetClaudeTokenCount()}.");
 ```
 
 ### Streaming Call
@@ -103,14 +101,14 @@ var prompt = AnthropicSignals.HumanSignal + "Write me a sonnet about Joe Biden."
 var parameters = new SamplingParameters()
 {
     // required    
-    Model = AnthropicModels.Claude_v2_0
+    Model = AnthropicModels.Claude_v2_1
     Prompt = prompt,
     MaxTokensToSample = 512,
 
     //optional
     Temperature = 1,
-    Top_k = 1,
-    Top_p = 1
+    TopK = 1,
+    TopP = 1
     StopSequences = new[] { AnthropicSignals.HumanSignal },
     Stream = false
 };
