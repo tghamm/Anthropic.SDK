@@ -53,5 +53,15 @@
         /// Claude Instant V1.2 latest full version.
         /// </summary>
         public const string ClaudeInstant_v1_2 = "claude-instant-1.2";
+
+        /// <summary>
+        /// Claude 3 Opus
+        /// </summary>
+        public const string Claude3Opus = "claude-3-opus-20240229";
+        
+        /// <summary>
+        /// Claude 3 Sonnet
+        /// </summary>
+        public const string Claude3Sonnet = "claude-3-sonnet-20240229";
     }
 }

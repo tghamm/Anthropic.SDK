@@ -23,7 +23,7 @@ namespace Anthropic.SDK.Completions
         {
             parameters.Stream = false;
             ValidateParameters(parameters);
-            var response = await HttpRequest(Url, HttpMethod.Post, parameters);
+            var response = await HttpRequest<CompletionResponse>(Url, HttpMethod.Post, parameters);
             return response;
         }
 
@@ -35,7 +35,7 @@ namespace Anthropic.SDK.Completions
         {
             parameters.Stream = true;
             ValidateParameters(parameters);
-            await foreach (var result in HttpStreamingRequest(Url, HttpMethod.Post, parameters))
+            await foreach (var result in HttpStreamingRequest<CompletionResponse>(Url, HttpMethod.Post, parameters))
             {
                 yield return result;
             }

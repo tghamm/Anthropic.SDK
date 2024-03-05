@@ -69,12 +69,12 @@ namespace Anthropic.SDK
             return $"Error at {name} ({description}) with HTTP status code: {response.StatusCode}. Content: {resultAsString ?? "<no content>"}";
         }
 
-        protected async Task<CompletionResponse> HttpRequest(string url = null, HttpMethod verb = null, object postData = null)
+        protected async Task<T> HttpRequest<T>(string url = null, HttpMethod verb = null, object postData = null)
         {
             var response = await HttpRequestRaw(url, verb, postData);
             string resultAsString = await response.Content.ReadAsStringAsync();
 
-            var res = await JsonSerializer.DeserializeAsync<CompletionResponse>(
+            var res = await JsonSerializer.DeserializeAsync<T>(
                 new MemoryStream(Encoding.UTF8.GetBytes(resultAsString)));
 
             return res;
@@ -148,7 +148,7 @@ namespace Anthropic.SDK
             }
         }
 
-        protected async IAsyncEnumerable<CompletionResponse> HttpStreamingRequest(string url = null, HttpMethod verb = null, object postData = null)
+        protected async IAsyncEnumerable<T> HttpStreamingRequest<T>(string url = null, HttpMethod verb = null, object postData = null)
         {
             var response = await HttpRequestRaw(url, verb, postData, true);
 
@@ -174,7 +174,7 @@ namespace Anthropic.SDK
                 {
                     if (currentEvent.EventType == "completion")
                     {
-                        var res = await JsonSerializer.DeserializeAsync<CompletionResponse>(
+                        var res = await JsonSerializer.DeserializeAsync<T>(
                             new MemoryStream(Encoding.UTF8.GetBytes(currentEvent.Data)));
                         yield return res;
                     }
@@ -185,6 +185,51 @@ namespace Anthropic.SDK
                         throw new Exception(res.Error.Message);
                     }
                     
+                    // Reset the current event for the next one
+                    currentEvent = new SseEvent();
+                }
+            }
+        }
+
+        protected async IAsyncEnumerable<T> HttpStreamingRequestMessages<T>(string url = null, HttpMethod verb = null, object postData = null)
+        {
+            var response = await HttpRequestRaw(url, verb, postData, true);
+
+
+            using var stream = await response.Content.ReadAsStreamAsync();
+            using StreamReader reader = new StreamReader(stream);
+            string line;
+            SseEvent currentEvent = new SseEvent();
+            while ((line = await reader.ReadLineAsync()) != null)
+            {
+                if (!string.IsNullOrEmpty(line))
+                {
+                    if (line.StartsWith("event:"))
+                    {
+                        currentEvent.EventType = line.Substring("event:".Length).Trim();
+                    }
+                    else if (line.StartsWith("data:"))
+                    {
+                        currentEvent.Data = line.Substring("data:".Length).Trim();
+                    }
+                }
+                else // an empty line indicates the end of an event
+                {
+                    if (currentEvent.EventType == "message_start" || 
+                        currentEvent.EventType == "content_block_delta" || 
+                        currentEvent.EventType == "message_delta")
+                    {
+                        var res = await JsonSerializer.DeserializeAsync<T>(
+                            new MemoryStream(Encoding.UTF8.GetBytes(currentEvent.Data)));
+                        yield return res;
+                    }
+                    else if (currentEvent.EventType == "error")
+                    {
+                        var res = await JsonSerializer.DeserializeAsync<ErrorResponse>(
+                            new MemoryStream(Encoding.UTF8.GetBytes(currentEvent.Data)));
+                        throw new Exception(res.Error.Message);
+                    }
+
                     // Reset the current event for the next one
                     currentEvent = new SseEvent();
                 }

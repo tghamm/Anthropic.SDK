@@ -37,7 +37,7 @@ namespace Anthropic.SDK.Tests
         public async Task TestClaudeStreamingCompletion()
         {
             var client = new AnthropicClient();
-            var prompt = AnthropicSignals.HumanSignal + "Write me a sonnet about Joe Biden." +
+            var prompt = AnthropicSignals.HumanSignal + "Write me a sonnet about The Statue of Liberty." +
                          AnthropicSignals.AssistantSignal;
 
             var parameters = new SamplingParameters()
