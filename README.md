@@ -1,6 +1,6 @@
 # Anthropic.SDK
 
-[![.NET](https://github.com/tghamm/Anthropic.SDK/actions/workflows/dotnet.yml/badge.svg)](https://github.com/tghamm/Anthropic.SDK/actions/workflows/dotnet.yml)
+[![.NET](https://github.com/tghamm/Anthropic.SDK/actions/workflows/dotnet.yml/badge.svg)](https://github.com/tghamm/Anthropic.SDK/actions/workflows/dotnet.yml) [![Nuget](https://img.shields.io/nuget/v/Anthropic.SDK)](https://www.nuget.org/packages/Anthropic.SDK/)
 
 Anthropic.SDK is an unofficial C# client designed for interacting with the Claude AI API. This powerful interface simplifies the integration of the Claude AI into your C# applications.  It targets netstandard2.0, and .net6.0.
 
@@ -13,7 +13,7 @@ Anthropic.SDK is an unofficial C# client designed for interacting with the Claud
 - [Examples](#examples)
   - [Non-Streaming Call](#non-streaming-call)
   - [Streaming Call](#streaming-call)
-  - [Token Counts](#token-counts)
+  - [Legacy Endpoints](#legacy-endpoints)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -41,61 +41,101 @@ To start using the Claude AI API, simply create an instance of the `AnthropicCli
 
 ### Non-Streaming Call
 
-Here's an example of a non-streaming call to the Claude AI API (with a System Prompt to the new Claude 2.1 model):
+Here's an example of a non-streaming call to the Claude AI API to the new Claude 3 Sonnet model:
 
 ```csharp
 var client = new AnthropicClient();
-var prompt = 
-    $@"You are an expert at date information.  Please return your response in JSON only.Return a JSON object like {{ ""date"": ""08/01/2023"" }} 
-    {AnthropicSignals.HumanSignal} What is the date the USA gained Independence? {AnthropicSignals.AssistantSignal}";
-var parameters = new SamplingParameters()
+var messages = new List<Message>();
+messages.Add(new Message()
 {
-    MaxTokensToSample = 512,
-    Prompt = prompt,
-    Temperature = 0.0m,
-    StopSequences = new[] { AnthropicSignals.HumanSignal },
+    Role = RoleType.User,
+    Content = "Write me a sonnet about the Statue of Liberty"
+});
+var parameters = new MessageParameters()
+{
+    Messages = messages,
+    MaxTokens = 512,
+    Model = AnthropicModels.Claude3Sonnet,
     Stream = false,
-    Model = AnthropicModels.Claude_v2_1
+    Temperature = 1.0m,
 };
-
-var response = await client.Completions.GetClaudeCompletionAsync(parameters);
-Console.WriteLine(response.Completion);
-Console.WriteLine(
-    $@"Tokens Used: Input - {prompt.GetClaudeTokenCount()}. Output - {response.Completion.GetClaudeTokenCount()}.");
+var res = await client.Messages.GetClaudeMessageAsync(parameters);
 ```
 
 ### Streaming Call
 
-The following is an example of a streaming call to the Claude AI API:
+The following is an example of a streaming call to the Claude AI API Model 3 Opus that provides an image for analysis:
 
 ```csharp
-var client = new AnthropicClient();
-var prompt = AnthropicSignals.HumanSignal + "Write me a sonnet about Joe Biden." + 
-         AnthropicSignals.AssistantSignal;
+string resourceName = "Anthropic.SDK.Tests.Red_Apple.jpg";
 
-var parameters = new SamplingParameters()
-{
-    MaxTokensToSample = 512,
-    Prompt = prompt,
-    Temperature = 0.0m,
-    StopSequences = new[] { AnthropicSignals.HumanSignal },
-    Stream = true,
-    Model = AnthropicModels.Claude_v2
-};
+// Get the current assembly
+Assembly assembly = Assembly.GetExecutingAssembly();
 
-await foreach (var res in client.Completions.StreamClaudeCompletionAsync(parameters))
+// Get a stream to the embedded resource
+await using Stream stream = assembly.GetManifestResourceStream(resourceName);
+// Read the stream into a byte array
+byte[] imageBytes;
+using (var memoryStream = new MemoryStream())
 {
-    Console.Write(res.Completion);
+    await stream.CopyToAsync(memoryStream);
+    imageBytes = memoryStream.ToArray();
 }
+
+// Convert the byte array to a base64 string
+string base64String = Convert.ToBase64String(imageBytes);
+
+var client = new AnthropicClient();
+var messages = new List<Message>();
+messages.Add(new Message()
+{
+    Role = RoleType.User,
+    Content = new dynamic[]
+    {
+        new ImageContent()
+        {
+            Source = new ImageSource()
+            {
+                MediaType = "image/jpeg",
+                Data = base64String
+            }
+        },
+        new TextContent()
+        {
+            Text = "What is this a picture of?"
+        }
+    }
+});
+var parameters = new MessageParameters()
+{
+    Messages = messages,
+    MaxTokens = 512,
+    Model = AnthropicModels.Claude3Opus,
+    Stream = true,
+    Temperature = 1.0m,
+};
+var outputs = new List<MessageResponse>();
+await foreach (var res in client.Messages.StreamClaudeMessageAsync(parameters))
+{
+    if (res.Delta != null)
+    {
+        Console.Write(res.Delta.Text);
+    }
+
+    outputs.Add(res);
+}
+Console.WriteLine(string.Empty);
+Console.WriteLine($@"Used Tokens - Input:{outputs.First().StreamStartMessage.Usage.InputTokens}.
+                            Output: {outputs.Last().Usage.OutputTokens}");
 ```
 
-### Token Counts
+### Legacy Endpoints
 
-Token calculation does not use the typical `cl100k_base` that most OpenAI models use, and instead uses it's own byte-pair encoding.  A simple extension method has been added to accurately calculate the number of tokens used by both a prompt and a response.  See an example below.
+This SDK still supports the Completion endpoints for now, but has primarily moved to the Messages API endpoints. Token calculation does not use the typical `cl100k_base` that most OpenAI models use, and instead uses it's own byte-pair encoding.  A simple extension method has been added to accurately calculate the number of tokens used by both a prompt and a response.  See an example below.
 
 ```csharp
 var client = new AnthropicClient();
-var prompt = AnthropicSignals.HumanSignal + "Write me a sonnet about Joe Biden." + 
+var prompt = AnthropicSignals.HumanSignal + "Write me a sonnet about The Statue of Liberty." + 
          AnthropicSignals.AssistantSignal;
 
 var parameters = new SamplingParameters()

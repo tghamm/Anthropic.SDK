@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Anthropic.SDK.Completions
@@ -19,11 +21,12 @@ namespace Anthropic.SDK.Completions
         /// Makes a non-streaming call to the Claude completion API. Be sure to set stream to false in <param name="parameters"></param>.
         /// </summary>
         /// <param name="parameters"></param>
-        public async Task<CompletionResponse> GetClaudeCompletionAsync(SamplingParameters parameters)
+        /// <param name="ctx"></param>
+        public async Task<CompletionResponse> GetClaudeCompletionAsync(SamplingParameters parameters, CancellationToken ctx = default)
         {
             parameters.Stream = false;
             ValidateParameters(parameters);
-            var response = await HttpRequest<CompletionResponse>(Url, HttpMethod.Post, parameters);
+            var response = await HttpRequest<CompletionResponse>(Url, HttpMethod.Post, parameters, ctx);
             return response;
         }
 
@@ -31,11 +34,12 @@ namespace Anthropic.SDK.Completions
         /// Makes a streaming call to the Claude completion API using an IAsyncEnumerable. Be sure to set stream to true in <param name="parameters"></param>.
         /// </summary>
         /// <param name="parameters"></param>
-        public async IAsyncEnumerable<CompletionResponse> StreamClaudeCompletionAsync(SamplingParameters parameters)
+        /// <param name="ctx"></param>
+        public async IAsyncEnumerable<CompletionResponse> StreamClaudeCompletionAsync(SamplingParameters parameters, [EnumeratorCancellation] CancellationToken ctx = default)
         {
             parameters.Stream = true;
             ValidateParameters(parameters);
-            await foreach (var result in HttpStreamingRequest<CompletionResponse>(Url, HttpMethod.Post, parameters))
+            await foreach (var result in HttpStreamingRequest<CompletionResponse>(Url, HttpMethod.Post, parameters, ctx))
             {
                 yield return result;
             }
