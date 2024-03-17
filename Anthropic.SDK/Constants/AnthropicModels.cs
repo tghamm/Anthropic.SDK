@@ -63,5 +63,10 @@
         /// Claude 3 Sonnet
         /// </summary>
         public const string Claude3Sonnet = "claude-3-sonnet-20240229";
+
+        /// <summary>
+        /// Claude 3 Haiku
+        /// </summary>
+        public const string Claude3Haiku = "claude-3-haiku-20240307";
     }
 }
