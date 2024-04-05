@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Anthropic.SDK.Constants;
 using Anthropic.SDK.Messaging;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Anthropic.SDK.Tests
 {
@@ -32,6 +33,85 @@ namespace Anthropic.SDK.Tests
                 Temperature = 1.0m,
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
+        }
+
+        [TestMethod]
+        public async Task TestWithToolsMessage()
+        {
+            var client = new AnthropicClient();
+            //client.HttpClientFactory = new FiddlerHttpClientFactory();
+            var messages = new List<Message>
+            {
+                new()
+                {
+                    Role = RoleType.User,
+                    Content = "How is the weather in amsterdam today?"
+                }
+            };
+            var tools = new List<Tool>
+            {
+                new()
+                {
+                    name = "get_weather",
+                    description = "Get the current weather",
+                    input_schema = new InputSchema()
+                    {
+                        type = "object",
+                        properties = new Dictionary<string,Property>()
+                        {
+                            {"location",new Property()
+                            {
+                                type = "string",
+                                description = "location"
+                            }}
+                        },
+                        required = new List<string>()
+                        {
+                            "city"
+                        }
+                    }
+                }
+            };
+
+            var parameters = new MessageParameters()
+            {
+                Messages = messages,
+                Tools = tools,
+                MaxTokens = 512,
+                Model = AnthropicModels.Claude3Sonnet,
+                Stream = false,
+                Temperature = 1.0m,
+            };
+            var res = await client.Messages.GetClaudeMessageAsync(parameters);
+            // add assistant message to the messages list
+            var assitantMessage = new Message()
+            {
+                Role = "assistant",
+                Content = res.Content
+            };
+
+            messages.Add(assitantMessage);
+            
+
+            var toolCall = res.Content.FirstOrDefault(c => c.Type == "tool_use");
+            var toolCallId = toolCall.Id;
+            var responseMessage = new Message()
+            {
+                Role = "user",
+                Content = new[]
+                { 
+                    new
+                    {
+                        type = "tool_result",
+                        tool_use_id = toolCallId,
+                        content = "34 degrees"
+                    }
+                }
+            };
+            messages.Add(responseMessage);
+
+            res = await client.Messages.GetClaudeMessageAsync(parameters);
+
         }
 
         [TestMethod]

@@ -61,6 +61,8 @@ namespace Anthropic.SDK
 
             client.DefaultRequestHeaders.Add("x-api-key", Client.Auth.ApiKey);
             client.DefaultRequestHeaders.Add("anthropic-version", Client.AnthropicVersion);
+            client.DefaultRequestHeaders.Add("anthropic-beta" , "tools-2024-04-04");
+
             client.DefaultRequestHeaders.Add("User-Agent", UserAgent);
             
             return client;

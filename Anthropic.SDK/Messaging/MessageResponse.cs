@@ -12,6 +12,15 @@ namespace Anthropic.SDK.Messaging
 
         [JsonPropertyName("type")]
         public string Type { get; set; }
+
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("name")]
+        public string Name { get; set; }
+
+        [JsonPropertyName("input")]
+        public Dictionary<string, string> Input { get; set; }
     }
     public class MessageResponse
     {
@@ -44,6 +53,10 @@ namespace Anthropic.SDK.Messaging
 
         [JsonPropertyName("message")]
         public StreamMessage StreamStartMessage { get; set; }
+
+        
+
+
     }
 
     public class StreamMessage
