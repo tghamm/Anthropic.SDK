@@ -1,22 +1,23 @@
-﻿using System;
+﻿using Anthropic.SDK.Common;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.Json.Serialization;
 
 namespace Anthropic.SDK.Messaging
 {
-    public class Content
-    {
-        [JsonPropertyName("text")]
-        public string Text { get; set; }
+    //public class ContentResponse
+    //{
+    //    [JsonPropertyName("text")]
+    //    public string Text { get; set; }
 
-        [JsonPropertyName("type")]
-        public string Type { get; set; }
-    }
+    //    [JsonPropertyName("type")]
+    //    public ContentType Type { get; set; }
+    //}
     public class MessageResponse
     {
         [JsonPropertyName("content")]
-        public List<Content> Content { get; set; }
+        public List<ContentBase> Content { get; set; }
 
         [JsonPropertyName("id")]
         public string Id { get; set; }
@@ -44,6 +45,18 @@ namespace Anthropic.SDK.Messaging
 
         [JsonPropertyName("message")]
         public StreamMessage StreamStartMessage { get; set; }
+
+        //[JsonPropertyName("name")]
+        //public string Name { get; set; }
+
+        //[JsonPropertyName("input")]
+        //public Dictionary<string, string> Input { get; set; }
+
+        [JsonIgnore]
+        public List<Function> ToolCalls { get; set; }
+
+        [JsonIgnore]
+        public TextContent FirstMessage => Content[0] as TextContent;
     }
 
     public class StreamMessage

@@ -1,4 +1,5 @@
 ﻿using Anthropic.SDK.Completions;
+using Anthropic.SDK.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -61,6 +62,7 @@ namespace Anthropic.SDK
 
             client.DefaultRequestHeaders.Add("x-api-key", Client.Auth.ApiKey);
             client.DefaultRequestHeaders.Add("anthropic-version", Client.AnthropicVersion);
+            client.DefaultRequestHeaders.Add("anthropic-beta", Client.AnthropicBetaVersion);
             client.DefaultRequestHeaders.Add("User-Agent", UserAgent);
             
             return client;
@@ -79,8 +81,27 @@ namespace Anthropic.SDK
 #else
             string resultAsString = await response.Content.ReadAsStringAsync();
 #endif
+            
             var res = await JsonSerializer.DeserializeAsync<T>(
                 new MemoryStream(Encoding.UTF8.GetBytes(resultAsString)), cancellationToken: ctx);
+
+            return res;
+        }
+
+        protected async Task<T> HttpRequestMessages<T>(string url = null, HttpMethod verb = null, object postData = null, CancellationToken ctx = default)
+        {
+            var response = await HttpRequestRaw(url, verb, postData, ctx: ctx);
+#if NET6_0_OR_GREATER
+            string resultAsString = await response.Content.ReadAsStringAsync(ctx);
+#else
+            string resultAsString = await response.Content.ReadAsStringAsync();
+#endif
+            var options = new JsonSerializerOptions
+            {
+                Converters = { new ContentConverter() }
+            };
+            var res = await JsonSerializer.DeserializeAsync<T>(
+                new MemoryStream(Encoding.UTF8.GetBytes(resultAsString)), options, cancellationToken: ctx);
 
             return res;
         }

@@ -5,30 +5,28 @@ using System.Text.Json.Serialization;
 
 namespace Anthropic.SDK.Messaging
 {
-    /// <summary>
-    /// Content Type Definitions
-    /// </summary>
-    public static class ContentType
+    public abstract class ContentBase
     {
         /// <summary>
-        /// Text Content Type
+        /// Type of Content (Text, pre-set)
         /// </summary>
-        public static string Text => "text";
-        /// <summary>
-        /// Image Content Type
-        /// </summary>
-        public static string Image => "image";
+        [JsonPropertyName("type")]
+        public abstract ContentType Type { get; }
     }
+
+
+    
+    
     /// <summary>
     /// Helper Class for Text Content to Send to Claude
     /// </summary>
-    public class TextContent
+    public class TextContent: ContentBase
     {
         /// <summary>
         /// Type of Content (Text, pre-set)
         /// </summary>
         [JsonPropertyName("type")] 
-        public string Type => ContentType.Text;
+        public override ContentType Type => ContentType.text;
 
         /// <summary>
         /// Text to send to Claude in a Block
@@ -40,13 +38,13 @@ namespace Anthropic.SDK.Messaging
     /// <summary>
     /// Helper Class for Image Content to Send to Claude
     /// </summary>
-    public class ImageContent
+    public class ImageContent: ContentBase
     {
         /// <summary>
         /// Type of Content (Image, pre-set)
         /// </summary>
         [JsonPropertyName("type")]
-        public string Type => ContentType.Image;
+        public override ContentType Type => ContentType.image;
 
         /// <summary>
         /// Source of Image

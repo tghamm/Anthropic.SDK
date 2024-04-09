@@ -3,6 +3,8 @@ using System;
 using System.Net.Http;
 using System.Reflection;
 using Anthropic.SDK.Messaging;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 
 namespace Anthropic.SDK
 {
@@ -21,6 +23,11 @@ namespace Anthropic.SDK
         public string AnthropicVersion { get; set; } = "2023-06-01";
 
         /// <summary>
+        /// Version of the Anthropic Beta API
+        /// </summary>
+        public string AnthropicBetaVersion { get; set; } = "tools-2024-04-04";
+
+        /// <summary>
         /// The API authentication information to use for API calls
         /// </summary>
         public APIAuthentication Auth { get; set; }
@@ -37,6 +44,7 @@ namespace Anthropic.SDK
             Messages = new MessagesEndpoint(this);
         }
 
+        
         /// <summary>
         /// Text generation is the core function of the API. You give the API a prompt, and it generates a completion. The way you “program” the API to do a task is by simply describing the task in plain english or providing a few written examples. This simple approach works for a wide range of use cases, including summarization, translation, grammar correction, question answering, chatbots, composing emails, and much more (see the prompt library for inspiration).
         /// </summary>

@@ -1,10 +1,14 @@
-﻿using System;
+﻿using Anthropic.SDK.Extensions;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
+using Anthropic.SDK.Common;
 
 namespace Anthropic.SDK.Messaging
 {
@@ -23,10 +27,40 @@ namespace Anthropic.SDK.Messaging
         /// </summary>
         /// <param name="parameters"></param>
         /// <param name="ctx"></param>
-        public async Task<MessageResponse> GetClaudeMessageAsync(MessageParameters parameters, CancellationToken ctx = default)
+        public async Task<MessageResponse> GetClaudeMessageAsync(MessageParameters parameters, IList<Common.Tool> tools = null, CancellationToken ctx = default)
         {
+            if (tools != null)
+            {
+                var toolsSerialized = tools.GenerateJsonToolsFromCommonTools().ToList();
+                parameters.Tools = toolsSerialized;
+            }
             parameters.Stream = false;
-            var response = await HttpRequest<MessageResponse>(Url, HttpMethod.Post, parameters, ctx);
+            var response = await HttpRequestMessages<MessageResponse>(Url, HttpMethod.Post, parameters, ctx);
+
+            var toolCalls = new List<Function>();
+            foreach (var message in response.Content)
+            {
+                
+                if (message.Type == ContentType.tool_use)
+                {
+                    var tool = tools.FirstOrDefault(t => t.Function.Name == (message as ToolUseContent).Name);
+                    
+                    if (tool != null)
+                    {
+                        // Convert the dictionary to a JsonNode
+                        JsonNode jsonNode = new JsonObject();
+                        foreach (var pair in (message as ToolUseContent).Input)
+                        {
+                            jsonNode[pair.Key] = pair.Value;
+                        }
+                        tool.Function.Arguments = jsonNode;
+                        tool.Function.Id = (message as ToolUseContent).Id;
+                        toolCalls.Add(tool.Function);
+                    }
+                }
+            }
+            response.ToolCalls = toolCalls;
+
             return response;
         }
 
