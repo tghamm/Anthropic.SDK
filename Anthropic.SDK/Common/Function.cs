@@ -83,7 +83,7 @@ namespace Anthropic.SDK.Common
             Name = name;
             Description = description;
             MethodInfo = method;
-            Parameters = method.GenerateJsonSchema();
+            //Parameters = method.GenerateJsonSchema();
             Instance = instance;
             functionCache[Name] = this;
         }

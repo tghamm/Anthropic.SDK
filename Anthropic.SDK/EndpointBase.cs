@@ -39,7 +39,7 @@ namespace Anthropic.SDK
         protected abstract string Endpoint { get; }
 
         /// <summary>
-        /// Gets the URL of the endpoint, based on the base OpenAI API URL followed by the endpoint name.  For example "https://api.anthropic.com/v1/complete"
+        /// Gets the URL of the endpoint, based on the base Anthropic API URL followed by the endpoint name.  For example "https://api.anthropic.com/v1/complete"
         /// </summary>
         protected string Url => string.Format(Client.ApiUrlFormat, Client.ApiVersion, Endpoint);
 

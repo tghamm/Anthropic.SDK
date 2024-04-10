@@ -6,14 +6,6 @@ using System.Text.Json.Serialization;
 
 namespace Anthropic.SDK.Messaging
 {
-    //public class ContentResponse
-    //{
-    //    [JsonPropertyName("text")]
-    //    public string Text { get; set; }
-
-    //    [JsonPropertyName("type")]
-    //    public ContentType Type { get; set; }
-    //}
     public class MessageResponse
     {
         [JsonPropertyName("content")]
@@ -46,14 +38,8 @@ namespace Anthropic.SDK.Messaging
         [JsonPropertyName("message")]
         public StreamMessage StreamStartMessage { get; set; }
 
-        //[JsonPropertyName("name")]
-        //public string Name { get; set; }
-
-        //[JsonPropertyName("input")]
-        //public Dictionary<string, string> Input { get; set; }
-
-        [JsonIgnore]
-        public List<Function> ToolCalls { get; set; }
+        [JsonIgnore] 
+        public List<Function> ToolCalls { get; set; } = new List<Function>();
 
         [JsonIgnore]
         public TextContent FirstMessage => Content[0] as TextContent;

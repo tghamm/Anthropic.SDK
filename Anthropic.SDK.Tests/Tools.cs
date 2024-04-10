@@ -19,6 +19,7 @@ namespace Anthropic.SDK.Tests
             Fahrenheit,
             Celsius
         }
+
         [Function("This function returns the weather for a given location")]
         public static async Task<string> GetWeather([FunctionParameter("Location of the weather", true)]string location,
             [FunctionParameter("Unit of temperature, celsius or fahrenheit", true)] TempType tempType)
@@ -288,17 +289,17 @@ namespace Anthropic.SDK.Tests
                 {
                     new Tool()
                     {
-                        name = "GetWeather", description = "This function returns the weather for a given location",
-                        input_schema = new InputSchema()
+                        Name = "GetWeather", Description = "This function returns the weather for a given location",
+                        InputSchema = new InputSchema()
                         {
-                            type = "object",
-                            properties = new Dictionary<string, Property>()
+                            Type = "object",
+                            Properties = new Dictionary<string, Property>()
                             {
-                                {"location", new Property() { type = "string", description = "The location of the weather"}},
-                                {"tempType", new Property() { type = "string", @enum = Enum.GetNames(typeof(TempType)), 
-                                    description = "The unit of temperature, celsius or fahrenheit"}}
+                                {"location", new Property() { Type = "string", Description = "The location of the weather"}},
+                                {"tempType", new Property() { Type = "string", Enum = Enum.GetNames(typeof(TempType)), 
+                                    Description = "The unit of temperature, celsius or fahrenheit"}}
                             },
-                            required = new List<string>() {"location", "tempType"}
+                            Required = new List<string>() {"location", "tempType"}
                         }
                     }
                 }
@@ -329,5 +330,195 @@ namespace Anthropic.SDK.Tests
 
             Assert.IsTrue(finalResult.FirstMessage.Text.Contains("72 degrees"));
         }
+
+
+        [TestMethod]
+        public async Task TestFuncBoolTool()
+        {
+            var client = new AnthropicClient();
+            var messages = new List<Message>
+            {
+                new Message()
+                {
+                    Role = RoleType.User,
+                    Content = "Should I roll the dice?"
+                }
+            };
+            var tools = new List<Common.Tool>
+            {
+                Common.Tool.FromFunc("Dice_Roller",
+                    ([FunctionParameter("Decides whether to roll the dice", true)]bool rollDice)=>
+                    {
+                        return "no";
+                    })
+            };
+
+            var parameters = new MessageParameters()
+            {
+                Messages = messages,
+                MaxTokens = 2048,
+                Model = AnthropicModels.Claude3Sonnet,
+                Stream = false,
+                Temperature = 1.0m,
+            };
+            var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
+
+            messages.Add(res.Content.AsAssistantMessage());
+
+            foreach (var toolCall in res.ToolCalls)
+            {
+                var response = toolCall.Invoke<string>();
+
+                messages.Add(new Message(toolCall, response));
+            }
+
+            var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
+
+            Assert.IsTrue(finalResult.FirstMessage.Text.Contains("no"));
+        }
+
+        [TestMethod]
+        public async Task TestFuncListTool()
+        {
+            var client = new AnthropicClient();
+            var messages = new List<Message>
+            {
+                new Message()
+                {
+                    Role = RoleType.User,
+                    Content = "What 5 numbers should I add together?"
+                }
+            };
+            var tools = new List<Common.Tool>
+            {
+                Common.Tool.FromFunc("Number_Adder",
+                    ([FunctionParameter("Adds a list of numbers together", true)]List<int> numbers)=>
+                    {
+                        return numbers.Sum().ToString();
+                    })
+            };
+
+            var parameters = new MessageParameters()
+            {
+                Messages = messages,
+                MaxTokens = 2048,
+                Model = AnthropicModels.Claude3Sonnet,
+                Stream = false,
+                Temperature = 1.0m,
+            };
+            var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
+
+            messages.Add(res.Content.AsAssistantMessage());
+
+            foreach (var toolCall in res.ToolCalls)
+            {
+                var response = toolCall.Invoke<string>();
+
+                messages.Add(new Message(toolCall, response));
+            }
+
+            var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
+
+            Assert.IsTrue(finalResult.FirstMessage.Text.Contains("sum") || finalResult.FirstMessage.Text.Contains("total"));
+        }
+
+        [TestMethod]
+        public async Task TestFuncArrayTool()
+        {
+            var client = new AnthropicClient();
+            var messages = new List<Message>
+            {
+                new Message()
+                {
+                    Role = RoleType.User,
+                    Content = "What 5 numbers should I add together?"
+                }
+            };
+            var tools = new List<Common.Tool>
+            {
+                Common.Tool.FromFunc("Number_Adder",
+                    ([FunctionParameter("Adds an array of numbers together", true)]int[] numbers)=>
+                    {
+                        var sum = 0;
+                        foreach (var number in numbers)
+                        {
+                            sum += (int)number;
+                        }
+                        return sum.ToString();
+                    })
+            };
+
+            var parameters = new MessageParameters()
+            {
+                Messages = messages,
+                MaxTokens = 2048,
+                Model = AnthropicModels.Claude3Sonnet,
+                Stream = false,
+                Temperature = 1.0m,
+            };
+            var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
+
+            messages.Add(res.Content.AsAssistantMessage());
+
+            foreach (var toolCall in res.ToolCalls)
+            {
+                var response = toolCall.Invoke<string>();
+
+                messages.Add(new Message(toolCall, response));
+            }
+
+            var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
+
+            Assert.IsTrue(finalResult.FirstMessage.Text.Contains("sum") || finalResult.FirstMessage.Text.Contains("total"));
+        }
+
+        [TestMethod]
+        public async Task TestFuncMultiTool()
+        {
+            var client = new AnthropicClient();
+            var messages = new List<Message>
+            {
+                new Message()
+                {
+                    Role = RoleType.User,
+                    Content = "Should I roll the dice?"
+                }
+            };
+            var tools = new List<Common.Tool>
+            {
+                Common.Tool.FromFunc("Get_Weather",
+                    ([FunctionParameter("Location of the weather", true)]string location)=> "72 degrees and sunny"),
+                Common.Tool.FromFunc("Dice_Roller",
+                    ([FunctionParameter("Decides whether to roll the dice", true)]bool rollDice)=>
+                    {
+                        return "no";
+                    })
+            };
+
+            var parameters = new MessageParameters()
+            {
+                Messages = messages,
+                MaxTokens = 2048,
+                Model = AnthropicModels.Claude3Sonnet,
+                Stream = false,
+                Temperature = 1.0m,
+            };
+            var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
+
+            messages.Add(res.Content.AsAssistantMessage());
+
+            foreach (var toolCall in res.ToolCalls)
+            {
+                var response = toolCall.Invoke<string>();
+
+                messages.Add(new Message(toolCall, response));
+            }
+
+            var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
+
+            Assert.IsTrue(finalResult.FirstMessage.Text.Contains("no"));
+        }
+
+
     }
 }
