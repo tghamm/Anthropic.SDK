@@ -21,7 +21,7 @@ namespace Anthropic.SDK.Messaging
         public string Name { get; set; }
 
         [JsonPropertyName("input")]
-        public IDictionary<string, string> Input { get; set; }
+        public IDictionary<string, dynamic> Input { get; set; }
 
         
 

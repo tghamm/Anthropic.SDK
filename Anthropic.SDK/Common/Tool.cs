@@ -236,7 +236,7 @@ namespace Anthropic.SDK.Common
                 throw new InvalidOperationException($"Method {type.FullName}.{methodName}() must be static. Use GetOrCreateTool(object instance, string methodName) instead.");
             }
 
-            var functionName = $"{type.FullName}.{method.Name}".Replace('.', '_');
+            var functionName = $"{type.FullName}.{method.Name}".Replace('.', '_').Replace("+", "__");
 
             if (TryGetTool(functionName, null, out var tool))
             {
@@ -265,7 +265,7 @@ namespace Anthropic.SDK.Common
             var method = type.GetMethod(methodName) ??
                 throw new InvalidOperationException($"Failed to find a valid method for {type.FullName}.{methodName}()");
 
-            var functionName = $"{type.FullName}.{method.Name}".Replace('.', '_');
+            var functionName = $"{type.FullName}.{method.Name}".Replace('.', '_').Replace("+", "__"); ;
 
             if (TryGetTool(functionName, instance, out var tool))
             {

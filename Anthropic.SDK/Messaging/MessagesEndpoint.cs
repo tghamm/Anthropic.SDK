@@ -9,6 +9,7 @@ using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Anthropic.SDK.Common;
+using System.Text.Json;
 
 namespace Anthropic.SDK.Messaging
 {
@@ -51,7 +52,7 @@ namespace Anthropic.SDK.Messaging
                         JsonNode jsonNode = new JsonObject();
                         foreach (var pair in (message as ToolUseContent).Input)
                         {
-                            jsonNode[pair.Key] = pair.Value;
+                            jsonNode[pair.Key] = ConvertJsonElementToJsonNode(pair.Value);
                         }
                         tool.Function.Arguments = jsonNode;
                         tool.Function.Id = (message as ToolUseContent).Id;
@@ -63,6 +64,45 @@ namespace Anthropic.SDK.Messaging
 
             return response;
         }
+
+        JsonNode ConvertJsonElementToJsonNode(dynamic value)
+        {
+            // Check if the value is a JsonElement
+            if (value is JsonElement element)
+            {
+                switch (element.ValueKind)
+                {
+                    case JsonValueKind.Object:
+                    case JsonValueKind.Array:
+                        return JsonNode.Parse(element.GetRawText());
+                    case JsonValueKind.String:
+                        return element.GetString();
+                    case JsonValueKind.Number:
+                        if (element.TryGetInt64(out long l))
+                        {
+                            return l;
+                        }
+                        else
+                        {
+                            return element.GetDouble();
+                        }
+                    case JsonValueKind.True:
+                    case JsonValueKind.False:
+                        return element.GetBoolean();
+                    case JsonValueKind.Null:
+                        return null;
+                    default:
+                        throw new ArgumentException($"Unsupported JSON value kind: {element.ValueKind}");
+                }
+            }
+            else
+            {
+                // For simplicity, convert non-JsonElement values directly to JsonNode
+                // This assumes that such values are already compatible with JsonNode
+                return JsonValue.Create(value);
+            }
+        }
+
 
         /// <summary>
         /// Makes a streaming call to the Claude completion API using an IAsyncEnumerable. Be sure to set stream to true in <param name="parameters"></param>.

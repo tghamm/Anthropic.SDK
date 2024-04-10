@@ -29,6 +29,8 @@ namespace Anthropic.SDK.Messaging
     {
         [JsonPropertyName("type")]
         public string type { get; set; }
+        [JsonPropertyName("enum")]
+        public string[] @enum { get; set; }
         [JsonPropertyName("description")]
         public string description { get; set; }
     }
