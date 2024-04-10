@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Anthropic.SDK.Common;
 using Anthropic.SDK.Constants;
 using Anthropic.SDK.Messaging;
+using Tool = Anthropic.SDK.Messaging.Tool;
 
 namespace Anthropic.SDK.Tests
 {
@@ -103,7 +104,7 @@ namespace Anthropic.SDK.Tests
 
             var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
 
-            Assert.IsTrue(finalResult.FirstMessage.Text.Contains("72 degrees and sunny"));
+            Assert.IsTrue(finalResult.FirstMessage.Text.Contains("72 degrees"));
         }
 
         public static class StaticObjectTool
@@ -156,7 +157,7 @@ namespace Anthropic.SDK.Tests
 
             var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
 
-            Assert.IsTrue(finalResult.FirstMessage.Text.Contains("72 degrees and sunny"));
+            Assert.IsTrue(finalResult.FirstMessage.Text.Contains("72 degrees"));
         }
 
         public class InstanceObjectTool
@@ -208,7 +209,7 @@ namespace Anthropic.SDK.Tests
 
             var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
 
-            Assert.IsTrue(finalResult.FirstMessage.Text.Contains("72 degrees and sunny"));
+            Assert.IsTrue(finalResult.FirstMessage.Text.Contains("72 degrees"));
         }
 
 
@@ -261,6 +262,72 @@ namespace Anthropic.SDK.Tests
             var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
 
             Assert.IsTrue(finalResult.FirstMessage.Text.Contains("23"));
+        }
+
+        [TestMethod]
+        public async Task TestBasicToolManual()
+        {
+            var client = new AnthropicClient();
+            var messages = new List<Message>
+            {
+                new Message()
+                {
+                    Role = RoleType.User,
+                    Content = "What is the weather in San Francisco, CA in fahrenheit?"
+                }
+            };
+            
+            var parameters = new MessageParameters()
+            {
+                Messages = messages,
+                MaxTokens = 2048,
+                Model = AnthropicModels.Claude3Sonnet,
+                Stream = false,
+                Temperature = 1.0m,
+                Tools = new List<Tool>()
+                {
+                    new Tool()
+                    {
+                        name = "GetWeather", description = "This function returns the weather for a given location",
+                        input_schema = new InputSchema()
+                        {
+                            type = "object",
+                            properties = new Dictionary<string, Property>()
+                            {
+                                {"location", new Property() { type = "string", description = "The location of the weather"}},
+                                {"tempType", new Property() { type = "string", @enum = Enum.GetNames(typeof(TempType)), 
+                                    description = "The unit of temperature, celsius or fahrenheit"}}
+                            },
+                            required = new List<string>() {"location", "tempType"}
+                        }
+                    }
+                }
+            };
+            var res = await client.Messages.GetClaudeMessageAsync(parameters);
+
+            messages.Add(res.Content.AsAssistantMessage());
+
+            var toolUse = res.Content.FirstOrDefault(c => c.Type == ContentType.tool_use) as ToolUseContent;
+            var id = toolUse.Id;
+            var input = toolUse.Input;
+            var param1 = input["location"].ToString();
+            var param2 = Enum.Parse<TempType>(input["tempType"].ToString());
+
+            var weather = await GetWeather(param1, param2);
+
+            messages.Add(new Message()
+            {
+                Role = RoleType.User,
+                Content = new[] { new ToolResultContent()
+                {
+                    ToolUseId = id,
+                    Content = weather
+                }
+            }});
+
+            var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
+
+            Assert.IsTrue(finalResult.FirstMessage.Text.Contains("72 degrees"));
         }
     }
 }

@@ -23,10 +23,6 @@ namespace Anthropic.SDK.Extensions
                     case "text":
                         return JsonSerializer.Deserialize<TextContent>(root.GetRawText(), options);
                     case "tool_use":
-                        var tOptions = new JsonSerializerOptions
-                        {
-                            Converters = { new ToolUseContentConverter() }
-                        };
                         return JsonSerializer.Deserialize<ToolUseContent>(root.GetRawText(), options);
                     case "image":
                         return JsonSerializer.Deserialize<ImageContent>(root.GetRawText(), options);

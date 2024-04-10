@@ -44,7 +44,7 @@ namespace Anthropic.SDK.Messaging
                 
                 if (message.Type == ContentType.tool_use)
                 {
-                    var tool = tools.FirstOrDefault(t => t.Function.Name == (message as ToolUseContent).Name);
+                    var tool = tools?.FirstOrDefault(t => t.Function.Name == (message as ToolUseContent).Name);
                     
                     if (tool != null)
                     {
