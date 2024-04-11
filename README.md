@@ -2,18 +2,18 @@
 
 [![.NET](https://github.com/tghamm/Anthropic.SDK/actions/workflows/dotnet.yml/badge.svg)](https://github.com/tghamm/Anthropic.SDK/actions/workflows/dotnet.yml) [![Nuget](https://img.shields.io/nuget/v/Anthropic.SDK)](https://www.nuget.org/packages/Anthropic.SDK/)
 
-Anthropic.SDK is an unofficial C# client designed for interacting with the Claude AI API. This powerful interface simplifies the integration of the Claude AI into your C# applications.  It targets netstandard2.0, and .net6.0.
+Anthropic.SDK is an unofficial C# client designed for interacting with the Claude AI API. This powerful interface simplifies the integration of the Claude AI into your C# applications.  It targets NetStandard 2.0, .NET 6.0, and .NET 8.0.
 
 ## Table of Contents
 
 - [Installation](#installation)
 - [API Keys](#api-keys)
-- [IHttpClientFactory](#ihttpclientfactory)
+- [HttpClient](#httpclient)
 - [Usage](#usage)
 - [Examples](#examples)
   - [Non-Streaming Call](#non-streaming-call)
   - [Streaming Call](#streaming-call)
-  - [Legacy Endpoints](#legacy-endpoints)
+  - [Tools](#tools)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -29,9 +29,9 @@ PM> Install-Package Anthropic.SDK
 
 You can load the API Key from an environment variable named `ANTHROPIC_API_KEY` by default. Alternatively, you can supply it as a string to the `AnthropicClient` constructor.
 
-## IHttpClientFactory
+## HttpClient
 
-The `AnthropicClient` can optionally take an `IHttpClientFactory`, which allows you to control elements such as retries and timeouts.
+The `AnthropicClient` can optionally take a custom `HttpClient`, which allows you to control elements such as retries and timeouts.
 
 ## Usage
 
@@ -129,33 +129,236 @@ Console.WriteLine($@"Used Tokens - Input:{outputs.First().StreamStartMessage.Usa
                             Output: {outputs.Last().Usage.OutputTokens}");
 ```
 
-### Legacy Endpoints
+### Tools
 
-This SDK still supports the Completion endpoints for now, but has primarily moved to the Messages API endpoints. Token calculation does not use the typical `cl100k_base` that most OpenAI models use, and instead uses it's own byte-pair encoding.  A simple extension method has been added to accurately calculate the number of tokens used by both a prompt and a response.  See an example below.
+The `AnthropicClient` supports function-calling through a variety of methods, see some examples below or check out the unit tests in this repo (note function-calling is currently only supported in non-streaming calls by Claude at the moment):
 
 ```csharp
-var client = new AnthropicClient();
-var prompt = AnthropicSignals.HumanSignal + "Write me a sonnet about The Statue of Liberty." + 
-         AnthropicSignals.AssistantSignal;
-
-var parameters = new SamplingParameters()
+//Global tool discovery method
+public enum TempType
 {
-    // required    
-    Model = AnthropicModels.Claude_v2_1
-    Prompt = prompt,
-    MaxTokensToSample = 512,
+    Fahrenheit,
+    Celsius
+}
 
-    //optional
-    Temperature = 1,
-    TopK = 1,
-    TopP = 1
-    StopSequences = new[] { AnthropicSignals.HumanSignal },
-    Stream = false
+[Function("This function returns the weather for a given location")]
+public static async Task<string> GetWeather([FunctionParameter("Location of the weather", true)]string location,
+    [FunctionParameter("Unit of temperature, celsius or fahrenheit", true)] TempType tempType)
+{
+    return "72 degrees and sunny";
+}
+
+var client = new AnthropicClient();
+var messages = new List<Message>
+{
+    new Message()
+    {
+        Role = RoleType.User,
+        Content = "What is the weather in San Francisco, CA in fahrenheit?"
+    }
+};
+var tools = Common.Tool.GetAllAvailableTools(includeDefaults: false, 
+    forceUpdate: true, clearCache: true);
+
+var parameters = new MessageParameters()
+{
+    Messages = messages,
+    MaxTokens = 2048,
+    Model = AnthropicModels.Claude3Sonnet,
+    Stream = false,
+    Temperature = 1.0m,
+};
+var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
+
+messages.Add(res.Content.AsAssistantMessage());
+
+foreach (var toolCall in res.ToolCalls)
+{
+    var response = await toolCall.InvokeAsync<string>();
+    
+    messages.Add(new Message(toolCall, response));
+}
+
+var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
+
+//The weather in San Francisco, CA is currently 72 degrees Fahrenheit and sunny.
+
+
+//From a Func:
+var client = new AnthropicClient();
+var messages = new List<Message>
+{
+    new Message()
+    {
+        Role = RoleType.User,
+        Content = "What is the weather in San Francisco, CA?"
+    }
+};
+var tools = new List<Common.Tool>
+{
+    Common.Tool.FromFunc("Get_Weather", 
+        ([FunctionParameter("Location of the weather", true)]string location)=> "72 degrees and sunny")
 };
 
-var response = await client.Completions.GetClaudeCompletionAsync(parameters);
-Console.WriteLine($@"Tokens Used: Input - {prompt.GetClaudeTokenCount()}. Output - {response.Completion.GetClaudeTokenCount()}.");
+var parameters = new MessageParameters()
+{
+    Messages = messages,
+    MaxTokens = 2048,
+    Model = AnthropicModels.Claude3Sonnet,
+    Stream = false,
+    Temperature = 1.0m,
+};
+var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
+
+messages.Add(res.Content.AsAssistantMessage());
+
+foreach (var toolCall in res.ToolCalls)
+{
+    var response = toolCall.Invoke<string>();
+
+    messages.Add(new Message(toolCall, response));
+}
+
+var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
+
+
+//From a static Object
+public static class StaticObjectTool
+{
+    
+    public static string GetWeather(string location)
+    {
+        return "72 degrees and sunny";
+    }
+}
+
+var client = new AnthropicClient();
+var messages = new List<Message>
+{
+    new Message()
+    {
+        Role = RoleType.User,
+        Content = "What is the weather in San Francisco, CA?"
+    }
+};
+
+var tools = new List<Common.Tool>
+{
+    Common.Tool.GetOrCreateTool(typeof(StaticObjectTool), nameof(GetWeather), "This function returns the weather for a given location")
+};
+
+var parameters = new MessageParameters()
+{
+    Messages = messages,
+    MaxTokens = 2048,
+    Model = AnthropicModels.Claude3Sonnet,
+    Stream = false,
+    Temperature = 1.0m,
+};
+var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
+
+messages.Add(res.Content.AsAssistantMessage());
+
+foreach (var toolCall in res.ToolCalls)
+{
+    var response = toolCall.Invoke<string>();
+
+    messages.Add(new Message(toolCall, response));
+}
+
+var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
+
+//From an object instance
+public class InstanceObjectTool
+{
+
+    public string GetWeather(string location)
+    {
+        return "72 degrees and sunny";
+    }
+}
+var client = new AnthropicClient();
+var messages = new List<Message>
+{
+    new Message()
+    {
+        Role = RoleType.User,
+        Content = "What is the weather in San Francisco, CA?"
+    }
+};
+
+var objectInstance = new InstanceObjectTool();
+var tools = new List<Common.Tool>
+{
+    Common.Tool.GetOrCreateTool(objectInstance, nameof(GetWeather), "This function returns the weather for a given location")
+};
+....
+
+//From Scratch
+
+var client = new AnthropicClient();
+var messages = new List<Message>
+{
+    new Message()
+    {
+        Role = RoleType.User,
+        Content = "What is the weather in San Francisco, CA in fahrenheit?"
+    }
+};
+
+var parameters = new MessageParameters()
+{
+    Messages = messages,
+    MaxTokens = 2048,
+    Model = AnthropicModels.Claude3Sonnet,
+    Stream = false,
+    Temperature = 1.0m,
+    Tools = new List<Tool>()
+    {
+        new Tool()
+        {
+            Name = "GetWeather", Description = "This function returns the weather for a given location",
+            InputSchema = new InputSchema()
+            {
+                Type = "object",
+                Properties = new Dictionary<string, Property>()
+                {
+                    {"location", new Property() { Type = "string", Description = "The location of the weather"}},
+                    {"tempType", new Property() { Type = "string", Enum = Enum.GetNames(typeof(TempType)), 
+                        Description = "The unit of temperature, celsius or fahrenheit"}}
+                },
+                Required = new List<string>() {"location", "tempType"}
+            }
+        }
+    }
+};
+var res = await client.Messages.GetClaudeMessageAsync(parameters);
+
+messages.Add(res.Content.AsAssistantMessage());
+
+var toolUse = res.Content.FirstOrDefault(c => c.Type == ContentType.tool_use) as ToolUseContent;
+var id = toolUse.Id;
+var input = toolUse.Input;
+var param1 = input["location"].ToString();
+var param2 = Enum.Parse<TempType>(input["tempType"].ToString());
+
+var weather = await GetWeather(param1, param2);
+
+messages.Add(new Message()
+{
+    Role = RoleType.User,
+    Content = new[] { new ToolResultContent()
+    {
+        ToolUseId = id,
+        Content = weather
+    }
+}});
+
+var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
+
+
 ```
+
 
 ## Contributing
 
