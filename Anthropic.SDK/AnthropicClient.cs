@@ -30,9 +30,9 @@ namespace Anthropic.SDK
         public APIAuthentication Auth { get; set; }
 
         /// <summary>
-        /// Optionally provide an IHttpClientFactory to create the client to send requests.
+        /// Optionally provide a custom HttpClient to send requests.
         /// </summary>
-        public IHttpClientFactory HttpClientFactory { get; set; }
+        public HttpClient HttpClient { get; set; }
 
         public AnthropicClient(APIAuthentication apiKeys = null)
         {
@@ -43,7 +43,6 @@ namespace Anthropic.SDK
         internal static JsonSerializerOptions JsonSerializationOptions { get; } = new()
         {
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            
             Converters = { new JsonStringEnumConverter() },
             ReferenceHandler = ReferenceHandler.IgnoreCycles,
         };
