@@ -34,7 +34,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
-    <PackageReference Include="Microsoft.ML.Tokenizers" Version="0.20.1" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
 	  <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
@@ -45,17 +44,5 @@
 			<Pack>True</Pack>
 			<PackagePath>\</PackagePath>
 		</None>
-	</ItemGroup>
-	<ItemGroup>
-	  <Content Include="Tokens\anthropic_merges.txt">
-		  <Pack>true</Pack>
-		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		  <PackageCopyToOutput>true</PackageCopyToOutput>
-	  </Content>
-	  <Content Include="Tokens\anthropic_vocab.json">
-		  <Pack>true</Pack>
-		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		  <PackageCopyToOutput>true</PackageCopyToOutput>
-	  </Content>
 	</ItemGroup>
 </Project>

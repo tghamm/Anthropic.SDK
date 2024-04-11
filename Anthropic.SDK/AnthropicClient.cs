@@ -1,11 +1,7 @@
-﻿using Anthropic.SDK.Completions;
-using System;
-using System.Net.Http;
-using System.Reflection;
+﻿using System.Net.Http;
 using Anthropic.SDK.Messaging;
 using System.Text.Json.Serialization;
 using System.Text.Json;
-using Anthropic.SDK.Extensions;
 
 namespace Anthropic.SDK
 {
@@ -41,7 +37,6 @@ namespace Anthropic.SDK
         public AnthropicClient(APIAuthentication apiKeys = null)
         {
             this.Auth = apiKeys.ThisOrDefault();
-            Completions = new CompletionsEndpoint(this);
             Messages = new MessagesEndpoint(this);
         }
 
@@ -53,10 +48,6 @@ namespace Anthropic.SDK
             ReferenceHandler = ReferenceHandler.IgnoreCycles,
         };
 
-        /// <summary>
-        /// Text generation is the core function of the API. You give the API a prompt, and it generates a completion. The way you “program” the API to do a task is by simply describing the task in plain english or providing a few written examples. This simple approach works for a wide range of use cases, including summarization, translation, grammar correction, question answering, chatbots, composing emails, and much more (see the prompt library for inspiration).
-        /// </summary>
-        public CompletionsEndpoint Completions { get; }
 
         /// <summary>
         /// Text generation is the core function of the API. You give the API a prompt, and it generates a completion. The way you “program” the API to do a task is by simply describing the task in plain english or providing a few written examples. This simple approach works for a wide range of use cases, including summarization, translation, grammar correction, question answering, chatbots, composing emails, and much more (see the prompt library for inspiration).

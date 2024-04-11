@@ -1,5 +1,4 @@
-﻿using Anthropic.SDK.Completions;
-using Anthropic.SDK.Extensions;
+﻿using Anthropic.SDK.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,6 +11,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using Anthropic.SDK.Messaging;
 
 namespace Anthropic.SDK
 {
@@ -71,21 +71,6 @@ namespace Anthropic.SDK
         private string GetErrorMessage(string resultAsString, HttpResponseMessage response, string name, string description = "")
         {
             return $"Error at {name} ({description}) with HTTP status code: {response.StatusCode}. Content: {resultAsString ?? "<no content>"}";
-        }
-
-        protected async Task<T> HttpRequest<T>(string url = null, HttpMethod verb = null, object postData = null, CancellationToken ctx = default)
-        {
-            var response = await HttpRequestRaw(url, verb, postData, ctx: ctx);
-#if NET6_0_OR_GREATER
-            string resultAsString = await response.Content.ReadAsStringAsync(ctx);
-#else
-            string resultAsString = await response.Content.ReadAsStringAsync();
-#endif
-            
-            var res = await JsonSerializer.DeserializeAsync<T>(
-                new MemoryStream(Encoding.UTF8.GetBytes(resultAsString)), cancellationToken: ctx);
-
-            return res;
         }
 
         protected async Task<T> HttpRequestMessages<T>(string url = null, HttpMethod verb = null, object postData = null, CancellationToken ctx = default)
@@ -178,55 +163,7 @@ namespace Anthropic.SDK
                 }
             }
         }
-
-        protected async IAsyncEnumerable<T> HttpStreamingRequest<T>(string url = null, HttpMethod verb = null,
-            object postData = null, [EnumeratorCancellation] CancellationToken ctx = default)
-        {
-            var response = await HttpRequestRaw(url, verb, postData, true, ctx);
-
-#if NET6_0_OR_GREATER
-            await using var stream = await response.Content.ReadAsStreamAsync(ctx);
-#else
-            using var stream = await response.Content.ReadAsStreamAsync();
-#endif
-
-            using StreamReader reader = new StreamReader(stream);
-            string line;
-            SseEvent currentEvent = new SseEvent();
-            while ((line = await reader.ReadLineAsync()) != null)
-            {
-                if (!string.IsNullOrEmpty(line))
-                {
-                    if (line.StartsWith("event:"))
-                    {
-                        currentEvent.EventType = line.Substring("event:".Length).Trim();
-                    }
-                    else if (line.StartsWith("data:"))
-                    {
-                        currentEvent.Data = line.Substring("data:".Length).Trim();
-                    }
-                }
-                else // an empty line indicates the end of an event
-                {
-                    if (currentEvent.EventType == "completion")
-                    {
-                        var res = await JsonSerializer.DeserializeAsync<T>(
-                            new MemoryStream(Encoding.UTF8.GetBytes(currentEvent.Data)), cancellationToken: ctx);
-                        yield return res;
-                    }
-                    else if (currentEvent.EventType == "error")
-                    {
-                        var res = await JsonSerializer.DeserializeAsync<ErrorResponse>(
-                            new MemoryStream(Encoding.UTF8.GetBytes(currentEvent.Data)), cancellationToken: ctx);
-                        throw new Exception(res.Error.Message);
-                    }
-
-                    // Reset the current event for the next one
-                    currentEvent = new SseEvent();
-                }
-            }
-        }
-
+        
         protected async IAsyncEnumerable<T> HttpStreamingRequestMessages<T>(string url = null, HttpMethod verb = null,
             object postData = null, [EnumeratorCancellation] CancellationToken ctx = default)
         {
