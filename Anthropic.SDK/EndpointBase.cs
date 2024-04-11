@@ -1,4 +1,4 @@
-﻿using Anthropic.SDK.Completions;
+﻿using Anthropic.SDK.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,6 +11,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using Anthropic.SDK.Messaging;
 
 namespace Anthropic.SDK
 {
@@ -38,7 +39,7 @@ namespace Anthropic.SDK
         protected abstract string Endpoint { get; }
 
         /// <summary>
-        /// Gets the URL of the endpoint, based on the base OpenAI API URL followed by the endpoint name.  For example "https://api.anthropic.com/v1/complete"
+        /// Gets the URL of the endpoint, based on the base Anthropic API URL followed by the endpoint name.  For example "https://api.anthropic.com/v1/complete"
         /// </summary>
         protected string Url => string.Format(Client.ApiUrlFormat, Client.ApiVersion, Endpoint);
 
@@ -55,12 +56,13 @@ namespace Anthropic.SDK
                 throw new AuthenticationException("You must provide API authentication.");
             }
 
-            var clientFactory = Client.HttpClientFactory;
+            var customClient = Client.HttpClient;
             
-            var client = clientFactory != null ? clientFactory.CreateClient() : new HttpClient();
+            var client = customClient ?? new HttpClient();
 
             client.DefaultRequestHeaders.Add("x-api-key", Client.Auth.ApiKey);
             client.DefaultRequestHeaders.Add("anthropic-version", Client.AnthropicVersion);
+            client.DefaultRequestHeaders.Add("anthropic-beta", Client.AnthropicBetaVersion);
             client.DefaultRequestHeaders.Add("User-Agent", UserAgent);
             
             return client;
@@ -71,7 +73,7 @@ namespace Anthropic.SDK
             return $"Error at {name} ({description}) with HTTP status code: {response.StatusCode}. Content: {resultAsString ?? "<no content>"}";
         }
 
-        protected async Task<T> HttpRequest<T>(string url = null, HttpMethod verb = null, object postData = null, CancellationToken ctx = default)
+        protected async Task<T> HttpRequestMessages<T>(string url = null, HttpMethod verb = null, object postData = null, CancellationToken ctx = default)
         {
             var response = await HttpRequestRaw(url, verb, postData, ctx: ctx);
 #if NET6_0_OR_GREATER
@@ -79,8 +81,12 @@ namespace Anthropic.SDK
 #else
             string resultAsString = await response.Content.ReadAsStringAsync();
 #endif
+            var options = new JsonSerializerOptions
+            {
+                Converters = { new ContentConverter() }
+            };
             var res = await JsonSerializer.DeserializeAsync<T>(
-                new MemoryStream(Encoding.UTF8.GetBytes(resultAsString)), cancellationToken: ctx);
+                new MemoryStream(Encoding.UTF8.GetBytes(resultAsString)), options, cancellationToken: ctx);
 
             return res;
         }
@@ -157,55 +163,7 @@ namespace Anthropic.SDK
                 }
             }
         }
-
-        protected async IAsyncEnumerable<T> HttpStreamingRequest<T>(string url = null, HttpMethod verb = null,
-            object postData = null, [EnumeratorCancellation] CancellationToken ctx = default)
-        {
-            var response = await HttpRequestRaw(url, verb, postData, true, ctx);
-
-#if NET6_0_OR_GREATER
-            await using var stream = await response.Content.ReadAsStreamAsync(ctx);
-#else
-            using var stream = await response.Content.ReadAsStreamAsync();
-#endif
-
-            using StreamReader reader = new StreamReader(stream);
-            string line;
-            SseEvent currentEvent = new SseEvent();
-            while ((line = await reader.ReadLineAsync()) != null)
-            {
-                if (!string.IsNullOrEmpty(line))
-                {
-                    if (line.StartsWith("event:"))
-                    {
-                        currentEvent.EventType = line.Substring("event:".Length).Trim();
-                    }
-                    else if (line.StartsWith("data:"))
-                    {
-                        currentEvent.Data = line.Substring("data:".Length).Trim();
-                    }
-                }
-                else // an empty line indicates the end of an event
-                {
-                    if (currentEvent.EventType == "completion")
-                    {
-                        var res = await JsonSerializer.DeserializeAsync<T>(
-                            new MemoryStream(Encoding.UTF8.GetBytes(currentEvent.Data)), cancellationToken: ctx);
-                        yield return res;
-                    }
-                    else if (currentEvent.EventType == "error")
-                    {
-                        var res = await JsonSerializer.DeserializeAsync<ErrorResponse>(
-                            new MemoryStream(Encoding.UTF8.GetBytes(currentEvent.Data)), cancellationToken: ctx);
-                        throw new Exception(res.Error.Message);
-                    }
-
-                    // Reset the current event for the next one
-                    currentEvent = new SseEvent();
-                }
-            }
-        }
-
+        
         protected async IAsyncEnumerable<T> HttpStreamingRequestMessages<T>(string url = null, HttpMethod verb = null,
             object postData = null, [EnumeratorCancellation] CancellationToken ctx = default)
         {

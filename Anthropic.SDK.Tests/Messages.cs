@@ -14,6 +14,27 @@ namespace Anthropic.SDK.Tests
     public class Messages
     {
         [TestMethod]
+        public async Task TestBasicClaude21Message()
+        {
+            var client = new AnthropicClient();
+            var messages = new List<Message>();
+            messages.Add(new Message()
+            {
+                Role = RoleType.User,
+                Content = "Write me a sonnet about the Statue of Liberty"
+            });
+            var parameters = new MessageParameters()
+            {
+                Messages = messages,
+                MaxTokens = 512,
+                Model = AnthropicModels.Claude_v2_1,
+                Stream = false,
+                Temperature = 1.0m,
+            };
+            var res = await client.Messages.GetClaudeMessageAsync(parameters);
+        }
+
+        [TestMethod]
         public async Task TestBasicClaude3Message()
         {
             var client = new AnthropicClient();
@@ -70,6 +91,39 @@ namespace Anthropic.SDK.Tests
                 Messages = messages,
                 MaxTokens = 512,
                 Model = AnthropicModels.Claude3Haiku,
+                Stream = true,
+                Temperature = 1.0m,
+            };
+            var outputs = new List<MessageResponse>();
+            await foreach (var res in client.Messages.StreamClaudeMessageAsync(parameters))
+            {
+                if (res.Delta != null)
+                {
+                    Debug.Write(res.Delta.Text);
+                }
+
+                outputs.Add(res);
+            }
+            Debug.WriteLine(string.Empty);
+            Debug.WriteLine($@"Used Tokens - Input:{outputs.First().StreamStartMessage.Usage.InputTokens}.
+                                        Output: {outputs.Last().Usage.OutputTokens}");
+        }
+
+        [TestMethod]
+        public async Task TestStreamingClaude21Message()
+        {
+            var client = new AnthropicClient();
+            var messages = new List<Message>();
+            messages.Add(new Message()
+            {
+                Role = RoleType.User,
+                Content = "Write me a paragraph about the history of the Statue of Liberty"
+            });
+            var parameters = new MessageParameters()
+            {
+                Messages = messages,
+                MaxTokens = 512,
+                Model = AnthropicModels.Claude_v2_1,
                 Stream = true,
                 Temperature = 1.0m,
             };

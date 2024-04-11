@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.Json.Serialization;
 
-namespace Anthropic.SDK.Completions
+namespace Anthropic.SDK.Messaging
 {
     public class ErrorResponse
     {
