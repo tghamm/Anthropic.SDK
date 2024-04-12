@@ -24,6 +24,8 @@ namespace Anthropic.SDK
         /// </summary>
         protected readonly AnthropicClient Client;
 
+        private HttpClient _client;
+
         /// <summary>
         /// Constructor of the api endpoint base, to be called from the constructor of any derived classes.
         /// </summary>
@@ -42,6 +44,12 @@ namespace Anthropic.SDK
         /// Gets the URL of the endpoint, based on the base Anthropic API URL followed by the endpoint name.  For example "https://api.anthropic.com/v1/complete"
         /// </summary>
         protected string Url => string.Format(Client.ApiUrlFormat, Client.ApiVersion, Endpoint);
+
+
+        private HttpClient innerClient
+        {
+            get { return _client ??= GetClient(); }
+        }
 
 
         /// <summary>
@@ -64,7 +72,11 @@ namespace Anthropic.SDK
             client.DefaultRequestHeaders.Add("anthropic-version", Client.AnthropicVersion);
             client.DefaultRequestHeaders.Add("anthropic-beta", Client.AnthropicBetaVersion);
             client.DefaultRequestHeaders.Add("User-Agent", UserAgent);
-            
+            client.DefaultRequestHeaders
+                .Accept
+                .Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+
             return client;
         }
 
@@ -96,12 +108,10 @@ namespace Anthropic.SDK
         {
             if (string.IsNullOrEmpty(url))
                 url = this.Url;
+            
+            //var client = GetClient();
 
-            using var client = GetClient();
 
-            client.DefaultRequestHeaders
-                .Accept
-                .Add(new MediaTypeWithQualityHeaderValue("application/json"));
             HttpResponseMessage response = null;
             string resultAsString = null;
             HttpRequestMessage req = new HttpRequestMessage(verb, url);
@@ -121,7 +131,7 @@ namespace Anthropic.SDK
                 }
             }
 
-            response = await client.SendAsync(req,
+            response = await innerClient.SendAsync(req,
                 streaming ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead, ctx);
 
             if (response.IsSuccessStatusCode)
