@@ -64,14 +64,18 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestBasicHttpClientPass()
         {
-            var client = new AnthropicClient();
-            client.HttpClient = CustomHttpClientPass();
-            var messages = new List<Message>();
-            messages.Add(new Message()
+            var client = new AnthropicClient
             {
-                Role = RoleType.User,
-                Content = "Write me a sonnet about the Statue of Liberty"
-            });
+                HttpClient = CustomHttpClientPass()
+            };
+            var messages = new List<Message>
+            {
+                new Message()
+                {
+                    Role = RoleType.User,
+                    Content = "Write me a sonnet about the Statue of Liberty"
+                }
+            };
             var parameters = new MessageParameters()
             {
                 Messages = messages,
@@ -81,6 +85,36 @@ namespace Anthropic.SDK.Tests
                 Temperature = 1.0m,
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
+
+        }
+
+        [TestMethod]
+        public async Task TaskMultipleCallsWithCustomHttpClient()
+        {
+            var client = new AnthropicClient
+            {
+                HttpClient = new HttpClient()
+            };
+            var messages = new List<Message>
+            {
+                new()
+                {
+                    Role = RoleType.User,
+                    Content = "Write me a sonnet about the Statue of Liberty"
+                }
+            };
+            var parameters = new MessageParameters()
+            {
+                Messages = messages,
+                MaxTokens = 512,
+                Model = AnthropicModels.Claude3Opus,
+                Stream = false,
+                Temperature = 1.0m,
+            };
+            var res = await client.Messages.GetClaudeMessageAsync(parameters);
+            
+            res = await client.Messages.GetClaudeMessageAsync(parameters);
+
 
         }
 
