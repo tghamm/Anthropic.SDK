@@ -89,7 +89,7 @@ namespace Anthropic.SDK.Tests
         }
 
         [TestMethod]
-        public async Task TaskMultipleCallsWithCustomHttpClient()
+        public async Task MultipleCallsWithCustomHttpClient()
         {
             var client = new AnthropicClient
             {
