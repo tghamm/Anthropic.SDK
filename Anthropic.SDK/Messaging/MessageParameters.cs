@@ -28,6 +28,6 @@ namespace Anthropic.SDK.Messaging
         [JsonPropertyName("top_p")]
         public decimal? TopP { get; set; }
         [JsonPropertyName("tools")] 
-        public List<Tool> Tools { get; set; }
+        public List<Common.Function> Tools { get; set; }
     }
 }

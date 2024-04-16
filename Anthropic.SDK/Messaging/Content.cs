@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using Anthropic.SDK.Common;
 
 namespace Anthropic.SDK.Messaging
 {
@@ -115,7 +117,7 @@ namespace Anthropic.SDK.Messaging
         /// Inputs of the Tool
         /// </summary>
         [JsonPropertyName("input")]
-        public IDictionary<string, dynamic> Input { get; set; }
+        public JsonNode Input { get; set; }
 
 
 
@@ -143,5 +145,11 @@ namespace Anthropic.SDK.Messaging
         /// </summary>
         [JsonPropertyName("content")]
         public string Content { get; set; }
+
+        /// <summary>
+        /// Indicates if the Tool Result is an Error
+        /// </summary>
+        [JsonPropertyName("is_error")]
+        public bool? IsError { get; set; }
     }
 }

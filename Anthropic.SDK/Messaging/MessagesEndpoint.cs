@@ -32,8 +32,8 @@ namespace Anthropic.SDK.Messaging
         {
             if (tools != null)
             {
-                var toolsSerialized = tools.GenerateJsonToolsFromCommonTools().ToList();
-                parameters.Tools = toolsSerialized;
+                var toolsSerialized = tools;
+                parameters.Tools = toolsSerialized.Select(p => p.Function).ToList();
             }
             parameters.Stream = false;
             var response = await HttpRequestMessages<MessageResponse>(Url, HttpMethod.Post, parameters, ctx);
@@ -49,12 +49,12 @@ namespace Anthropic.SDK.Messaging
                     if (tool != null)
                     {
                         // Convert the dictionary to a JsonNode
-                        JsonNode jsonNode = new JsonObject();
-                        foreach (var pair in (message as ToolUseContent).Input)
-                        {
-                            jsonNode[pair.Key] = ConvertJsonElementToJsonNode(pair.Value);
-                        }
-                        tool.Function.Arguments = jsonNode;
+                        //JsonNode jsonNode = new JsonObject();
+                        //foreach (var pair in (message as ToolUseContent).Input)
+                        //{
+                        //    jsonNode[pair.Key] = ConvertJsonElementToJsonNode(pair.Value);
+                        //}
+                        tool.Function.Arguments = (message as ToolUseContent).Input;
                         tool.Function.Id = (message as ToolUseContent).Id;
                         toolCalls.Add(tool.Function);
                     }

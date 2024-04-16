@@ -83,7 +83,7 @@ namespace Anthropic.SDK.Common
             Name = name;
             Description = description;
             MethodInfo = method;
-            //Parameters = method.GenerateJsonSchema();
+            Parameters = method.GenerateJsonSchema();
             Instance = instance;
             functionCache[Name] = this;
         }
@@ -142,7 +142,7 @@ namespace Anthropic.SDK.Common
         /// <summary>
         /// Id to Send to the API.
         /// </summary>
-        [JsonInclude]
+        [JsonIgnore]
         [JsonPropertyName("id")]
         public string Id { get; set; }
 
@@ -162,7 +162,7 @@ namespace Anthropic.SDK.Common
         /// Describe the parameters that the model should generate in JSON schema format (json-schema.org).
         /// </summary>
         [JsonInclude]
-        [JsonPropertyName("parameters")]
+        [JsonPropertyName("input_schema")]
         public JsonNode Parameters
         {
             get
@@ -185,7 +185,7 @@ namespace Anthropic.SDK.Common
         /// <summary>
         /// The arguments to use when calling the function.
         /// </summary>
-        [JsonInclude]
+        [JsonIgnore]
         [JsonPropertyName("arguments")]
         public JsonNode Arguments
         {
