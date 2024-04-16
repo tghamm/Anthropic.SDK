@@ -112,6 +112,46 @@ namespace Anthropic.SDK.Tests
             Assert.IsTrue(finalResult.FirstMessage.Text.Contains("72 degrees"));
         }
 
+        [TestMethod]
+        public async Task TestFuncErrorTool()
+        {
+            var client = new AnthropicClient();
+            var messages = new List<Message>
+            {
+                new Message()
+                {
+                    Role = RoleType.User,
+                    Content = "What is the weather in San Francisco, CA?"
+                }
+            };
+            var tools = new List<Common.Tool>
+            {
+                Common.Tool.FromFunc("Get_Weather",
+                    ([FunctionParameter("Location of the weather", true)]string location)=> "72 degrees and sunny")
+            };
+
+            var parameters = new MessageParameters()
+            {
+                Messages = messages,
+                MaxTokens = 2048,
+                Model = AnthropicModels.Claude3Sonnet,
+                Stream = false,
+                Temperature = 1.0m,
+            };
+            var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
+
+            messages.Add(res.Content.AsAssistantMessage());
+
+            foreach (var toolCall in res.ToolCalls)
+            {
+                messages.Add(new Message(toolCall, "Error: Error calling the weather service.", true));
+            }
+
+            var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
+
+            
+        }
+
         public static class StaticObjectTool
         {
             

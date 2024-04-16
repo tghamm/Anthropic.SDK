@@ -14,7 +14,7 @@
 	  <PackageTags>Claude, AI, ML, API, Anthropic</PackageTags>
 	  <Title>Claude API</Title>
 	  <PackageReleaseNotes>
-		  More complete implementation of Tools
+		  More complete implementation of Tools, leak in HttpClient fixed.
 	  </PackageReleaseNotes>
 	  <PackageId>Anthropic.SDK</PackageId>
 	  <Version>3.1.0</Version>
