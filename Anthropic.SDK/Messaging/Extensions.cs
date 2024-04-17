@@ -31,7 +31,10 @@ namespace Anthropic.SDK.Messaging
                 }
                 else if (item is TextContent textContent)
                 {
-                    message.Content.Add(textContent);
+                    if (!string.IsNullOrWhiteSpace(textContent.Text))
+                    {
+                        message.Content.Add(textContent);
+                    }
                 }
             }
             return message;
