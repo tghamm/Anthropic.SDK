@@ -10,13 +10,17 @@ namespace Anthropic.SDK.Messaging
     {
         public Message(){}
 
-        public Message(Function toolCall, dynamic functionResult)
+        public Message(Function toolCall, dynamic functionResult, bool isError = false)
         {
             Content = new[] { new ToolResultContent()
             {
                 ToolUseId = toolCall.Id,
-                Content = functionResult
+                Content = functionResult,
             }};
+            if (isError)
+            {
+                (Content[0] as ToolResultContent).IsError = true;
+            }
             Role = RoleType.User;
         }
 

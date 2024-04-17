@@ -38,8 +38,8 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestBasicHttpClientFailure()
         {
-            var client = new AnthropicClient();
-            client.HttpClient = CustomHttpClientFail();
+            var client = new AnthropicClient(client: CustomHttpClientFail());
+            
             var messages = new List<Message>();
             messages.Add(new Message()
             {
@@ -64,10 +64,7 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestBasicHttpClientPass()
         {
-            var client = new AnthropicClient
-            {
-                HttpClient = CustomHttpClientPass()
-            };
+            var client = new AnthropicClient(client: CustomHttpClientPass());
             var messages = new List<Message>
             {
                 new Message()
@@ -91,10 +88,7 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task MultipleCallsWithCustomHttpClient()
         {
-            var client = new AnthropicClient
-            {
-                HttpClient = new HttpClient()
-            };
+            var client = new AnthropicClient(client: new HttpClient());
             var messages = new List<Message>
             {
                 new()
