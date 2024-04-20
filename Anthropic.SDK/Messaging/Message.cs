@@ -10,6 +10,13 @@ namespace Anthropic.SDK.Messaging
     {
         public Message(){}
 
+        public Message(string role, string content)
+        {
+            Role = role;
+            Content = content;
+        }
+
+
         public Message(Function toolCall, dynamic functionResult, bool isError = false)
         {
             Content = new[] { new ToolResultContent()
@@ -35,6 +42,10 @@ namespace Anthropic.SDK.Messaging
         /// </summary>
         [JsonPropertyName("content")]
         public dynamic Content { get; set; }
+
+        public override string ToString() => Content?.ToString() ?? string.Empty;
+
+        public static implicit operator string(Message choice) => choice?.ToString();
 
     }
 }

@@ -56,7 +56,7 @@ namespace Anthropic.SDK.Tests
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
             
-            messages.Add(res.Content.AsAssistantMessage());
+            messages.Add(res.Message);
 
             foreach (var toolCall in res.ToolCalls)
             {
@@ -98,7 +98,7 @@ namespace Anthropic.SDK.Tests
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
 
-            messages.Add(res.Content.AsAssistantMessage());
+            messages.Add(res.Message);
 
             foreach (var toolCall in res.ToolCalls)
             {
@@ -140,7 +140,7 @@ namespace Anthropic.SDK.Tests
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
 
-            messages.Add(res.Content.AsAssistantMessage());
+            messages.Add(res.Message);
 
             foreach (var toolCall in res.ToolCalls)
             {
@@ -191,7 +191,7 @@ namespace Anthropic.SDK.Tests
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
 
-            messages.Add(res.Content.AsAssistantMessage());
+            messages.Add(res.Message);
 
             foreach (var toolCall in res.ToolCalls)
             {
@@ -243,7 +243,7 @@ namespace Anthropic.SDK.Tests
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
 
-            messages.Add(res.Content.AsAssistantMessage());
+            messages.Add(res.Message);
 
             foreach (var toolCall in res.ToolCalls)
             {
@@ -295,7 +295,7 @@ namespace Anthropic.SDK.Tests
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
 
-            messages.Add(res.Content.AsAssistantMessage());
+            messages.Add(res.Message);
 
             foreach (var toolCall in res.ToolCalls)
             {
@@ -359,7 +359,7 @@ namespace Anthropic.SDK.Tests
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters, tools);
 
-            messages.Add(res.Content.AsAssistantMessage());
+            messages.Add(res.Message);
 
             var toolUse = res.Content.FirstOrDefault(c => c.Type == ContentType.tool_use) as ToolUseContent;
             var id = toolUse.Id;
@@ -416,7 +416,7 @@ namespace Anthropic.SDK.Tests
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
 
-            messages.Add(res.Content.AsAssistantMessage());
+            messages.Add(res.Message);
 
             foreach (var toolCall in res.ToolCalls)
             {
@@ -461,7 +461,7 @@ namespace Anthropic.SDK.Tests
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
 
-            messages.Add(res.Content.AsAssistantMessage());
+            messages.Add(res.Message);
 
             foreach (var toolCall in res.ToolCalls)
             {
@@ -511,7 +511,7 @@ namespace Anthropic.SDK.Tests
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
 
-            messages.Add(res.Content.AsAssistantMessage());
+            messages.Add(res.Message);
 
             foreach (var toolCall in res.ToolCalls)
             {
@@ -558,7 +558,7 @@ namespace Anthropic.SDK.Tests
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
 
-            messages.Add(res.Content.AsAssistantMessage());
+            messages.Add(res.Message);
 
             foreach (var toolCall in res.ToolCalls)
             {

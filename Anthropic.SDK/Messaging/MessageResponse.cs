@@ -1,6 +1,7 @@
 ﻿using Anthropic.SDK.Common;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -43,6 +44,9 @@ namespace Anthropic.SDK.Messaging
 
         [JsonIgnore]
         public TextContent FirstMessage => Content[0] as TextContent;
+
+        [JsonIgnore]
+        public Message Message => Content.AsAssistantMessages();
     }
 
     public class StreamMessage
