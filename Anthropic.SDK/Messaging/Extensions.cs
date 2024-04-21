@@ -21,7 +21,7 @@ namespace Anthropic.SDK.Messaging
             var message = new Message()
             {
                 Role = RoleType.Assistant,
-                Content = new List<dynamic>()
+                Content = new List<ContentBase>()
             };
             foreach (var item in content)
             {

@@ -38,11 +38,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message()
-                {
-                    Role = RoleType.User,
-                    Content = "What is the weather in San Francisco, CA in fahrenheit?"
-                }
+                new Message(RoleType.User, "What is the weather in San Francisco, CA in fahrenheit?")
             };
             var tools = Common.Tool.GetAllAvailableTools(includeDefaults: false, forceUpdate: true, clearCache: true);
 
@@ -76,11 +72,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message()
-                {
-                    Role = RoleType.User,
-                    Content = "What is the weather in San Francisco, CA?"
-                }
+                new Message(RoleType.User, "What is the weather in San Francisco, CA?")
             };
             var tools = new List<Common.Tool>
             {
@@ -96,7 +88,7 @@ namespace Anthropic.SDK.Tests
                 Stream = false,
                 Temperature = 1.0m,
             };
-            var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
+            var res = await client.Messages.GetClaudeMessageAsync(parameters, tools);
 
             messages.Add(res.Message);
 
@@ -118,11 +110,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message()
-                {
-                    Role = RoleType.User,
-                    Content = "What is the weather in San Francisco, CA?"
-                }
+                new Message(RoleType.User, "What is the weather in San Francisco, CA?")
             };
             var tools = new List<Common.Tool>
             {
@@ -168,11 +156,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message()
-                {
-                    Role = RoleType.User,
-                    Content = "What is the weather in San Francisco, CA?"
-                }
+                new Message(RoleType.User, "What is the weather in San Francisco, CA?")
             };
 
             //var objectInstance = new ObjectTool();
@@ -220,11 +204,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message()
-                {
-                    Role = RoleType.User,
-                    Content = "What is the weather in San Francisco, CA?"
-                }
+                new Message(RoleType.User, "What is the weather in San Francisco, CA?")
             };
 
             var objectInstance = new InstanceObjectTool();
@@ -264,11 +244,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message()
-                {
-                    Role = RoleType.User,
-                    Content = "How many characters are in the word Christmas, multiply by 5, add 6, subtract 2, then divide by 2.1?"
-                }
+                new Message(RoleType.User, "How many characters are in the word Christmas, multiply by 5, add 6, subtract 2, then divide by 2.1?")
             };
 
             //var objectInstance = new InstanceObjectTool();
@@ -315,11 +291,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message()
-                {
-                    Role = RoleType.User,
-                    Content = "What is the weather in San Francisco, CA in fahrenheit?"
-                }
+                new Message(RoleType.User, "What is the weather in San Francisco, CA in fahrenheit?")
             };
             var inputschema = new InputSchema()
             {
@@ -372,7 +344,7 @@ namespace Anthropic.SDK.Tests
             messages.Add(new Message()
             {
                 Role = RoleType.User,
-                Content = new[] { new ToolResultContent()
+                Content = new List<ContentBase>() { new ToolResultContent()
                 {
                     ToolUseId = id,
                     Content = weather
@@ -391,11 +363,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message()
-                {
-                    Role = RoleType.User,
-                    Content = "Should I roll the dice?"
-                }
+                new Message(RoleType.User, "Should I roll the dice?")
             };
             var tools = new List<Common.Tool>
             {
@@ -436,11 +404,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message()
-                {
-                    Role = RoleType.User,
-                    Content = "What 5 numbers should I add together?"
-                }
+                new Message(RoleType.User, "What 5 numbers should I add together?")
             };
             var tools = new List<Common.Tool>
             {
@@ -481,11 +445,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message()
-                {
-                    Role = RoleType.User,
-                    Content = "What 5 numbers should I add together?"
-                }
+                new Message(RoleType.User, "What 5 numbers should I add together?")
             };
             var tools = new List<Common.Tool>
             {
@@ -531,11 +491,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message()
-                {
-                    Role = RoleType.User,
-                    Content = "Should I roll the dice?"
-                }
+                new Message(RoleType.User, "Should I roll the dice?")
             };
             var tools = new List<Common.Tool>
             {
@@ -666,7 +622,7 @@ namespace Anthropic.SDK.Tests
             messages.Add(new Message()
             {
                 Role = RoleType.User,
-                Content = new dynamic[]
+                Content = new List<ContentBase>()
                 {
                     new ImageContent()
                     {
@@ -708,13 +664,13 @@ namespace Anthropic.SDK.Tests
                 
             };
 
-            JsonSerializerOptions JsonSerializationOptions = new()
+            JsonSerializerOptions jsonSerializationOptions = new()
             {
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                 Converters = { new JsonStringEnumConverter() },
                 ReferenceHandler = ReferenceHandler.IgnoreCycles,
             };
-            string jsonString = JsonSerializer.Serialize(imageSchema, JsonSerializationOptions);
+            string jsonString = JsonSerializer.Serialize(imageSchema, jsonSerializationOptions);
             var tools = new List<Common.Tool>()
             {
                 new Common.Tool(new Function("record_summary", "Record summary of an image into well-structured JSON.",
@@ -733,6 +689,12 @@ namespace Anthropic.SDK.Tests
                 Temperature = 1.0m,
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters, tools);
+
+            var toolResult = res.Content.OfType<ToolUseContent>().First();
+
+            var json = toolResult.Input.ToJsonString();
+
+
         }
 
     }

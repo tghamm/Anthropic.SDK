@@ -13,7 +13,7 @@ namespace Anthropic.SDK.Tests
     public class Conversation
     {
         [TestMethod]
-        public async Task TestBasicClaude21Message()
+        public async Task TestBasicClaudeConversation()
         {
             var client = new AnthropicClient();
             var messages = new List<Message>()
@@ -32,11 +32,11 @@ namespace Anthropic.SDK.Tests
                 Temperature = 1.0m,
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
-            Debug.WriteLine(res.FirstMessage.Text);
+            Debug.WriteLine(res.Message);
             messages.Add(res.Message);
             messages.Add(new Message(RoleType.User,"Who was the starting pitcher for the Dodgers?"));
             var res2 = await client.Messages.GetClaudeMessageAsync(parameters);
-            Debug.WriteLine(res2.FirstMessage.Text);
+            Debug.WriteLine(res2.Message);
         }
     }
 }

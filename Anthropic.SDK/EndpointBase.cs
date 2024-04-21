@@ -82,7 +82,7 @@ namespace Anthropic.SDK
 
         private string GetErrorMessage(string resultAsString, HttpResponseMessage response, string name, string description = "")
         {
-            return $"Error at {name} ({description}) with HTTP status code: {response.StatusCode}. Content: {resultAsString ?? "<no content>"}";
+            return $"{resultAsString ?? "<no content>"}";
         }
 
         protected async Task<T> HttpRequestMessages<T>(string url = null, HttpMethod verb = null, object postData = null, CancellationToken ctx = default)
@@ -124,8 +124,12 @@ namespace Anthropic.SDK
                 }
                 else
                 {
-                    string jsonContent = JsonSerializer.Serialize(postData,
-                        new JsonSerializerOptions() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
+                    var options = new JsonSerializerOptions
+                    {
+                        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                        Converters = { new ContentConverter(), new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+                    };
+                    string jsonContent = JsonSerializer.Serialize(postData, options);
                     var stringContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
                     req.Content = stringContent;
                 }
@@ -163,13 +167,23 @@ namespace Anthropic.SDK
                 }
                 else if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
                 {
+#if NET6_0_OR_GREATER
                     throw new HttpRequestException(
                         "Anthropic had an internal server error, which can happen occasionally.  Please retry your request.  " +
-                        GetErrorMessage(resultAsString, response, url, url));
+                        GetErrorMessage(resultAsString, response, url, url), null, response.StatusCode);
+#else
+                    throw new HttpRequestException(
+                        "Anthropic had an internal server error, which can happen occasionally.  Please retry your request.  " +
+                        GetErrorMessage(resultAsString, response, url, url), null);
+#endif
                 }
                 else
                 {
-                    throw new HttpRequestException(GetErrorMessage(resultAsString, response, url, url));
+#if NET6_0_OR_GREATER
+                    throw new HttpRequestException(GetErrorMessage(resultAsString, response, url, url), null, response.StatusCode);
+#else
+                    throw new HttpRequestException(GetErrorMessage(resultAsString, response, url, url), null);
+#endif
                 }
             }
         }
