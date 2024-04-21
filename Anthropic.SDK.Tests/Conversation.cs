@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 using Anthropic.SDK.Constants;
 using Anthropic.SDK.Messaging;
 
@@ -32,11 +27,15 @@ namespace Anthropic.SDK.Tests
                 Temperature = 1.0m,
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
+            
             Debug.WriteLine(res.Message);
+            
             messages.Add(res.Message);
-            messages.Add(new Message(RoleType.User,"Who was the starting pitcher for the Dodgers?"));
+            messages.Add(new Message(RoleType.User,"Who were the starting pitchers for the Dodgers?"));
+            
             var res2 = await client.Messages.GetClaudeMessageAsync(parameters);
-            Debug.WriteLine(res2.Message);
+            
+            Assert.IsNotNull(res2.Message.ToString());
         }
     }
 }

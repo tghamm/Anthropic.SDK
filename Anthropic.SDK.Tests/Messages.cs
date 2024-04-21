@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using Anthropic.SDK.Constants;
 using Anthropic.SDK.Messaging;
 
@@ -28,6 +23,7 @@ namespace Anthropic.SDK.Tests
                 Temperature = 1.0m,
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
+            Assert.IsNotNull(res.Message.ToString());
         }
 
         [TestMethod]
@@ -45,6 +41,7 @@ namespace Anthropic.SDK.Tests
                 Temperature = 1.0m,
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
+            Assert.IsNotNull(res.Message.ToString());
         }
 
         [TestMethod]
@@ -62,6 +59,7 @@ namespace Anthropic.SDK.Tests
                 Temperature = 1.0m,
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
+            Assert.IsNotNull(res.Message.ToString());
         }
 
         [TestMethod]
@@ -170,6 +168,7 @@ namespace Anthropic.SDK.Tests
                 Temperature = 1.0m,
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
+            Assert.IsNotNull(res.Message.ToString());
         }
 
         [TestMethod]

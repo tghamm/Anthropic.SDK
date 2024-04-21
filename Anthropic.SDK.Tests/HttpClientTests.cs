@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Anthropic.SDK.Constants;
+﻿using Anthropic.SDK.Constants;
 using Anthropic.SDK.Messaging;
 
 namespace Anthropic.SDK.Tests
@@ -76,6 +71,7 @@ namespace Anthropic.SDK.Tests
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
 
+            Assert.IsNotNull(res.Message.ToString());
         }
 
         [TestMethod]
@@ -98,7 +94,7 @@ namespace Anthropic.SDK.Tests
             
             res = await client.Messages.GetClaudeMessageAsync(parameters);
 
-
+            Assert.IsNotNull(res.Message.ToString());
         }
 
     }
