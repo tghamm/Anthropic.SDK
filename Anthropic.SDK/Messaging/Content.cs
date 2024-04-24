@@ -17,6 +17,7 @@ namespace Anthropic.SDK.Messaging
         /// </summary>
         [JsonPropertyName("type")]
         public abstract ContentType Type { get; }
+
     }
     
     /// <summary>
@@ -35,6 +36,10 @@ namespace Anthropic.SDK.Messaging
         /// </summary>
         [JsonPropertyName("text")]
         public string Text { get; set; }
+
+        public override string ToString() => Text?.ToString() ?? string.Empty;
+
+        public static implicit operator string(TextContent choice) => choice?.ToString();
     }
 
     /// <summary>

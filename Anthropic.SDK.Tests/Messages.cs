@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using Anthropic.SDK.Constants;
 using Anthropic.SDK.Messaging;
 
@@ -18,11 +13,7 @@ namespace Anthropic.SDK.Tests
         {
             var client = new AnthropicClient();
             var messages = new List<Message>();
-            messages.Add(new Message()
-            {
-                Role = RoleType.User,
-                Content = "Write me a sonnet about the Statue of Liberty"
-            });
+            messages.Add(new Message(RoleType.User, "Write me a sonnet about the Statue of Liberty"));
             var parameters = new MessageParameters()
             {
                 Messages = messages,
@@ -32,6 +23,7 @@ namespace Anthropic.SDK.Tests
                 Temperature = 1.0m,
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
+            Assert.IsNotNull(res.Message.ToString());
         }
 
         [TestMethod]
@@ -39,11 +31,7 @@ namespace Anthropic.SDK.Tests
         {
             var client = new AnthropicClient();
             var messages = new List<Message>();
-            messages.Add(new Message()
-            {
-                Role = RoleType.User,
-                Content = "Write me a sonnet about the Statue of Liberty"
-            });
+            messages.Add(new Message(RoleType.User, "Write me a sonnet about the Statue of Liberty"));
             var parameters = new MessageParameters()
             {
                 Messages = messages,
@@ -53,6 +41,7 @@ namespace Anthropic.SDK.Tests
                 Temperature = 1.0m,
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
+            Assert.IsNotNull(res.Message.ToString());
         }
 
         [TestMethod]
@@ -60,11 +49,7 @@ namespace Anthropic.SDK.Tests
         {
             var client = new AnthropicClient();
             var messages = new List<Message>();
-            messages.Add(new Message()
-            {
-                Role = RoleType.User,
-                Content = "Write me a haiku about the Statue of Liberty"
-            });
+            messages.Add(new Message(RoleType.User, "Write me a sonnet about the Statue of Liberty"));
             var parameters = new MessageParameters()
             {
                 Messages = messages,
@@ -74,6 +59,7 @@ namespace Anthropic.SDK.Tests
                 Temperature = 1.0m,
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
+            Assert.IsNotNull(res.Message.ToString());
         }
 
         [TestMethod]
@@ -81,11 +67,7 @@ namespace Anthropic.SDK.Tests
         {
             var client = new AnthropicClient();
             var messages = new List<Message>();
-            messages.Add(new Message()
-            {
-                Role = RoleType.User,
-                Content = "Write me a paragraph about the history of the Statue of Liberty"
-            });
+            messages.Add(new Message(RoleType.User, "Write me a sonnet about the Statue of Liberty"));
             var parameters = new MessageParameters()
             {
                 Messages = messages,
@@ -114,11 +96,7 @@ namespace Anthropic.SDK.Tests
         {
             var client = new AnthropicClient();
             var messages = new List<Message>();
-            messages.Add(new Message()
-            {
-                Role = RoleType.User,
-                Content = "Write me a paragraph about the history of the Statue of Liberty"
-            });
+            messages.Add(new Message(RoleType.User, "Write me a sonnet about the Statue of Liberty"));
             var parameters = new MessageParameters()
             {
                 Messages = messages,
@@ -165,7 +143,7 @@ namespace Anthropic.SDK.Tests
             messages.Add(new Message()
             {
                 Role = RoleType.User,
-                Content = new dynamic[]
+                Content = new List<ContentBase>()
                 {
                     new ImageContent()
                     {
@@ -190,6 +168,7 @@ namespace Anthropic.SDK.Tests
                 Temperature = 1.0m,
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
+            Assert.IsNotNull(res.Message.ToString());
         }
 
         [TestMethod]
@@ -218,7 +197,7 @@ namespace Anthropic.SDK.Tests
             messages.Add(new Message()
             {
                 Role = RoleType.User,
-                Content = new dynamic[]
+                Content = new List<ContentBase>()
                 {
                     new ImageContent()
                     {

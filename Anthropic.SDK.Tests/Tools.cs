@@ -1,17 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+﻿using System.Globalization;
 using System.Reflection;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using Anthropic.SDK.Common;
 using Anthropic.SDK.Constants;
 using Anthropic.SDK.Messaging;
-using Tool = Anthropic.SDK.Messaging.Tool;
 
 namespace Anthropic.SDK.Tests
 {
@@ -31,6 +25,13 @@ namespace Anthropic.SDK.Tests
             return "72 degrees and sunny";
         }
 
+        public enum DanceType
+        {
+            Swing,
+            ChaCha,
+            Bolero
+        }
+
 
         [TestMethod]
         public async Task TestBasicTool()
@@ -38,11 +39,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message()
-                {
-                    Role = RoleType.User,
-                    Content = "What is the weather in San Francisco, CA in fahrenheit?"
-                }
+                new Message(RoleType.User, "What is the weather in San Francisco, CA in fahrenheit?")
             };
             var tools = Common.Tool.GetAllAvailableTools(includeDefaults: false, forceUpdate: true, clearCache: true);
 
@@ -56,7 +53,7 @@ namespace Anthropic.SDK.Tests
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
             
-            messages.Add(res.Content.AsAssistantMessage());
+            messages.Add(res.Message);
 
             foreach (var toolCall in res.ToolCalls)
             {
@@ -67,7 +64,7 @@ namespace Anthropic.SDK.Tests
 
             var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
 
-            Assert.IsTrue(finalResult.FirstMessage.Text.Contains("72 degrees"));
+            Assert.IsTrue(finalResult.Message.ToString().Contains("72 degrees"));
         }
 
         [TestMethod]
@@ -76,16 +73,12 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message()
-                {
-                    Role = RoleType.User,
-                    Content = "What is the weather in San Francisco, CA?"
-                }
+                new Message(RoleType.User, "Use the `Get_Dance_Definition` tool to better understand the ChaCha")
             };
             var tools = new List<Common.Tool>
             {
-                Common.Tool.FromFunc("Get_Weather", 
-                    ([FunctionParameter("Location of the weather", true)]string location)=> "72 degrees and sunny")
+                Common.Tool.FromFunc("Get_Dance_Definition", 
+                    ([FunctionParameter("The type of dance", true)]DanceType danceType)=> "The ChaCha is a lively, playful, and flirtatious Latin ballroom dance with compact steps, hip and pelvic movements, and lots of energy.")
             };
 
             var parameters = new MessageParameters()
@@ -96,9 +89,9 @@ namespace Anthropic.SDK.Tests
                 Stream = false,
                 Temperature = 1.0m,
             };
-            var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
+            var res = await client.Messages.GetClaudeMessageAsync(parameters, tools);
 
-            messages.Add(res.Content.AsAssistantMessage());
+            messages.Add(res.Message);
 
             foreach (var toolCall in res.ToolCalls)
             {
@@ -109,7 +102,7 @@ namespace Anthropic.SDK.Tests
 
             var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
 
-            Assert.IsTrue(finalResult.FirstMessage.Text.Contains("72 degrees"));
+            
         }
 
         [TestMethod]
@@ -118,11 +111,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message()
-                {
-                    Role = RoleType.User,
-                    Content = "What is the weather in San Francisco, CA?"
-                }
+                new Message(RoleType.User, "What is the weather in San Francisco, CA?")
             };
             var tools = new List<Common.Tool>
             {
@@ -140,7 +129,7 @@ namespace Anthropic.SDK.Tests
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
 
-            messages.Add(res.Content.AsAssistantMessage());
+            messages.Add(res.Message);
 
             foreach (var toolCall in res.ToolCalls)
             {
@@ -168,11 +157,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message()
-                {
-                    Role = RoleType.User,
-                    Content = "What is the weather in San Francisco, CA?"
-                }
+                new Message(RoleType.User, "What is the weather in San Francisco, CA?")
             };
 
             //var objectInstance = new ObjectTool();
@@ -191,7 +176,7 @@ namespace Anthropic.SDK.Tests
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
 
-            messages.Add(res.Content.AsAssistantMessage());
+            messages.Add(res.Message);
 
             foreach (var toolCall in res.ToolCalls)
             {
@@ -202,7 +187,7 @@ namespace Anthropic.SDK.Tests
 
             var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
 
-            Assert.IsTrue(finalResult.FirstMessage.Text.Contains("72 degrees"));
+            Assert.IsTrue(finalResult.Message.ToString().Contains("72 degrees"));
         }
 
         public class InstanceObjectTool
@@ -220,11 +205,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message()
-                {
-                    Role = RoleType.User,
-                    Content = "What is the weather in San Francisco, CA?"
-                }
+                new Message(RoleType.User, "What is the weather in San Francisco, CA?")
             };
 
             var objectInstance = new InstanceObjectTool();
@@ -243,7 +224,7 @@ namespace Anthropic.SDK.Tests
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
 
-            messages.Add(res.Content.AsAssistantMessage());
+            messages.Add(res.Message);
 
             foreach (var toolCall in res.ToolCalls)
             {
@@ -254,7 +235,7 @@ namespace Anthropic.SDK.Tests
 
             var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
 
-            Assert.IsTrue(finalResult.FirstMessage.Text.Contains("72 degrees"));
+            Assert.IsTrue(finalResult.Message.ToString().Contains("72 degrees"));
         }
 
 
@@ -264,14 +245,9 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message()
-                {
-                    Role = RoleType.User,
-                    Content = "How many characters are in the word Christmas, multiply by 5, add 6, subtract 2, then divide by 2.1?"
-                }
+                new Message(RoleType.User, "How many characters are in the word Christmas, multiply by 5, add 6, subtract 2, then divide by 2.1?")
             };
 
-            //var objectInstance = new InstanceObjectTool();
             var tools = new List<Common.Tool>
             {
                 Common.Tool.FromFunc("ChristmasMathFunction",
@@ -295,7 +271,7 @@ namespace Anthropic.SDK.Tests
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
 
-            messages.Add(res.Content.AsAssistantMessage());
+            messages.Add(res.Message);
 
             foreach (var toolCall in res.ToolCalls)
             {
@@ -315,11 +291,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message()
-                {
-                    Role = RoleType.User,
-                    Content = "What is the weather in San Francisco, CA in fahrenheit?"
-                }
+                new Message(RoleType.User, "What is the weather in San Francisco, CA in fahrenheit?")
             };
             var inputschema = new InputSchema()
             {
@@ -337,17 +309,17 @@ namespace Anthropic.SDK.Tests
                 },
                 Required = new List<string>() { "location", "tempType" }
             };
-            JsonSerializerOptions JsonSerializationOptions  = new()
+            JsonSerializerOptions jsonSerializationOptions  = new()
             {
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                 Converters = { new JsonStringEnumConverter() },
                 ReferenceHandler = ReferenceHandler.IgnoreCycles,
             };
-            string jsonString = JsonSerializer.Serialize(inputschema, JsonSerializationOptions);
+            string jsonString = JsonSerializer.Serialize(inputschema, jsonSerializationOptions);
             var tools = new List<Common.Tool>()
-            {
-                new Common.Tool(new Function("GetWeather", "This function returns the weather for a given location",
-                    JsonNode.Parse(jsonString)))
+            { 
+                new Function("GetWeather", "This function returns the weather for a given location",
+                    JsonNode.Parse(jsonString))
             };
             var parameters = new MessageParameters()
             {
@@ -359,11 +331,10 @@ namespace Anthropic.SDK.Tests
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters, tools);
 
-            messages.Add(res.Content.AsAssistantMessage());
+            messages.Add(res.Message);
 
-            var toolUse = res.Content.FirstOrDefault(c => c.Type == ContentType.tool_use) as ToolUseContent;
+            var toolUse = res.Content.OfType<ToolUseContent>().First();
             var id = toolUse.Id;
-            var input = toolUse.Input;
             var param1 = toolUse.Input["location"].ToString();
             var param2 = Enum.Parse<TempType>(toolUse.Input["tempType"].ToString());
 
@@ -372,7 +343,7 @@ namespace Anthropic.SDK.Tests
             messages.Add(new Message()
             {
                 Role = RoleType.User,
-                Content = new[] { new ToolResultContent()
+                Content = new List<ContentBase>() { new ToolResultContent()
                 {
                     ToolUseId = id,
                     Content = weather
@@ -381,7 +352,7 @@ namespace Anthropic.SDK.Tests
 
             var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
 
-            Assert.IsTrue(finalResult.FirstMessage.Text.Contains("72 degrees"));
+            Assert.IsTrue(finalResult.Message.ToString().Contains("72 degrees"));
         }
 
 
@@ -391,11 +362,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message()
-                {
-                    Role = RoleType.User,
-                    Content = "Should I roll the dice?"
-                }
+                new Message(RoleType.User, "Should I roll the dice?")
             };
             var tools = new List<Common.Tool>
             {
@@ -416,7 +383,7 @@ namespace Anthropic.SDK.Tests
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
 
-            messages.Add(res.Content.AsAssistantMessage());
+            messages.Add(res.Message);
 
             foreach (var toolCall in res.ToolCalls)
             {
@@ -427,7 +394,7 @@ namespace Anthropic.SDK.Tests
 
             var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
 
-            Assert.IsTrue(finalResult.FirstMessage.Text.Contains("no"));
+            Assert.IsTrue(finalResult.Message.ToString().Contains("no"));
         }
 
         [TestMethod]
@@ -436,11 +403,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message()
-                {
-                    Role = RoleType.User,
-                    Content = "What 5 numbers should I add together?"
-                }
+                new Message(RoleType.User, "What 5 numbers should I add together?")
             };
             var tools = new List<Common.Tool>
             {
@@ -461,7 +424,7 @@ namespace Anthropic.SDK.Tests
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
 
-            messages.Add(res.Content.AsAssistantMessage());
+            messages.Add(res.Message);
 
             foreach (var toolCall in res.ToolCalls)
             {
@@ -472,7 +435,7 @@ namespace Anthropic.SDK.Tests
 
             var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
 
-            Assert.IsTrue(finalResult.FirstMessage.Text.Contains("sum") || finalResult.FirstMessage.Text.Contains("total"));
+            Assert.IsTrue(finalResult.Message.ToString().Contains("sum") || finalResult.Message.ToString().Contains("total"));
         }
 
         [TestMethod]
@@ -481,11 +444,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message()
-                {
-                    Role = RoleType.User,
-                    Content = "What 5 numbers should I add together?"
-                }
+                new Message(RoleType.User, "What 5 numbers should I add together?")
             };
             var tools = new List<Common.Tool>
             {
@@ -511,7 +470,7 @@ namespace Anthropic.SDK.Tests
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
 
-            messages.Add(res.Content.AsAssistantMessage());
+            messages.Add(res.Message);
 
             foreach (var toolCall in res.ToolCalls)
             {
@@ -522,7 +481,7 @@ namespace Anthropic.SDK.Tests
 
             var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
 
-            Assert.IsTrue(finalResult.FirstMessage.Text.Contains("sum") || finalResult.FirstMessage.Text.Contains("total"));
+            Assert.IsTrue(finalResult.Message.ToString().Contains("sum") || finalResult.Message.ToString().Contains("total"));
         }
 
         [TestMethod]
@@ -531,11 +490,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message()
-                {
-                    Role = RoleType.User,
-                    Content = "Should I roll the dice?"
-                }
+                new Message(RoleType.User, "Should I roll the dice?")
             };
             var tools = new List<Common.Tool>
             {
@@ -558,7 +513,7 @@ namespace Anthropic.SDK.Tests
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
 
-            messages.Add(res.Content.AsAssistantMessage());
+            messages.Add(res.Message);
 
             foreach (var toolCall in res.ToolCalls)
             {
@@ -569,7 +524,7 @@ namespace Anthropic.SDK.Tests
 
             var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
 
-            Assert.IsTrue(finalResult.FirstMessage.Text.Contains("no"));
+            Assert.IsTrue(finalResult.Message.ToString().Contains("no"));
         }
 
 
@@ -666,7 +621,7 @@ namespace Anthropic.SDK.Tests
             messages.Add(new Message()
             {
                 Role = RoleType.User,
-                Content = new dynamic[]
+                Content = new List<ContentBase>()
                 {
                     new ImageContent()
                     {
@@ -708,17 +663,17 @@ namespace Anthropic.SDK.Tests
                 
             };
 
-            JsonSerializerOptions JsonSerializationOptions = new()
+            JsonSerializerOptions jsonSerializationOptions = new()
             {
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                 Converters = { new JsonStringEnumConverter() },
                 ReferenceHandler = ReferenceHandler.IgnoreCycles,
             };
-            string jsonString = JsonSerializer.Serialize(imageSchema, JsonSerializationOptions);
+            string jsonString = JsonSerializer.Serialize(imageSchema, jsonSerializationOptions);
             var tools = new List<Common.Tool>()
             {
-                new Common.Tool(new Function("record_summary", "Record summary of an image into well-structured JSON.",
-                    JsonNode.Parse(jsonString)))
+                new Function("record_summary", "Record summary of an image into well-structured JSON.",
+                    JsonNode.Parse(jsonString))
             };
 
 
@@ -733,6 +688,12 @@ namespace Anthropic.SDK.Tests
                 Temperature = 1.0m,
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters, tools);
+
+            var toolResult = res.Content.OfType<ToolUseContent>().First();
+
+            var json = toolResult.Input.ToJsonString();
+
+
         }
 
     }
