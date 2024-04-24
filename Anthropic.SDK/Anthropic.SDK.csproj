@@ -14,7 +14,7 @@
 	  <PackageTags>Claude, AI, ML, API, Anthropic</PackageTags>
 	  <Title>Claude API</Title>
 	  <PackageReleaseNotes>
-		  Simpler use of Messages and Responses.
+		  Simpler use of Messages and Responses, cleaner function calls, and more robust error handling.
 	  </PackageReleaseNotes>
 	  <PackageId>Anthropic.SDK</PackageId>
 	  <Version>3.2.0</Version>

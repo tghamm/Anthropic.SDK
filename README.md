@@ -45,21 +45,36 @@ Here's an example of a non-streaming call to the Claude AI API to the new Claude
 
 ```csharp
 var client = new AnthropicClient();
-var messages = new List<Message>();
-messages.Add(new Message()
+var messages = new List<Message>()
 {
-    Role = RoleType.User,
-    Content = "Write me a sonnet about the Statue of Liberty"
-});
+    new Message(RoleType.User, "Who won the world series in 2020?"),
+    new Message(RoleType.Assistant, "The Los Angeles Dodgers won the World Series in 2020."),
+    new Message(RoleType.User, "Where was it played?"),
+};
+
 var parameters = new MessageParameters()
 {
     Messages = messages,
-    MaxTokens = 512,
+    MaxTokens = 1024,
     Model = AnthropicModels.Claude3Sonnet,
     Stream = false,
     Temperature = 1.0m,
 };
-var res = await client.Messages.GetClaudeMessageAsync(parameters);
+var firstResult = await client.Messages.GetClaudeMessageAsync(parameters);
+
+//print result
+Console.WriteLine(firstResult.Message.ToString());
+
+//add assistant message to chain for second call
+messages.Add(firstResult.Message);
+
+//ask followup question in chain
+messages.Add(new Message(RoleType.User,"Who were the starting pitchers for the Dodgers?"));
+
+var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
+
+//print result
+Console.WriteLine(finalResult.Message.ToString());
 ```
 
 ### Streaming Call
@@ -90,7 +105,7 @@ var messages = new List<Message>();
 messages.Add(new Message()
 {
     Role = RoleType.User,
-    Content = new dynamic[]
+    Content = new List<ContentBase>()
     {
         new ImageContent()
         {
@@ -134,8 +149,7 @@ Console.WriteLine($@"Used Tokens - Input:{outputs.First().StreamStartMessage.Usa
 The `AnthropicClient` supports function-calling through a variety of methods, see some examples below or check out the unit tests in this repo (note function-calling is currently only supported in non-streaming calls by Claude at the moment):
 
 ```csharp
-//Global tool discovery method
-
+//From a globally declared static function:
 public enum TempType
 {
     Fahrenheit,
@@ -152,12 +166,10 @@ public static async Task<string> GetWeather([FunctionParameter("Location of the 
 var client = new AnthropicClient();
 var messages = new List<Message>
 {
-    new Message()
-    {
-        Role = RoleType.User,
-        Content = "What is the weather in San Francisco, CA in fahrenheit?"
-    }
+    new Message(RoleType.User, "What is the weather in San Francisco, CA in fahrenheit?")
 };
+
+
 var tools = Common.Tool.GetAllAvailableTools(includeDefaults: false, 
     forceUpdate: true, clearCache: true);
 
@@ -169,9 +181,9 @@ var parameters = new MessageParameters()
     Stream = false,
     Temperature = 1.0m,
 };
-var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
+var res = await client.Messages.GetClaudeMessageAsync(parameters, tools);
 
-messages.Add(res.Content.AsAssistantMessage());
+messages.Add(res.Message);
 
 foreach (var toolCall in res.ToolCalls)
 {
@@ -190,11 +202,7 @@ var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
 var client = new AnthropicClient();
 var messages = new List<Message>
 {
-    new Message()
-    {
-        Role = RoleType.User,
-        Content = "What is the weather in San Francisco, CA?"
-    }
+    new Message(RoleType.User, "What is the weather in San Francisco, CA?")
 };
 var tools = new List<Common.Tool>
 {
@@ -212,7 +220,7 @@ var parameters = new MessageParameters()
 };
 var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
 
-messages.Add(res.Content.AsAssistantMessage());
+messages.Add(res.Message);
 
 foreach (var toolCall in res.ToolCalls)
 {
@@ -238,11 +246,7 @@ public static class StaticObjectTool
 var client = new AnthropicClient();
 var messages = new List<Message>
 {
-    new Message()
-    {
-        Role = RoleType.User,
-        Content = "What is the weather in San Francisco, CA?"
-    }
+    new Message(RoleType.User, "What is the weather in San Francisco, CA?")
 };
 
 var tools = new List<Common.Tool>
@@ -260,7 +264,7 @@ var parameters = new MessageParameters()
 };
 var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
 
-messages.Add(res.Content.AsAssistantMessage());
+messages.Add(res.Message);
 
 foreach (var toolCall in res.ToolCalls)
 {
@@ -284,11 +288,7 @@ public class InstanceObjectTool
 var client = new AnthropicClient();
 var messages = new List<Message>
 {
-    new Message()
-    {
-        Role = RoleType.User,
-        Content = "What is the weather in San Francisco, CA?"
-    }
+    new Message(RoleType.User, "What is the weather in San Francisco, CA?")
 };
 
 var objectInstance = new InstanceObjectTool();
@@ -303,11 +303,7 @@ var tools = new List<Common.Tool>
 var client = new AnthropicClient();
 var messages = new List<Message>
 {
-    new Message()
-    {
-        Role = RoleType.User,
-        Content = "What is the weather in San Francisco, CA in fahrenheit?"
-    }
+    new Message(RoleType.User, "What is the weather in San Francisco, CA in fahrenheit?")
 };
 var inputschema = new InputSchema()
 {
@@ -325,17 +321,17 @@ var inputschema = new InputSchema()
     },
     Required = new List<string>() { "location", "tempType" }
 };
-JsonSerializerOptions JsonSerializationOptions  = new()
+JsonSerializerOptions jsonSerializationOptions  = new()
 {
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     Converters = { new JsonStringEnumConverter() },
     ReferenceHandler = ReferenceHandler.IgnoreCycles,
 };
-string jsonString = JsonSerializer.Serialize(inputschema, JsonSerializationOptions);
+string jsonString = JsonSerializer.Serialize(inputschema, jsonSerializationOptions);
 var tools = new List<Common.Tool>()
 {
-    new Common.Tool(new Function("GetWeather", "This function returns the weather for a given location",
-        JsonNode.Parse(jsonString)))
+    new Function("GetWeather", "This function returns the weather for a given location",
+        JsonNode.Parse(jsonString))
 };
 var parameters = new MessageParameters()
 {
@@ -347,11 +343,10 @@ var parameters = new MessageParameters()
 };
 var res = await client.Messages.GetClaudeMessageAsync(parameters, tools);
 
-messages.Add(res.Content.AsAssistantMessage());
+messages.Add(res.Message);
 
-var toolUse = res.Content.FirstOrDefault(c => c.Type == ContentType.tool_use) as ToolUseContent;
+var toolUse = res.Content.OfType<ToolUseContent>().First();
 var id = toolUse.Id;
-var input = toolUse.Input;
 var param1 = toolUse.Input["location"].ToString();
 var param2 = Enum.Parse<TempType>(toolUse.Input["tempType"].ToString());
 
@@ -360,7 +355,7 @@ var weather = await GetWeather(param1, param2);
 messages.Add(new Message()
 {
     Role = RoleType.User,
-    Content = new[] { new ToolResultContent()
+    Content = new List<ContentBase>() { new ToolResultContent()
     {
         ToolUseId = id,
         Content = weather
@@ -392,7 +387,7 @@ var messages = new List<Message>();
 messages.Add(new Message()
 {
     Role = RoleType.User,
-    Content = new dynamic[]
+    Content = new List<ContentBase>()
     {
         new ImageContent()
         {
@@ -434,17 +429,17 @@ var imageSchema = new ImageSchema
     
 };
 
-JsonSerializerOptions JsonSerializationOptions = new()
+JsonSerializerOptions jsonSerializationOptions = new()
 {
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     Converters = { new JsonStringEnumConverter() },
     ReferenceHandler = ReferenceHandler.IgnoreCycles,
 };
-string jsonString = JsonSerializer.Serialize(imageSchema, JsonSerializationOptions);
+string jsonString = JsonSerializer.Serialize(imageSchema, jsonSerializationOptions);
 var tools = new List<Common.Tool>()
 {
-    new Common.Tool(new Function("record_summary", "Record summary of an image into well-structured JSON.",
-        JsonNode.Parse(jsonString)))
+    new Function("record_summary", "Record summary of an image into well-structured JSON.",
+        JsonNode.Parse(jsonString))
 };
 
 
@@ -459,10 +454,38 @@ var parameters = new MessageParameters()
     Temperature = 1.0m,
 };
 var res = await client.Messages.GetClaudeMessageAsync(parameters, tools);
+
+var toolResult = res.Content.OfType<ToolUseContent>().First();
+
+var json = toolResult.Input.ToJsonString();
+
 ```
 Output From Json Mode
 ```json
-{"description":"The image shows a ripe, fresh red apple with streaks of yellow and orange coloring. The skin is shiny and water droplets are visible, giving it a bright, appetizing appearance.","estimated_year":2022,"key_colors":[{"r":1.0,"g":0.2,"b":0.2,"name":"crimson_red"},{"r":1.0,"g":0.6,"b":0.2,"name":"orange"},{"r":1.0,"g":0.9,"b":0.6,"name":"yellow"}]}
+{
+  "description": "This image shows a close-up view of a ripe, red apple with shades of yellow and orange. The apple has a shiny, waxy surface with water droplets visible, giving it a fresh appearance.",
+  "estimated_year": 2020,
+  "key_colors": [
+    {
+      "r": 1,
+      "g": 0.2,
+      "b": 0.2,
+      "name": "red"
+    },
+    {
+      "r": 1,
+      "g": 0.6,
+      "b": 0.2,
+      "name": "orange"
+    },
+    {
+      "r": 0.8,
+      "g": 0.8,
+      "b": 0.2,
+      "name": "yellow"
+    }
+  ]
+}
 ```
 
 ## Contributing
