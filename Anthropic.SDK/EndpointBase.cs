@@ -127,7 +127,7 @@ namespace Anthropic.SDK
                     var options = new JsonSerializerOptions
                     {
                         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                        Converters = { new ContentConverter(), new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+                        Converters = { new ContentConverter() }
                     };
                     string jsonContent = JsonSerializer.Serialize(postData, options);
                     var stringContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
