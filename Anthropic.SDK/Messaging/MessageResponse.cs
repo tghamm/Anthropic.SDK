@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
+using Anthropic.SDK.Extensions;
 
 namespace Anthropic.SDK.Messaging
 {
@@ -19,7 +20,8 @@ namespace Anthropic.SDK.Messaging
         public string Model { get; set; }
 
         [JsonPropertyName("role")]
-        public string Role { get; set; }
+        [JsonConverter(typeof(RoleTypeConverter))]
+        public RoleType Role { get; set; }
 
         [JsonPropertyName("stop_reason")]
         public string StopReason { get; set; }
@@ -58,7 +60,8 @@ namespace Anthropic.SDK.Messaging
         public string Type { get; set; }
 
         [JsonPropertyName("role")]
-        public string Role { get; set; }
+        [JsonConverter(typeof(RoleTypeConverter))]
+        public RoleType Role { get; set; }
 
         [JsonPropertyName("content")]
         public List<object> Content { get; set; }

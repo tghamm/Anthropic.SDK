@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using Anthropic.SDK.Common;
+using Anthropic.SDK.Extensions;
 
 namespace Anthropic.SDK.Messaging
 {
@@ -39,6 +40,7 @@ namespace Anthropic.SDK.Messaging
         /// Accepts <see cref="RoleType.User"/> or <see cref="RoleType.Assistant"/>
         /// </summary>
         [JsonPropertyName("role")]
+        [JsonConverter(typeof(RoleTypeConverter))]
         public RoleType Role { get; set; }
 
         /// <summary>
