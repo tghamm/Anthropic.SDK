@@ -19,7 +19,10 @@ namespace Anthropic.SDK.Extensions
 
             if (parameters.Length == 0)
             {
-                return null;
+                return new JsonObject
+                {
+                    ["type"] = "object"
+                };
             }
 
             var schema = new JsonObject
