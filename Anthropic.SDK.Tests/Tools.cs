@@ -22,7 +22,15 @@ namespace Anthropic.SDK.Tests
         public static async Task<string> GetWeather([FunctionParameter("Location of the weather", true)]string location,
             [FunctionParameter("Unit of temperature, celsius or fahrenheit", true)] TempType tempType)
         {
+            await Task.Yield();
             return "72 degrees and sunny";
+        }
+
+        [Function("Get the current user's name")]
+        public static async Task<string> GetCurrentUser()
+        {
+            await Task.Yield();
+            return "Claude";
         }
 
         public enum DanceType
@@ -31,7 +39,6 @@ namespace Anthropic.SDK.Tests
             ChaCha,
             Bolero
         }
-
 
         [TestMethod]
         public async Task TestBasicTool()
@@ -65,6 +72,40 @@ namespace Anthropic.SDK.Tests
             var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
 
             Assert.IsTrue(finalResult.Message.ToString().Contains("72 degrees"));
+        }
+
+        [TestMethod]
+        public async Task TestEmptyArgsTool()
+        {
+            var client = new AnthropicClient();
+            var messages = new List<Message>
+            {
+                new Message(RoleType.User, "What is the current user's name?")
+            };
+            var tools = Common.Tool.GetAllAvailableTools(includeDefaults: false, forceUpdate: true, clearCache: true);
+
+            var parameters = new MessageParameters()
+            {
+                Messages = messages,
+                MaxTokens = 2048,
+                Model = AnthropicModels.Claude3Sonnet,
+                Stream = false,
+                Temperature = 1.0m,
+            };
+            var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
+
+            messages.Add(res.Message);
+
+            foreach (var toolCall in res.ToolCalls)
+            {
+                var response = await toolCall.InvokeAsync<string>();
+
+                messages.Add(new Message(toolCall, response));
+            }
+
+            var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
+
+            Assert.IsTrue(finalResult.Message.ToString().Contains("Claude"));
         }
 
         [TestMethod]
