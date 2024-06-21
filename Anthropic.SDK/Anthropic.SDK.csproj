@@ -14,12 +14,12 @@
 	  <PackageTags>Claude, AI, ML, API, Anthropic</PackageTags>
 	  <Title>Claude API</Title>
 	  <PackageReleaseNotes>
-		  Support Empty Parameter Args in Tools.
+		  Adds Sonnet 3.5.
 	  </PackageReleaseNotes>
 	  <PackageId>Anthropic.SDK</PackageId>
-	  <Version>3.2.2</Version>
-	  <AssemblyVersion>3.2.2.0</AssemblyVersion>
-	  <FileVersion>3.2.2.0</FileVersion>
+	  <Version>3.2.3</Version>
+	  <AssemblyVersion>3.2.3.0</AssemblyVersion>
+	  <FileVersion>3.2.3.0</FileVersion>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
 	  <PackageReadmeFile>README.md</PackageReadmeFile>
 	  <ProduceReferenceAssembly>True</ProduceReferenceAssembly>
