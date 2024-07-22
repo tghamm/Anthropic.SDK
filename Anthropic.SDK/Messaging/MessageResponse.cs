@@ -1,8 +1,5 @@
 ﻿using Anthropic.SDK.Common;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json.Serialization;
 using Anthropic.SDK.Extensions;
 
@@ -37,6 +34,9 @@ namespace Anthropic.SDK.Messaging
 
         [JsonPropertyName("delta")]
         public Delta Delta { get; set; }
+        
+        [JsonPropertyName("content_block")]
+        public ContentBlock? ContentBlock { get; set; }
 
         [JsonPropertyName("message")]
         public StreamMessage StreamStartMessage { get; set; }
@@ -91,6 +91,27 @@ namespace Anthropic.SDK.Messaging
         public string Text { get; set; }
         [JsonPropertyName("usage")]
         public Usage Usage { get; set; }
+        
+        [JsonPropertyName("name ")]
+        public string Name { get; set; } 
+        
+        [JsonPropertyName("partial_json")]
+        public string? PartialJson { get; set; }
+    }
+
+    public class ContentBlock
+    {
+        [JsonPropertyName("type")]
+        public string Type { get; set; }
+
+        [JsonPropertyName("id")]
+        public string? Id { get; set; }
+
+        [JsonPropertyName("text")]
+        public string? Text { get; set; }
+
+        [JsonPropertyName("name")]
+        public string? Name { get; set; }
     }
 
     public class Usage

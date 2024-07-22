@@ -1,16 +1,18 @@
 ﻿using Anthropic.SDK.Messaging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json.Serialization;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace Anthropic.SDK.Extensions
 {
     public class ContentConverter : JsonConverter<ContentBase>
     {
+        public static ContentConverter Instance { get; } = new ContentConverter();
+
+        private ContentConverter()
+        {
+        }
+
         public override ContentBase Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             using (var jsonDoc = JsonDocument.ParseValue(ref reader))
