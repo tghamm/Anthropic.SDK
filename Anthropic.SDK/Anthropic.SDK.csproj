@@ -6,7 +6,7 @@
 	  <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	  <Authors>Grant Hamm</Authors>
 	  <Product>Claude API</Product>
-	  <Description>A simple C# / .NET library to use with Anthropic's Claude API.  Independently developed, this is not an official library and I am not affiliated with Anthropic.  An Anthropic account is required.</Description>
+	  <Description>A C# / .NET library to use with Anthropic's Claude API.  Supports Streaming and Tools</Description>
 	  <Copyright>This library is licensed MIT, in the public domain</Copyright>
 	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
 	  <PackageProjectUrl>https://github.com/tghamm/Anthropic.SDK</PackageProjectUrl>
@@ -14,14 +14,15 @@
 	  <PackageTags>Claude, AI, ML, API, Anthropic</PackageTags>
 	  <Title>Claude API</Title>
 	  <PackageReleaseNotes>
-		  Adds Sonnet 3.5.
+		  Adds support for Tooling in the Streaming API
 	  </PackageReleaseNotes>
 	  <PackageId>Anthropic.SDK</PackageId>
-	  <Version>3.2.3</Version>
-	  <AssemblyVersion>3.2.3.0</AssemblyVersion>
-	  <FileVersion>3.2.3.0</FileVersion>
+	  <Version>3.3.0</Version>
+	  <AssemblyVersion>3.3.0.0</AssemblyVersion>
+	  <FileVersion>3.3.0.0</FileVersion>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
 	  <PackageReadmeFile>README.md</PackageReadmeFile>
+	  <PackageIcon>icon.png</PackageIcon>
 	  <ProduceReferenceAssembly>True</ProduceReferenceAssembly>
 	  <RepositoryType>git</RepositoryType>
 
@@ -38,6 +39,10 @@
   </ItemGroup>
 	<ItemGroup>
 		<None Include="..\README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+		<None Include="icon.png">
 			<Pack>True</Pack>
 			<PackagePath>\</PackagePath>
 		</None>
