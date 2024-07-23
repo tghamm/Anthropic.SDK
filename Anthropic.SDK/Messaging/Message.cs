@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using System.Xml.Linq;
 using Anthropic.SDK.Common;
 using Anthropic.SDK.Extensions;
 
@@ -34,6 +36,63 @@ namespace Anthropic.SDK.Messaging
                 (Content[0] as ToolResultContent).IsError = true;
             }
             Role = RoleType.User;
+        }
+
+        public Message(List<MessageResponse> asyncResponses)
+        {
+            Content = new();
+            var arguments = string.Empty;
+            var text = string.Empty;
+            var name = string.Empty;
+            bool captureTool = false;
+            var id = string.Empty;
+
+            foreach (var result in asyncResponses)
+            {
+                if (!string.IsNullOrWhiteSpace(result.Delta?.Text))
+                {
+                    text += result.Delta.Text;
+                }
+
+            }
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                Content.Add(new TextContent()
+                {
+                    Text = text
+                });
+            }
+
+
+            foreach (var result in asyncResponses)
+            {
+                if (result.ContentBlock != null && result.ContentBlock.Type == "tool_use")
+                {
+                    arguments = string.Empty;
+                    captureTool = true;
+                    name = result.ContentBlock.Name;
+                    id = result.ContentBlock.Id;
+                }
+
+                if (!string.IsNullOrWhiteSpace(result.Delta?.PartialJson))
+                {
+                    arguments += result.Delta.PartialJson;
+                }
+
+                if (captureTool && result.Delta?.StopReason == "tool_use")
+                {
+                    Content.Add(new ToolUseContent()
+                    {
+                        Name = name,
+                        Id = id,
+                        Input = JsonNode.Parse(arguments)
+                    });
+                    captureTool = false;
+                }
+            }
+
+            Role = RoleType.Assistant;
+
         }
 
         /// <summary>

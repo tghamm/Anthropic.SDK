@@ -95,7 +95,7 @@ namespace Anthropic.SDK
 #endif
             var options = new JsonSerializerOptions
             {
-                Converters = { new ContentConverter() }
+                Converters = { ContentConverter.Instance }
             };
             var res = await JsonSerializer.DeserializeAsync<T>(
                 new MemoryStream(Encoding.UTF8.GetBytes(resultAsString)), options, cancellationToken: ctx);
@@ -127,7 +127,7 @@ namespace Anthropic.SDK
                     var options = new JsonSerializerOptions
                     {
                         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                        Converters = { new ContentConverter() }
+                        Converters = { ContentConverter.Instance }
                     };
                     string jsonContent = JsonSerializer.Serialize(postData, options);
                     var stringContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
@@ -219,6 +219,8 @@ namespace Anthropic.SDK
                 {
                     if (currentEvent.EventType == "message_start" ||
                         currentEvent.EventType == "content_block_delta" ||
+                        currentEvent.EventType == "content_block_start" ||
+                        currentEvent.EventType == "content_block_stop" ||
                         currentEvent.EventType == "message_delta")
                     {
                         var res = await JsonSerializer.DeserializeAsync<T>(
