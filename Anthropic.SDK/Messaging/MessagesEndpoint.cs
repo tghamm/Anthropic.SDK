@@ -59,13 +59,50 @@ namespace Anthropic.SDK.Messaging
         /// </summary>
         /// <param name="parameters"></param>
         /// <param name="ctx"></param>
-        public async IAsyncEnumerable<MessageResponse> StreamClaudeMessageAsync(MessageParameters parameters, [EnumeratorCancellation] CancellationToken ctx = default)
+        public async IAsyncEnumerable<MessageResponse> StreamClaudeMessageAsync(MessageParameters parameters, IList<Common.Tool> tools = null, [EnumeratorCancellation] CancellationToken ctx = default)
         {
+            if (tools != null)
+            {
+                var toolsSerialized = tools;
+                parameters.Tools = toolsSerialized.Select(p => p.Function).ToList();
+            }
             parameters.Stream = true;
+            var toolCalls = new List<Function>();
+            var arguments = string.Empty;
+            var name = string.Empty;
+            bool captureTool = false;
+            var id = string.Empty;
             await foreach (var result in HttpStreamingRequestMessages<MessageResponse>(Url, HttpMethod.Post, parameters, ctx))
             {
+                if (result.ContentBlock != null && result.ContentBlock.Type == "tool_use")
+                {
+                    arguments = string.Empty;
+                    captureTool = true;
+                    name = result.ContentBlock.Name;
+                    id = result.ContentBlock.Id;
+                }
+                if (!string.IsNullOrWhiteSpace(result.Delta?.PartialJson))
+                {
+                    arguments += result.Delta.PartialJson;
+                }
+
+                if (captureTool && result.Delta?.StopReason == "tool_use")
+                {
+                    var tool = tools?.FirstOrDefault(t => t.Function.Name == name);
+
+                        if (tool != null)
+                        {
+                            tool.Function.Arguments = arguments;
+                            tool.Function.Id = id;
+                            toolCalls.Add(tool.Function);
+                        }
+                        captureTool = false;
+                        result.ToolCalls = toolCalls;
+                }
+                
                 yield return result;
             }
+            
         }
     }
 }
