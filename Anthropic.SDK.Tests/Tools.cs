@@ -57,8 +57,9 @@ namespace Anthropic.SDK.Tests
                 Model = AnthropicModels.Claude3Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
+                Tools = tools.ToList()
             };
-            var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
+            var res = await client.Messages.GetClaudeMessageAsync(parameters);
             
             messages.Add(res.Message);
 
@@ -91,8 +92,9 @@ namespace Anthropic.SDK.Tests
                 Model = AnthropicModels.Claude3Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
+                Tools = tools.ToList()
             };
-            var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
+            var res = await client.Messages.GetClaudeMessageAsync(parameters);
 
             messages.Add(res.Message);
 
@@ -129,8 +131,9 @@ namespace Anthropic.SDK.Tests
                 Model = AnthropicModels.Claude3Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
+                Tools = tools
             };
-            var res = await client.Messages.GetClaudeMessageAsync(parameters, tools);
+            var res = await client.Messages.GetClaudeMessageAsync(parameters);
 
             messages.Add(res.Message);
 
@@ -167,8 +170,9 @@ namespace Anthropic.SDK.Tests
                 Model = AnthropicModels.Claude3Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
+                Tools = tools
             };
-            var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
+            var res = await client.Messages.GetClaudeMessageAsync(parameters);
 
             messages.Add(res.Message);
 
@@ -214,8 +218,9 @@ namespace Anthropic.SDK.Tests
                 Model = AnthropicModels.Claude3Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
+                Tools = tools
             };
-            var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
+            var res = await client.Messages.GetClaudeMessageAsync(parameters);
 
             messages.Add(res.Message);
 
@@ -262,8 +267,9 @@ namespace Anthropic.SDK.Tests
                 Model = AnthropicModels.Claude3Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
+                Tools = tools
             };
-            var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
+            var res = await client.Messages.GetClaudeMessageAsync(parameters);
 
             messages.Add(res.Message);
 
@@ -309,8 +315,9 @@ namespace Anthropic.SDK.Tests
                 Model = AnthropicModels.Claude3Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
+                Tools = tools
             };
-            var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
+            var res = await client.Messages.GetClaudeMessageAsync(parameters);
 
             messages.Add(res.Message);
 
@@ -368,9 +375,10 @@ namespace Anthropic.SDK.Tests
                 MaxTokens = 2048,
                 Model = AnthropicModels.Claude3Sonnet,
                 Stream = false,
-                Temperature = 1.0m
+                Temperature = 1.0m,
+                Tools = tools
             };
-            var res = await client.Messages.GetClaudeMessageAsync(parameters, tools);
+            var res = await client.Messages.GetClaudeMessageAsync(parameters);
 
             messages.Add(res.Message);
 
@@ -421,8 +429,9 @@ namespace Anthropic.SDK.Tests
                 Model = AnthropicModels.Claude3Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
+                Tools = tools
             };
-            var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
+            var res = await client.Messages.GetClaudeMessageAsync(parameters);
 
             messages.Add(res.Message);
 
@@ -462,8 +471,9 @@ namespace Anthropic.SDK.Tests
                 Model = AnthropicModels.Claude3Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
+                Tools = tools
             };
-            var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
+            var res = await client.Messages.GetClaudeMessageAsync(parameters);
 
             messages.Add(res.Message);
 
@@ -508,8 +518,13 @@ namespace Anthropic.SDK.Tests
                 Model = AnthropicModels.Claude3Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
+                Tools = tools,
+                ToolChoice = new ToolChoice()
+                {
+                    Type = ToolChoiceType.Any
+                }
             };
-            var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
+            var res = await client.Messages.GetClaudeMessageAsync(parameters);
 
             messages.Add(res.Message);
 
@@ -519,6 +534,9 @@ namespace Anthropic.SDK.Tests
 
                 messages.Add(new Message(toolCall, response));
             }
+
+            parameters.ToolChoice = null;
+            
 
             var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
 
@@ -551,8 +569,9 @@ namespace Anthropic.SDK.Tests
                 Model = AnthropicModels.Claude3Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
+                Tools = tools
             };
-            var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
+            var res = await client.Messages.GetClaudeMessageAsync(parameters);
 
             messages.Add(res.Message);
 
@@ -727,8 +746,9 @@ namespace Anthropic.SDK.Tests
                 Model = AnthropicModels.Claude3Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
+                Tools = tools
             };
-            var res = await client.Messages.GetClaudeMessageAsync(parameters, tools);
+            var res = await client.Messages.GetClaudeMessageAsync(parameters);
 
             var toolResult = res.Content.OfType<ToolUseContent>().First();
 

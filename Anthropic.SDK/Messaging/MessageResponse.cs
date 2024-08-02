@@ -1,4 +1,5 @@
-﻿using Anthropic.SDK.Common;
+﻿using System;
+using Anthropic.SDK.Common;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Anthropic.SDK.Extensions;
@@ -49,6 +50,9 @@ namespace Anthropic.SDK.Messaging
 
         [JsonIgnore]
         public Message Message => Content.AsAssistantMessages();
+
+        [JsonIgnore]
+        public RateLimits RateLimits { get; set; }
     }
 
     public class StreamMessage
@@ -77,7 +81,21 @@ namespace Anthropic.SDK.Messaging
 
         [JsonPropertyName("usage")]
         public Usage Usage { get; set; }
+
+        
     }
+
+    public class RateLimits
+    {
+        public long RequestsLimit { get; set; }
+        public long RequestsRemaining { get; set; }
+        public DateTime RequestsReset { get; set; }
+        public long TokensLimit { get; set; }
+        public long TokensRemaining { get; set; }
+        public DateTime TokensReset { get; set; }
+        public long RetryAfter { get; set; }
+    }
+
 
     public class Delta
     {

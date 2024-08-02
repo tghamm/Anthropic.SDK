@@ -19,11 +19,12 @@ namespace Anthropic.SDK.Tests
     {
         //Test Streaming call
         [TestMethod]
-        public async Task TestStreamingClaude3Sonnet35Message()
+        public async Task TestStreamingClaude3Sonnet35MessageWithRateLimit()
         {
             var client = new AnthropicClient();
             var messages = new List<Message>();
             messages.Add(new Message(RoleType.User, "What's the temperature in San diego right now in Fahrenheit?"));
+            var tools = Common.Tool.GetAllAvailableTools(includeDefaults: false, forceUpdate: true, clearCache: true);
             var parameters = new MessageParameters()
             {
                 Messages = messages,
@@ -31,10 +32,15 @@ namespace Anthropic.SDK.Tests
                 Model = AnthropicModels.Claude35Sonnet,
                 Stream = true,
                 Temperature = 1.0m,
+                Tools = tools.ToList(),
+                ToolChoice = new ToolChoice()
+                {
+                    Type = ToolChoiceType.Any
+                }
             };
             var outputs = new List<MessageResponse>();
-            var tools = Common.Tool.GetAllAvailableTools(includeDefaults: false, forceUpdate: true, clearCache: true);
-            await foreach (var res in client.Messages.StreamClaudeMessageAsync(parameters, tools.ToList()))
+            
+            await foreach (var res in client.Messages.StreamClaudeMessageAsync(parameters))
             {
                 if (res.Delta != null)
                 {
@@ -59,6 +65,10 @@ namespace Anthropic.SDK.Tests
                     }
                 }
             }
+
+            Assert.IsTrue(outputs.First().RateLimits.RequestsLimit > 0);
+
+            parameters.ToolChoice = null;
 
             await foreach (var res in client.Messages.StreamClaudeMessageAsync(parameters))
             {
@@ -116,14 +126,7 @@ namespace Anthropic.SDK.Tests
                     }
                 }
             });
-            var parameters = new MessageParameters()
-            {
-                Messages = messages,
-                MaxTokens = 512,
-                Model = AnthropicModels.Claude35Sonnet,
-                Stream = true,
-                Temperature = 1.0m,
-            };
+            
             var imageSchema = new Tools.ImageSchema
             {
                 Type = "object",
@@ -162,8 +165,24 @@ namespace Anthropic.SDK.Tests
                     JsonNode.Parse(jsonString))
             };
 
+            var parameters = new MessageParameters()
+            {
+                Messages = messages,
+                MaxTokens = 512,
+                Model = AnthropicModels.Claude35Sonnet,
+                Stream = true,
+                Temperature = 1.0m,
+                Tools = tools.ToList(),
+                ToolChoice = new ToolChoice()
+                {
+                    Type = ToolChoiceType.Tool,
+                    Name = "record_summary"
+                }
+            };
+
+
             var outputs = new List<MessageResponse>();
-            await foreach (var res in client.Messages.StreamClaudeMessageAsync(parameters, tools.ToList()))
+            await foreach (var res in client.Messages.StreamClaudeMessageAsync(parameters))
             {
                 if (res.Delta != null)
                 {
