@@ -1,6 +1,6 @@
 # Anthropic.SDK
 
-[![.NET](https://github.com/tghamm/Anthropic.SDK/actions/workflows/dotnet.yml/badge.svg)](https://github.com/tghamm/Anthropic.SDK/actions/workflows/dotnet.yml) [![Nuget](https://img.shields.io/nuget/v/Anthropic.SDK)](https://www.nuget.org/packages/Anthropic.SDK/)
+[![.NET](https://github.com/tghamm/Anthropic.SDK/actions/workflows/dotnet.yml/badge.svg)](https://github.com/tghamm/Anthropic.SDK/actions/workflows/dotnet.yml) [![Nuget](https://img.shields.io/nuget/v/Anthropic.SDK)](https://www.nuget.org/packages/Anthropic.SDK/) [![Nuget](https://img.shields.io/nuget/dt/Anthropic.SDK)](https://www.nuget.org/packages/Anthropic.SDK/)
 
 Anthropic.SDK is an unofficial C# client designed for interacting with the Claude AI API. This powerful interface simplifies the integration of the Claude AI into your C# applications.  It targets NetStandard 2.0, .NET 6.0, and .NET 8.0.
 
@@ -56,7 +56,7 @@ var parameters = new MessageParameters()
 {
     Messages = messages,
     MaxTokens = 1024,
-    Model = AnthropicModels.Claude3Sonnet,
+    Model = AnthropicModels.Claude35Sonnet,
     Stream = false,
     Temperature = 1.0m,
 };
@@ -64,6 +64,9 @@ var firstResult = await client.Messages.GetClaudeMessageAsync(parameters);
 
 //print result
 Console.WriteLine(firstResult.Message.ToString());
+
+//print remaining Request Limit
+Console.WriteLine(firstResult.RateLimits.RequestsLimit.ToString());
 
 //add assistant message to chain for second call
 messages.Add(firstResult.Message);
@@ -180,8 +183,9 @@ var parameters = new MessageParameters()
     Model = AnthropicModels.Claude3Sonnet,
     Stream = false,
     Temperature = 1.0m,
+    Tools = tools.ToList()
 };
-var res = await client.Messages.GetClaudeMessageAsync(parameters, tools);
+var res = await client.Messages.GetClaudeMessageAsync(parameters);
 
 messages.Add(res.Message);
 
@@ -200,6 +204,7 @@ var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
 var client = new AnthropicClient();
 var messages = new List<Message>();
 messages.Add(new Message(RoleType.User, "What's the temperature in San diego right now in Fahrenheit?"));
+var tools = Common.Tool.GetAllAvailableTools(includeDefaults: false, forceUpdate: true, clearCache: true);
 var parameters = new MessageParameters()
 {
     Messages = messages,
@@ -207,10 +212,11 @@ var parameters = new MessageParameters()
     Model = AnthropicModels.Claude35Sonnet,
     Stream = true,
     Temperature = 1.0m,
+    Tools = tools.ToList()
 };
 var outputs = new List<MessageResponse>();
-var tools = Common.Tool.GetAllAvailableTools(includeDefaults: false, forceUpdate: true, clearCache: true);
-await foreach (var res in client.Messages.StreamClaudeMessageAsync(parameters, tools.ToList()))
+
+await foreach (var res in client.Messages.StreamClaudeMessageAsync(parameters))
 {
     if (res.Delta != null)
     {
@@ -268,8 +274,9 @@ var parameters = new MessageParameters()
     Model = AnthropicModels.Claude3Sonnet,
     Stream = false,
     Temperature = 1.0m,
+    Tools = tools
 };
-var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
+var res = await client.Messages.GetClaudeMessageAsync(parameters);
 
 messages.Add(res.Message);
 
@@ -312,8 +319,9 @@ var parameters = new MessageParameters()
     Model = AnthropicModels.Claude3Sonnet,
     Stream = false,
     Temperature = 1.0m,
+    Tools = tools
 };
-var res = await client.Messages.GetClaudeMessageAsync(parameters, tools.ToList());
+var res = await client.Messages.GetClaudeMessageAsync(parameters);
 
 messages.Add(res.Message);
 
@@ -390,9 +398,10 @@ var parameters = new MessageParameters()
     MaxTokens = 2048,
     Model = AnthropicModels.Claude3Sonnet,
     Stream = false,
-    Temperature = 1.0m
+    Temperature = 1.0m,
+    Tools = tools
 };
-var res = await client.Messages.GetClaudeMessageAsync(parameters, tools);
+var res = await client.Messages.GetClaudeMessageAsync(parameters);
 
 messages.Add(res.Message);
 
@@ -495,7 +504,7 @@ var tools = new List<Common.Tool>()
 
 
 
-
+//with ToolChoice selection
 var parameters = new MessageParameters()
 {
     Messages = messages,
@@ -503,8 +512,14 @@ var parameters = new MessageParameters()
     Model = AnthropicModels.Claude3Sonnet,
     Stream = false,
     Temperature = 1.0m,
+    Tools = tools,
+    ToolChoice = new ToolChoice()
+    {
+        Type = ToolChoiceType.Tool,
+        Name = "record_summary"
+    }
 };
-var res = await client.Messages.GetClaudeMessageAsync(parameters, tools);
+var res = await client.Messages.GetClaudeMessageAsync(parameters);
 
 var toolResult = res.Content.OfType<ToolUseContent>().First();
 

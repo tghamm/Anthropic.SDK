@@ -27,7 +27,7 @@ namespace Anthropic.SDK.Tests
         }
 
         [TestMethod]
-        public async Task TestBasicClaude3Message()
+        public async Task TestBasicClaude3MessageWithRateLimits()
         {
             var client = new AnthropicClient();
             var messages = new List<Message>();
@@ -36,12 +36,13 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 512,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude35Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
             Assert.IsNotNull(res.Message.ToString());
+            Assert.IsTrue(res.RateLimits.RequestsLimit > 0);
         }
 
         [TestMethod]

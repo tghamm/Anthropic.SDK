@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
+using Anthropic.SDK.Extensions;
 
 namespace Anthropic.SDK.Messaging
 {
+    [JsonConverter(typeof(MessageParametersConverter))]
     public class MessageParameters
     {
         [JsonPropertyName("model")]
@@ -28,6 +31,12 @@ namespace Anthropic.SDK.Messaging
         [JsonPropertyName("top_p")]
         public decimal? TopP { get; set; }
         [JsonPropertyName("tools")] 
-        public List<Common.Function> Tools { get; set; }
+        private List<Common.Function> ToolsForClaude => Tools?.Select(p => p.Function).ToList();
+        [JsonIgnore]
+        public IList<Common.Tool> Tools { get; set; }
+
+        [JsonPropertyName("tool_choice")]
+        public ToolChoice ToolChoice { get; set; }
     }
+
 }

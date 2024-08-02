@@ -23,15 +23,10 @@ namespace Anthropic.SDK.Messaging
         /// </summary>
         /// <param name="parameters"></param>
         /// <param name="ctx"></param>
-        public async Task<MessageResponse> GetClaudeMessageAsync(MessageParameters parameters, IList<Common.Tool> tools = null, CancellationToken ctx = default)
+        public async Task<MessageResponse> GetClaudeMessageAsync(MessageParameters parameters, CancellationToken ctx = default)
         {
-            if (tools != null)
-            {
-                var toolsSerialized = tools;
-                parameters.Tools = toolsSerialized.Select(p => p.Function).ToList();
-            }
             parameters.Stream = false;
-            var response = await HttpRequestMessages<MessageResponse>(Url, HttpMethod.Post, parameters, ctx);
+            var response = await HttpRequestMessages(Url, HttpMethod.Post, parameters, ctx).ConfigureAwait(false);
 
             var toolCalls = new List<Function>();
             foreach (var message in response.Content)
@@ -39,7 +34,7 @@ namespace Anthropic.SDK.Messaging
                 
                 if (message.Type == ContentType.tool_use)
                 {
-                    var tool = tools?.FirstOrDefault(t => t.Function.Name == (message as ToolUseContent).Name);
+                    var tool = parameters.Tools?.FirstOrDefault(t => t.Function.Name == (message as ToolUseContent).Name);
                     
                     if (tool != null)
                     {
@@ -59,20 +54,15 @@ namespace Anthropic.SDK.Messaging
         /// </summary>
         /// <param name="parameters"></param>
         /// <param name="ctx"></param>
-        public async IAsyncEnumerable<MessageResponse> StreamClaudeMessageAsync(MessageParameters parameters, IList<Common.Tool> tools = null, [EnumeratorCancellation] CancellationToken ctx = default)
+        public async IAsyncEnumerable<MessageResponse> StreamClaudeMessageAsync(MessageParameters parameters, [EnumeratorCancellation] CancellationToken ctx = default)
         {
-            if (tools != null)
-            {
-                var toolsSerialized = tools;
-                parameters.Tools = toolsSerialized.Select(p => p.Function).ToList();
-            }
             parameters.Stream = true;
             var toolCalls = new List<Function>();
             var arguments = string.Empty;
             var name = string.Empty;
             bool captureTool = false;
             var id = string.Empty;
-            await foreach (var result in HttpStreamingRequestMessages<MessageResponse>(Url, HttpMethod.Post, parameters, ctx))
+            await foreach (var result in HttpStreamingRequestMessages(Url, HttpMethod.Post, parameters, ctx).ConfigureAwait(false))
             {
                 if (result.ContentBlock != null && result.ContentBlock.Type == "tool_use")
                 {
@@ -88,16 +78,16 @@ namespace Anthropic.SDK.Messaging
 
                 if (captureTool && result.Delta?.StopReason == "tool_use")
                 {
-                    var tool = tools?.FirstOrDefault(t => t.Function.Name == name);
+                    var tool = parameters.Tools?.FirstOrDefault(t => t.Function.Name == name);
 
-                        if (tool != null)
-                        {
-                            tool.Function.Arguments = arguments;
-                            tool.Function.Id = id;
-                            toolCalls.Add(tool.Function);
-                        }
-                        captureTool = false;
-                        result.ToolCalls = toolCalls;
+                    if (tool != null)
+                    {
+                        tool.Function.Arguments = arguments;
+                        tool.Function.Id = id;
+                        toolCalls.Add(tool.Function);
+                    }
+                    captureTool = false;
+                    result.ToolCalls = toolCalls;
                 }
                 
                 yield return result;

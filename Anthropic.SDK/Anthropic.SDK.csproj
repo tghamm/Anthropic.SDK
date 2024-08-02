@@ -14,12 +14,12 @@
 	  <PackageTags>Claude, AI, ML, API, Anthropic</PackageTags>
 	  <Title>Claude API</Title>
 	  <PackageReleaseNotes>
-		  Adds support for Tooling in the Streaming API
+		  Better Support for Threaded Calls, Refactored Tool Calls, Rate Limit Information, Tool Choice Configuration
 	  </PackageReleaseNotes>
 	  <PackageId>Anthropic.SDK</PackageId>
-	  <Version>3.3.0</Version>
-	  <AssemblyVersion>3.3.0.0</AssemblyVersion>
-	  <FileVersion>3.3.0.0</FileVersion>
+	  <Version>4.0.0</Version>
+	  <AssemblyVersion>4.0.0.0</AssemblyVersion>
+	  <FileVersion>4.0.0.0</FileVersion>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
 	  <PackageReadmeFile>README.md</PackageReadmeFile>
 	  <PackageIcon>icon.png</PackageIcon>
