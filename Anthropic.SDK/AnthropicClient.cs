@@ -23,7 +23,7 @@ namespace Anthropic.SDK
         /// <summary>
         /// Version of the Anthropic Beta API
         /// </summary>
-        public string AnthropicBetaVersion { get; set; } = "tools-2024-04-04";
+        public string AnthropicBetaVersion { get; set; } = "prompt-caching-2024-07-31";
 
         /// <summary>
         /// The API authentication information to use for API calls

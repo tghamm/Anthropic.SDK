@@ -26,6 +26,44 @@ namespace Anthropic.SDK.Tests
             return "72 degrees and sunny";
         }
 
+        [Function("This function returns the time of day for a given location")]
+        public static async Task<string> GetTimeOfDay([FunctionParameter("Location", true)] string location)
+        {
+            await Task.Yield();
+            return DateTime.Now.ToLongTimeString();
+        }
+
+        [Function("This function provides a useless fact about a location. In reality, it doesn't do that at all, but I'm testing out prompt caching in functions and need enough functions to get over 1024 tokens so I'm typing a really log description here.")]
+        public static async Task<string> GetUselessInformation([FunctionParameter("Location", true)] string location)
+        {
+            await Task.Yield();
+            return DateTime.Now.ToLongTimeString();
+        }
+
+        [Function("This function provides a useless fact about a location part two. In reality, it doesn't do that at all, but I'm testing out prompt caching in functions and need enough functions to get over 1024 tokens so I'm typing a really log description here.")]
+        public static async Task<string> GetUselessInformation2([FunctionParameter("Location", true)] string location)
+        {
+            await Task.Yield();
+            return DateTime.Now.ToLongTimeString();
+        }
+
+        [Function("This function provides a useless fact about a location part 3. In reality, it doesn't do that at all, but I'm testing out prompt caching in functions and need enough functions to get over 1024 tokens so I'm typing a really log description here.")]
+        public static async Task<string> GetUselessInformation3([FunctionParameter("Location", true)] string location)
+        {
+            await Task.Yield();
+            return DateTime.Now.ToLongTimeString();
+        }
+
+        [Function("This function returns number of days remaining in the current month")]
+        public static async Task<string> GetNumberOfDaysInTheMonthRemaining()
+        {
+            await Task.Yield();
+            DateTime today = DateTime.Today;
+            int daysInMonth = DateTime.DaysInMonth(today.Year, today.Month);
+            int daysRemaining = daysInMonth - today.Day;
+            return daysRemaining.ToString();
+        }
+
         [Function("Get the current user's name")]
         public static async Task<string> GetCurrentUser()
         {

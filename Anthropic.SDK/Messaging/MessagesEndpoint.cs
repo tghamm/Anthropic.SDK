@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
@@ -25,6 +26,45 @@ namespace Anthropic.SDK.Messaging
         /// <param name="ctx"></param>
         public async Task<MessageResponse> GetClaudeMessageAsync(MessageParameters parameters, CancellationToken ctx = default)
         {
+            bool hasMessageCaching = (parameters.PromptCaching & PromptCacheType.Messages) == PromptCacheType.Messages;
+            bool hasToolCaching = (parameters.PromptCaching & PromptCacheType.Tools) == PromptCacheType.Tools;
+            if (hasMessageCaching && parameters.System != null && parameters.System.Any())
+            {
+                parameters.System.Last().CacheControl = new CacheControl()
+                {
+                    Type = CacheControlType.ephemeral
+                };
+            }
+
+            if (hasToolCaching && parameters.Tools != null && parameters.Tools.Any())
+            {
+                parameters.Tools.Last().Function.CacheControl = new CacheControl()
+                {
+                    Type = CacheControlType.ephemeral
+                };
+            }
+
+            var count = parameters.Messages.Count(p => p.Role == RoleType.User);
+            if (hasMessageCaching && parameters.Messages != null &&  count > 1)
+            {
+                var x = 1;
+                foreach (var message in parameters.Messages.Where(p => p.Role == RoleType.User))
+                {
+                    if (x < count - 2)
+                    {
+                        message.Content.ForEach(p => p.CacheControl = null);
+                    }
+                    else
+                    {
+                        message.Content.Last().CacheControl = new CacheControl() {
+                            Type = CacheControlType.ephemeral
+                        };
+                    }
+
+                    x++;
+                }
+            }
+
             parameters.Stream = false;
             var response = await HttpRequestMessages(Url, HttpMethod.Post, parameters, ctx).ConfigureAwait(false);
 
@@ -56,6 +96,46 @@ namespace Anthropic.SDK.Messaging
         /// <param name="ctx"></param>
         public async IAsyncEnumerable<MessageResponse> StreamClaudeMessageAsync(MessageParameters parameters, [EnumeratorCancellation] CancellationToken ctx = default)
         {
+            bool hasMessageCaching = (parameters.PromptCaching & PromptCacheType.Messages) == PromptCacheType.Messages;
+            bool hasToolCaching = (parameters.PromptCaching & PromptCacheType.Tools) == PromptCacheType.Tools;
+            if (hasMessageCaching && parameters.System != null && parameters.System.Any())
+            {
+                parameters.System.Last().CacheControl = new CacheControl()
+                {
+                    Type = CacheControlType.ephemeral
+                };
+            }
+
+            if (hasToolCaching && parameters.Tools != null && parameters.Tools.Any())
+            {
+                parameters.Tools.Last().Function.CacheControl = new CacheControl()
+                {
+                    Type = CacheControlType.ephemeral
+                };
+            }
+
+            var count = parameters.Messages.Count(p => p.Role == RoleType.User);
+            if (hasMessageCaching && parameters.Messages != null && count > 1)
+            {
+                var x = 1;
+                foreach (var message in parameters.Messages.Where(p => p.Role == RoleType.User))
+                {
+                    if (x < count - 2)
+                    {
+                        message.Content.ForEach(p => p.CacheControl = null);
+                    }
+                    else
+                    {
+                        message.Content.Last().CacheControl = new CacheControl()
+                        {
+                            Type = CacheControlType.ephemeral
+                        };
+                    }
+
+                    x++;
+                }
+            }
+
             parameters.Stream = true;
             var toolCalls = new List<Function>();
             var arguments = string.Empty;
