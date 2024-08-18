@@ -366,6 +366,81 @@ namespace Anthropic.SDK.Tests
             Debug.WriteLine(json);
 
         }
+
+        [TestMethod]
+        public async Task TestSystemMessageWithNoCaching()
+        {
+            string resourceName = "Anthropic.SDK.Tests.BillyBudd.txt";
+
+            Assembly assembly = Assembly.GetExecutingAssembly();
+
+            await using Stream stream = assembly.GetManifestResourceStream(resourceName);
+            using StreamReader reader = new StreamReader(stream);
+            string content = await reader.ReadToEndAsync();
+
+
+
+
+            var client = new AnthropicClient();
+            var messages = new List<Message>()
+            {
+                new Message(RoleType.User, $"What are the key literary themes of the following novel? {content}"),
+            };
+            var systemMessages = new List<SystemMessage>()
+            {
+                new SystemMessage("You are an expert at analyzing literary texts.")
+            };
+            var parameters = new MessageParameters()
+            {
+                Messages = messages,
+                MaxTokens = 1024,
+                Model = AnthropicModels.Claude35Sonnet,
+                Stream = false,
+                Temperature = 1.0m,
+                System = systemMessages
+            };
+            var res = await client.Messages.GetClaudeMessageAsync(parameters);
+
+            Debug.WriteLine(res.Message);
+        }
+
+        [TestMethod]
+        public async Task TestSystemMultipleMessagesWithNoCaching()
+        {
+            string resourceName = "Anthropic.SDK.Tests.BillyBudd.txt";
+
+            Assembly assembly = Assembly.GetExecutingAssembly();
+
+            await using Stream stream = assembly.GetManifestResourceStream(resourceName);
+            using StreamReader reader = new StreamReader(stream);
+            string content = await reader.ReadToEndAsync();
+
+
+
+
+            var client = new AnthropicClient();
+            var messages = new List<Message>()
+            {
+                new Message(RoleType.User, $"What are the key literary themes of the following novel? {content}"),
+            };
+            var systemMessages = new List<SystemMessage>()
+            {
+                new SystemMessage("You are an expert at analyzing literary texts."),
+                new SystemMessage("You are an expert on the novel Billy Budd.")
+            };
+            var parameters = new MessageParameters()
+            {
+                Messages = messages,
+                MaxTokens = 1024,
+                Model = AnthropicModels.Claude35Sonnet,
+                Stream = false,
+                Temperature = 1.0m,
+                System = systemMessages
+            };
+            var res = await client.Messages.GetClaudeMessageAsync(parameters);
+
+            Debug.WriteLine(res.Message);
+        }
     }
 
     
