@@ -14,12 +14,12 @@
 	  <PackageTags>Claude, AI, ML, API, Anthropic</PackageTags>
 	  <Title>Claude API</Title>
 	  <PackageReleaseNotes>
-		  Better Support for Threaded Calls, Refactored Tool Calls, Rate Limit Information, Tool Choice Configuration
+		  Support for Prompt Caching
 	  </PackageReleaseNotes>
 	  <PackageId>Anthropic.SDK</PackageId>
-	  <Version>4.0.0</Version>
-	  <AssemblyVersion>4.0.0.0</AssemblyVersion>
-	  <FileVersion>4.0.0.0</FileVersion>
+	  <Version>4.1.0</Version>
+	  <AssemblyVersion>4.1.0.0</AssemblyVersion>
+	  <FileVersion>4.1.0.0</FileVersion>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
 	  <PackageReadmeFile>README.md</PackageReadmeFile>
 	  <PackageIcon>icon.png</PackageIcon>

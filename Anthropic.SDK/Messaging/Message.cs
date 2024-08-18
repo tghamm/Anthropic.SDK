@@ -108,6 +108,8 @@ namespace Anthropic.SDK.Messaging
         [JsonPropertyName("content")]
         public List<ContentBase> Content { get; set; }
 
+        
+
         public override string ToString() => (Content.FirstOrDefault() as TextContent)?.ToString() ?? string.Empty;
 
         public static implicit operator string(Message textContent) => textContent?.ToString();

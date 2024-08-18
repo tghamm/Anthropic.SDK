@@ -15,7 +15,7 @@ namespace Anthropic.SDK.Messaging
         [JsonPropertyName("messages")]
         public List<Message> Messages { get; set; }
         [JsonPropertyName("system")]
-        public string? SystemMessage { get; set; }
+        public List<SystemMessage> System { get; set; }
         [JsonPropertyName("max_tokens")]
         public int MaxTokens { get; set; }
         [JsonPropertyName("metadata")]
@@ -35,6 +35,11 @@ namespace Anthropic.SDK.Messaging
         [JsonIgnore]
         public IList<Common.Tool> Tools { get; set; }
 
+        /// <summary>
+        /// Prompt Cache Type Definitions. Designed to be used as a bitwise assignment if you want to cache multiple types and are caching enough context.
+        /// </summary>
+        [JsonIgnore]
+        public PromptCacheType PromptCaching { get; set; } = PromptCacheType.None;
         [JsonPropertyName("tool_choice")]
         public ToolChoice ToolChoice { get; set; }
     }

@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Threading;
 using Anthropic.SDK.Extensions;
+using Anthropic.SDK.Messaging;
 
 namespace Anthropic.SDK.Common
 {
@@ -138,6 +139,10 @@ namespace Anthropic.SDK.Common
         [JsonInclude]
         [JsonPropertyName("name")]
         public string Name { get; private set; }
+
+        [JsonInclude]
+        [JsonPropertyName("cache_control")]
+        internal CacheControl CacheControl { get; set; }
 
         /// <summary>
         /// Id to Send to the API.

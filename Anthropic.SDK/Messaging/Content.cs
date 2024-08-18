@@ -18,6 +18,10 @@ namespace Anthropic.SDK.Messaging
         [JsonPropertyName("type")]
         public abstract ContentType Type { get; }
 
+        [JsonInclude]
+        [JsonPropertyName("cache_control")]
+        internal CacheControl CacheControl { get; set; }
+
     }
     
     /// <summary>

@@ -13,6 +13,7 @@ Anthropic.SDK is an unofficial C# client designed for interacting with the Claud
 - [Examples](#examples)
   - [Non-Streaming Call](#non-streaming-call)
   - [Streaming Call](#streaming-call)
+  - [Prompt Caching](#prompt-caching)
   - [Tools](#tools)
 - [Contributing](#contributing)
 - [License](#license)
@@ -41,7 +42,7 @@ To start using the Claude AI API, simply create an instance of the `AnthropicCli
 
 ### Non-Streaming Call
 
-Here's an example of a non-streaming call to the Claude AI API to the new Claude 3 Sonnet model:
+Here's an example of a non-streaming call to the Claude AI API to the new Claude 3.5 Sonnet model:
 
 ```csharp
 var client = new AnthropicClient();
@@ -147,9 +148,83 @@ Console.WriteLine($@"Used Tokens - Input:{outputs.First().StreamStartMessage.Usa
                             Output: {outputs.Last().Usage.OutputTokens}");
 ```
 
+### Prompt Caching
+
+The `AnthropicClient` supports prompt caching of system messages, user messages, and tools in accordance with model limitations. Because the `AnthropicClient` does not have it's own tokenizer, you must ensure yourself that when enabling prompt caching, you are providing enough context to the qualifying model for it to cache or you will receive an exception from Anthropic. Check out the documentation on Anthropic's website for specific model limitations and requirements.
+
+```csharp
+//load up a long form text you want to cache and ask questions of
+string resourceName = "Anthropic.SDK.Tests.BillyBudd.txt";
+Assembly assembly = Assembly.GetExecutingAssembly();
+await using Stream stream = assembly.GetManifestResourceStream(resourceName);
+using StreamReader reader = new StreamReader(stream);
+string content = await reader.ReadToEndAsync();
+
+var client = new AnthropicClient();
+var systemMessages = new List<SystemMessage>()
+{
+    //typical system message
+    new SystemMessage("You are an expert at analyzing literary texts."),
+    //entire contents of the long form text
+    new SystemMessage(content)
+};
+
+var messages = new List<Message>()
+{
+    //first question to ask
+    new Message(RoleType.User, "What are the key literary themes of this novel?"),
+};
+
+var parameters = new MessageParameters()
+{
+    Messages = messages,
+    MaxTokens = 1024,
+    Model = AnthropicModels.Claude35Sonnet,
+    Stream = false,
+    Temperature = 1.0m,
+    System = systemMessages,
+    //Key ingredient: we tell Claude we want it to cache messages
+    PromptCaching = PromptCacheType.Messages
+};
+var res = await client.Messages.GetClaudeMessageAsync(parameters);
+
+Console.WriteLine(res.Message);
+//proof that our messages were cached
+Console.WriteLine(res.Usage.CacheCreationInputTokens); 
+
+//add assistant message
+messages.Add(res.Message);
+//ask question 2
+messages.Add(new Message(RoleType.User, "Who is the main character and how old are they?"));
+var res2 = await client.Messages.GetClaudeMessageAsync(parameters);
+
+//proof that we hit the cache, this will be greater than 0
+Console.WriteLine(res2.Usage.CacheReadInputTokens);
+```
+
+To cache tools (if you have a LOT of tools registered) and cache messages at the same time, you can simply declare the prompt caching type as a bitwise operation like so:
+
+```csharp
+var parameters = new MessageParameters()
+{
+    Messages = messages,
+    MaxTokens = 1024,
+    Model = AnthropicModels.Claude35Sonnet,
+    Stream = false,
+    Temperature = 1.0m,
+    //Set caching as enabled for both messages and tools
+    PromptCaching = PromptCacheType.Messages | PromptCacheType.Tools,
+    Tools = tools
+};
+var res = await client.Messages.GetClaudeMessageAsync(parameters);
+```
+
+See unit tests for additional examples.
+
+
 ### Tools
 
-The `AnthropicClient` supports function-calling through a variety of methods, see some examples below or check out the unit tests in this repo (note function-calling is currently only supported in non-streaming calls by Claude at the moment):
+The `AnthropicClient` supports function-calling through a variety of methods, see some examples below or check out the unit tests in this repo:
 
 ```csharp
 //From a globally declared static function:
