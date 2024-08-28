@@ -20,4 +20,8 @@ public enum PromptCacheType
     /// Cache Tool Definitions
     /// </summary>
     Tools = 1 << 1, // 2
+    /// <summary>
+    /// Use the cache-control instructions from each message
+    /// </summary>
+    FineGrained = 1 << 2, // 4
 }
