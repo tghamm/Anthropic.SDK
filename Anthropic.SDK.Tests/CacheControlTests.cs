@@ -37,12 +37,12 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>()
             {
-                new Message(RoleType.User, "What are the key literary themes of this novel?"),
+                new Message(RoleType.User, "What are the key literary themes of this novel?", new CacheControl() { Type = CacheControlType.ephemeral }),
             };
             var systemMessages = new List<SystemMessage>()
             {
                 new SystemMessage("You are an expert at analyzing literary texts."),
-                new SystemMessage(content)
+                new SystemMessage(content, new CacheControl() { Type = CacheControlType.ephemeral })
             };
             var parameters = new MessageParameters()
             {
@@ -50,9 +50,9 @@ namespace Anthropic.SDK.Tests
                 MaxTokens = 1024,
                 Model = AnthropicModels.Claude35Sonnet,
                 Stream = false,
-                Temperature = 1.0m,
+                Temperature = 0m,
                 System = systemMessages,
-                PromptCaching = PromptCacheType.Messages
+                PromptCaching = PromptCacheType.FineGrained
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
 
@@ -164,7 +164,7 @@ namespace Anthropic.SDK.Tests
             var systemMessages = new List<SystemMessage>()
             {
                 new SystemMessage("You are an expert at analyzing literary texts."),
-                new SystemMessage(content)
+                new SystemMessage(content, new CacheControl() { Type = CacheControlType.ephemeral })
             };
 
             
@@ -177,7 +177,7 @@ namespace Anthropic.SDK.Tests
                 Stream = false,
                 Temperature = 1.0m,
                 System = systemMessages,
-                PromptCaching = PromptCacheType.Messages
+                PromptCaching = PromptCacheType.FineGrained
                 
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
@@ -324,6 +324,7 @@ namespace Anthropic.SDK.Tests
             tools.Add(new Function("record_summary", "Record summary of an image into well-structured JSON.",
                 JsonNode.Parse(jsonString)));
 
+            tools.Last().Function.CacheControl = new CacheControl() { Type = CacheControlType.ephemeral };
 
             var client = new AnthropicClient();
             var messages = new List<Message>();
@@ -342,7 +343,8 @@ namespace Anthropic.SDK.Tests
                     },
                     new TextContent()
                     {
-                        Text = "Use `record_summary` to describe this image."
+                        Text = "Use `record_summary` to describe this image.",
+                        CacheControl = new CacheControl() { Type = CacheControlType.ephemeral }
                     }
                 }
             });
@@ -353,7 +355,7 @@ namespace Anthropic.SDK.Tests
                 Model = AnthropicModels.Claude35Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
-                PromptCaching = PromptCacheType.Messages | PromptCacheType.Tools,
+                PromptCaching = PromptCacheType.FineGrained,
                 Tools = tools
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
