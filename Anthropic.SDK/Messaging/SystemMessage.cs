@@ -7,10 +7,11 @@ namespace Anthropic.SDK.Messaging
 {
     public class SystemMessage
     {
-        public SystemMessage(string text)
+        public SystemMessage(string text, CacheControl cacheControl = null)
         {
             Type = "text";
             Text = text;
+            CacheControl = cacheControl;
         }
         [JsonPropertyName("type")]
         public string Type { get; set; }
@@ -19,6 +20,6 @@ namespace Anthropic.SDK.Messaging
 
         [JsonInclude]
         [JsonPropertyName("cache_control")]
-        internal CacheControl CacheControl { get; set; }
+        public CacheControl CacheControl { get; set; }
     }
 }

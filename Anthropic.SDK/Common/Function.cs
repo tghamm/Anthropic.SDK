@@ -142,7 +142,7 @@ namespace Anthropic.SDK.Common
 
         [JsonInclude]
         [JsonPropertyName("cache_control")]
-        internal CacheControl CacheControl { get; set; }
+        public CacheControl CacheControl { get; set; }
 
         /// <summary>
         /// Id to Send to the API.

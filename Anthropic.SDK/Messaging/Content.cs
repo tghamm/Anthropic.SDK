@@ -20,7 +20,7 @@ namespace Anthropic.SDK.Messaging
 
         [JsonInclude]
         [JsonPropertyName("cache_control")]
-        internal CacheControl CacheControl { get; set; }
+        public CacheControl CacheControl { get; set; }
 
     }
     

@@ -14,22 +14,24 @@ namespace Anthropic.SDK.Messaging
     {
         public Message(){}
 
-        public Message(RoleType role, string text)
+        public Message(RoleType role, string text, CacheControl cacheControl = null)
         {
             Role = role;
             Content = new List<ContentBase>() { new TextContent()
             {
-                Text = text
+                Text = text,
+                CacheControl = cacheControl
             } };
         }
 
 
-        public Message(Function toolCall, string functionResult, bool isError = false)
+        public Message(Function toolCall, string functionResult, bool isError = false, CacheControl cacheControl = null)
         {
             Content = new List<ContentBase>() { new ToolResultContent()
             {
                 ToolUseId = toolCall.Id,
                 Content = functionResult,
+                CacheControl = cacheControl
             }};
             if (isError)
             {

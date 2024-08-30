@@ -26,44 +26,7 @@ namespace Anthropic.SDK.Messaging
         /// <param name="ctx"></param>
         public async Task<MessageResponse> GetClaudeMessageAsync(MessageParameters parameters, CancellationToken ctx = default)
         {
-            bool hasMessageCaching = (parameters.PromptCaching & PromptCacheType.Messages) == PromptCacheType.Messages;
-            bool hasToolCaching = (parameters.PromptCaching & PromptCacheType.Tools) == PromptCacheType.Tools;
-            if (hasMessageCaching && parameters.System != null && parameters.System.Any())
-            {
-                parameters.System.Last().CacheControl = new CacheControl()
-                {
-                    Type = CacheControlType.ephemeral
-                };
-            }
-
-            if (hasToolCaching && parameters.Tools != null && parameters.Tools.Any())
-            {
-                parameters.Tools.Last().Function.CacheControl = new CacheControl()
-                {
-                    Type = CacheControlType.ephemeral
-                };
-            }
-
-            var count = parameters.Messages.Count(p => p.Role == RoleType.User);
-            if (hasMessageCaching && parameters.Messages != null &&  count > 1)
-            {
-                var x = 1;
-                foreach (var message in parameters.Messages.Where(p => p.Role == RoleType.User))
-                {
-                    if (x < count - 2)
-                    {
-                        message.Content.ForEach(p => p.CacheControl = null);
-                    }
-                    else
-                    {
-                        message.Content.Last().CacheControl = new CacheControl() {
-                            Type = CacheControlType.ephemeral
-                        };
-                    }
-
-                    x++;
-                }
-            }
+            SetCacheControls(parameters);
 
             parameters.Stream = false;
             var response = await HttpRequestMessages(Url, HttpMethod.Post, parameters, ctx).ConfigureAwait(false);
@@ -89,6 +52,56 @@ namespace Anthropic.SDK.Messaging
             return response;
         }
 
+        private static void SetCacheControls(MessageParameters parameters)
+        {
+            if ( (parameters.PromptCaching & PromptCacheType.FineGrained) == PromptCacheType.FineGrained)
+            {
+                // just use each one's cache control, assume they are already set
+            }
+            else
+            {
+                bool hasMessageCaching = (parameters.PromptCaching & PromptCacheType.Messages) == PromptCacheType.Messages;
+                bool hasToolCaching = (parameters.PromptCaching & PromptCacheType.Tools) == PromptCacheType.Tools;
+                if (hasMessageCaching && parameters.System != null && parameters.System.Any())
+                {
+                    parameters.System.Last().CacheControl = new CacheControl()
+                    {
+                        Type = CacheControlType.ephemeral
+                    };
+                }
+
+                if (hasToolCaching && parameters.Tools != null && parameters.Tools.Any())
+                {
+                    parameters.Tools.Last().Function.CacheControl = new CacheControl()
+                    {
+                        Type = CacheControlType.ephemeral
+                    };
+                }
+
+                var count = parameters.Messages.Count(p => p.Role == RoleType.User);
+                if (hasMessageCaching && parameters.Messages != null &&  count > 1)
+                {
+                    var x = 1;
+                    foreach (var message in parameters.Messages.Where(p => p.Role == RoleType.User))
+                    {
+                        if (x < count - 2)
+                        {
+                            message.Content.ForEach(p => p.CacheControl = null);
+                        }
+                        else
+                        {
+                            message.Content.Last().CacheControl = new CacheControl() {
+                                Type = CacheControlType.ephemeral
+                            };
+                        }
+
+                        x++;
+                    }
+                }
+            }
+            
+        }
+
         /// <summary>
         /// Makes a streaming call to the Claude completion API using an IAsyncEnumerable. Be sure to set stream to true in <param name="parameters"></param>.
         /// </summary>
@@ -96,45 +109,7 @@ namespace Anthropic.SDK.Messaging
         /// <param name="ctx"></param>
         public async IAsyncEnumerable<MessageResponse> StreamClaudeMessageAsync(MessageParameters parameters, [EnumeratorCancellation] CancellationToken ctx = default)
         {
-            bool hasMessageCaching = (parameters.PromptCaching & PromptCacheType.Messages) == PromptCacheType.Messages;
-            bool hasToolCaching = (parameters.PromptCaching & PromptCacheType.Tools) == PromptCacheType.Tools;
-            if (hasMessageCaching && parameters.System != null && parameters.System.Any())
-            {
-                parameters.System.Last().CacheControl = new CacheControl()
-                {
-                    Type = CacheControlType.ephemeral
-                };
-            }
-
-            if (hasToolCaching && parameters.Tools != null && parameters.Tools.Any())
-            {
-                parameters.Tools.Last().Function.CacheControl = new CacheControl()
-                {
-                    Type = CacheControlType.ephemeral
-                };
-            }
-
-            var count = parameters.Messages.Count(p => p.Role == RoleType.User);
-            if (hasMessageCaching && parameters.Messages != null && count > 1)
-            {
-                var x = 1;
-                foreach (var message in parameters.Messages.Where(p => p.Role == RoleType.User))
-                {
-                    if (x < count - 2)
-                    {
-                        message.Content.ForEach(p => p.CacheControl = null);
-                    }
-                    else
-                    {
-                        message.Content.Last().CacheControl = new CacheControl()
-                        {
-                            Type = CacheControlType.ephemeral
-                        };
-                    }
-
-                    x++;
-                }
-            }
+            SetCacheControls(parameters);
 
             parameters.Stream = true;
             var toolCalls = new List<Function>();

@@ -150,7 +150,7 @@ Console.WriteLine($@"Used Tokens - Input:{outputs.First().StreamStartMessage.Usa
 
 ### Prompt Caching
 
-The `AnthropicClient` supports prompt caching of system messages, user messages, and tools in accordance with model limitations. Because the `AnthropicClient` does not have it's own tokenizer, you must ensure yourself that when enabling prompt caching, you are providing enough context to the qualifying model for it to cache or you will receive an exception from Anthropic. Check out the documentation on Anthropic's website for specific model limitations and requirements.
+The `AnthropicClient` supports prompt caching of system messages, user messages (including images), assistant messages, tool_results, and tools in accordance with model limitations. Because the `AnthropicClient` does not have it's own tokenizer, you must ensure yourself that when enabling prompt caching, you are providing enough context to the qualifying model for it to cache or nothing will be cached. Check out the documentation on Anthropic's website for specific model limitations and requirements. 
 
 ```csharp
 //load up a long form text you want to cache and ask questions of
@@ -217,6 +217,58 @@ var parameters = new MessageParameters()
     Tools = tools
 };
 var res = await client.Messages.GetClaudeMessageAsync(parameters);
+```
+
+Additionally, there is a mode for fine-grained control of caching, where you manage the cache points yourself. Here, you declare the cache control setting at the message and tool level, giving you complete control.
+
+```csharp
+string resourceName = "Anthropic.SDK.Tests.BillyBudd.txt";
+
+Assembly assembly = Assembly.GetExecutingAssembly();
+
+await using Stream stream = assembly.GetManifestResourceStream(resourceName);
+using StreamReader reader = new StreamReader(stream);
+string content = await reader.ReadToEndAsync();
+
+var client = new AnthropicClient();
+var messages = new List<Message>()
+{
+    new Message(RoleType.User, "What are the key literary themes of this novel?"),
+};
+var systemMessages = new List<SystemMessage>()
+{
+    new SystemMessage("You are an expert at analyzing literary texts."),
+    //set cache control manually
+    new SystemMessage(content, new CacheControl() { Type = CacheControlType.ephemeral })
+};
+var parameters = new MessageParameters()
+{
+    Messages = messages,
+    MaxTokens = 1024,
+    Model = AnthropicModels.Claude35Sonnet,
+    Stream = false,
+    Temperature = 0m,
+    System = systemMessages,
+    //Set to fine-grained, manual checkpoint caching
+    PromptCaching = PromptCacheType.FineGrained
+};
+var res = await client.Messages.GetClaudeMessageAsync(parameters);
+
+Console.WriteLine(res.Message);
+//will be greater than 0
+Console.WriteLine(res.Usage.CacheCreationInputTokens);
+
+//cache an assistant message
+res.Message.Content.First().CacheControl = new CacheControl() { Type = CacheControlType.ephemeral };
+
+messages.Add(res.Message);
+messages.Add(new Message(RoleType.User, "Who is the main character and how old are they?"));
+
+var res2 = await client.Messages.GetClaudeMessageAsync(parameters);
+
+//will be greater than 0
+Console.WriteLine(res2.Usage.CacheReadInputTokens);
+//more turns
 ```
 
 See unit tests for additional examples.
