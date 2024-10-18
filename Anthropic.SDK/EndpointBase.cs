@@ -118,39 +118,46 @@ namespace Anthropic.SDK
         private static RateLimits GetRateLimits(HttpResponseMessage message)
         {
             var rateLimits = new RateLimits();
-            if (message.Headers.TryGetValues("anthropic-ratelimit-requests-limit", out var requestsLimit))
+            if (message.Headers.TryGetValues("anthropic-ratelimit-requests-limit", out var requestsLimit)
+                && long.TryParse(requestsLimit.First(), out var parsedRequestsLimit))
             {
-                rateLimits.RequestsLimit = long.Parse(requestsLimit.First());
+                rateLimits.RequestsLimit = parsedRequestsLimit;
             }
 
-            if (message.Headers.TryGetValues("anthropic-ratelimit-requests-remaining", out var requestsRemaining))
+            if (message.Headers.TryGetValues("anthropic-ratelimit-requests-remaining", out var requestsRemaining) &&
+                long.TryParse(requestsRemaining.First(), out var parsedRequestsRemaining))
             {
-                rateLimits.RequestsRemaining = long.Parse(requestsRemaining.First());
+                rateLimits.RequestsRemaining = parsedRequestsRemaining;
             }
 
-            if (message.Headers.TryGetValues("anthropic-ratelimit-requests-reset", out var requestsReset))
+            if (message.Headers.TryGetValues("anthropic-ratelimit-requests-reset", out var requestsReset)
+                && DateTime.TryParse(requestsReset.First(), out var parsedRequestsReset))
             {
-                rateLimits.RequestsReset = DateTime.Parse(requestsReset.First());
+                rateLimits.RequestsReset = parsedRequestsReset;
             }
 
-            if (message.Headers.TryGetValues("anthropic-ratelimit-tokens-limit", out var tokensLimit))
+            if (message.Headers.TryGetValues("anthropic-ratelimit-tokens-limit", out var tokensLimit)
+                && long.TryParse(tokensLimit.First(), out var parsedTokensLimit))
             {
-                rateLimits.TokensLimit = long.Parse(tokensLimit.First());
+                rateLimits.TokensLimit = parsedTokensLimit;
             }
 
-            if (message.Headers.TryGetValues("anthropic-ratelimit-tokens-remaining", out var tokensRemaining))
+            if (message.Headers.TryGetValues("anthropic-ratelimit-tokens-remaining", out var tokensRemaining) &&
+                long.TryParse(tokensRemaining.First(), out var parsedTokensRemaining))
             {
-                rateLimits.TokensRemaining = long.Parse(tokensRemaining.First());
+                rateLimits.TokensRemaining = parsedTokensRemaining;
             }
 
-            if (message.Headers.TryGetValues("anthropic-ratelimit-tokens-reset", out var tokensReset))
+            if (message.Headers.TryGetValues("anthropic-ratelimit-tokens-reset", out var tokensReset)
+                && DateTime.TryParse(tokensReset.First(), out var parsedTokensReset))
             {
-                rateLimits.TokensReset = DateTime.Parse(tokensReset.First());
+                rateLimits.TokensReset = parsedTokensReset;
             }
 
-            if (message.Headers.TryGetValues("retry-after", out var retryAfter))
+            if (message.Headers.TryGetValues("retry-after", out var retryAfter)
+                && long.TryParse(retryAfter.First(), out var parsedRetryAfter))
             {
-                rateLimits.RetryAfter = TimeSpan.FromSeconds(long.Parse(retryAfter.First()));
+                rateLimits.RetryAfter = TimeSpan.FromSeconds(parsedRetryAfter);
             }
 
             return rateLimits;
