@@ -81,19 +81,17 @@ namespace Anthropic.SDK.Messaging
 
         [JsonPropertyName("usage")]
         public Usage Usage { get; set; }
-
-        
     }
 
     public class RateLimits
     {
-        public long RequestsLimit { get; set; }
-        public long RequestsRemaining { get; set; }
-        public DateTime RequestsReset { get; set; }
-        public long TokensLimit { get; set; }
-        public long TokensRemaining { get; set; }
-        public DateTime TokensReset { get; set; }
-        public long RetryAfter { get; set; }
+        public long? RequestsLimit { get; set; }
+        public long? RequestsRemaining { get; set; }
+        public DateTime? RequestsReset { get; set; }
+        public long? TokensLimit { get; set; }
+        public long? TokensRemaining { get; set; }
+        public DateTime? TokensReset { get; set; }
+        public TimeSpan? RetryAfter { get; set; }
     }
 
 

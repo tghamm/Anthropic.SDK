@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
@@ -67,7 +68,7 @@ namespace Anthropic.SDK
             }
 
             var customClient = Client.HttpClient;
-            
+
             var client = customClient ?? new HttpClient();
 
             client.DefaultRequestHeaders.Add("x-api-key", Client.Auth.ApiKey);
@@ -76,6 +77,7 @@ namespace Anthropic.SDK
             {
                 client.DefaultRequestHeaders.Add("anthropic-beta", Client.AnthropicBetaVersion);
             }
+
             client.DefaultRequestHeaders.Add("User-Agent", UserAgent);
             client.DefaultRequestHeaders
                 .Accept
@@ -85,12 +87,14 @@ namespace Anthropic.SDK
             return client;
         }
 
-        private string GetErrorMessage(string resultAsString, HttpResponseMessage response, string name, string description = "")
+        private string GetErrorMessage(string resultAsString, HttpResponseMessage response, string name,
+            string description = "")
         {
             return $"{resultAsString ?? "<no content>"}";
         }
 
-        protected async Task<MessageResponse> HttpRequestMessages(string url = null, HttpMethod verb = null, object postData = null, CancellationToken ctx = default)
+        protected async Task<MessageResponse> HttpRequestMessages(string url = null, HttpMethod verb = null,
+            object postData = null, CancellationToken ctx = default)
         {
             var response = await HttpRequestRaw(url, verb, postData, ctx: ctx).ConfigureAwait(false);
 #if NET6_0_OR_GREATER
@@ -105,49 +109,56 @@ namespace Anthropic.SDK
             var res = await JsonSerializer.DeserializeAsync<MessageResponse>(
                 new MemoryStream(Encoding.UTF8.GetBytes(resultAsString)), options, cancellationToken: ctx);
 
-            PopulateLimits(response, res);
+            res.RateLimits = GetRateLimits(response);
 
             return res;
         }
 
-        private void PopulateLimits(HttpResponseMessage message, MessageResponse response)
+
+        private static RateLimits GetRateLimits(HttpResponseMessage message)
         {
-            response.RateLimits = new RateLimits();
+            var rateLimits = new RateLimits();
             if (message.Headers.TryGetValues("anthropic-ratelimit-requests-limit", out var requestsLimit))
             {
-                response.RateLimits.RequestsLimit = long.Parse(requestsLimit.First());
-            }
-            if (message.Headers.TryGetValues("anthropic-ratelimit-requests-remaining", out var requestsRemaining))
-            {
-                response.RateLimits.RequestsRemaining = long.Parse(requestsRemaining.First());
-            }
-            if (message.Headers.TryGetValues("anthropic-ratelimit-requests-reset", out var requestsReset))
-            {
-                response.RateLimits.RequestsReset = DateTime.Parse(requestsReset.First());
-            }
-            if (message.Headers.TryGetValues("anthropic-ratelimit-tokens-limit", out var tokensLimit))
-            {
-                response.RateLimits.TokensLimit = long.Parse(tokensLimit.First());
-            }
-            if (message.Headers.TryGetValues("anthropic-ratelimit-tokens-remaining", out var tokensRemaining))
-            {
-                response.RateLimits.TokensRemaining = long.Parse(tokensRemaining.First());
-            }
-            if (message.Headers.TryGetValues("anthropic-ratelimit-tokens-reset", out var tokensReset))
-            {
-                response.RateLimits.TokensReset = DateTime.Parse(tokensReset.First());
-            }
-            if (message.Headers.TryGetValues("retry-after", out var retryAfter))
-            {
-                response.RateLimits.RetryAfter = long.Parse(retryAfter.First());
+                rateLimits.RequestsLimit = long.Parse(requestsLimit.First());
             }
 
+            if (message.Headers.TryGetValues("anthropic-ratelimit-requests-remaining", out var requestsRemaining))
+            {
+                rateLimits.RequestsRemaining = long.Parse(requestsRemaining.First());
+            }
+
+            if (message.Headers.TryGetValues("anthropic-ratelimit-requests-reset", out var requestsReset))
+            {
+                rateLimits.RequestsReset = DateTime.Parse(requestsReset.First());
+            }
+
+            if (message.Headers.TryGetValues("anthropic-ratelimit-tokens-limit", out var tokensLimit))
+            {
+                rateLimits.TokensLimit = long.Parse(tokensLimit.First());
+            }
+
+            if (message.Headers.TryGetValues("anthropic-ratelimit-tokens-remaining", out var tokensRemaining))
+            {
+                rateLimits.TokensRemaining = long.Parse(tokensRemaining.First());
+            }
+
+            if (message.Headers.TryGetValues("anthropic-ratelimit-tokens-reset", out var tokensReset))
+            {
+                rateLimits.TokensReset = DateTime.Parse(tokensReset.First());
+            }
+
+            if (message.Headers.TryGetValues("retry-after", out var retryAfter))
+            {
+                rateLimits.RetryAfter = TimeSpan.FromSeconds(long.Parse(retryAfter.First()));
+            }
+
+            return rateLimits;
         }
 
 
-
         private async Task<HttpResponseMessage> HttpRequestRaw(string url = null, HttpMethod verb = null,
-    object postData = null, bool streaming = false, CancellationToken ctx = default)
+            object postData = null, bool streaming = false, CancellationToken ctx = default)
         {
             if (string.IsNullOrEmpty(url))
                 url = this.Url;
@@ -179,7 +190,9 @@ namespace Anthropic.SDK
 
             // Ensure innerClient is thread-safe or use a separate instance per thread
             response = await InnerClient.SendAsync(req,
-                streaming ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead, ctx).ConfigureAwait(false);
+                    streaming ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead,
+                    ctx)
+                .ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
             {
@@ -190,7 +203,7 @@ namespace Anthropic.SDK
                 try
                 {
 #if NET6_0_OR_GREATER
-            resultAsString = await response.Content.ReadAsStringAsync(ctx).ConfigureAwait(false);
+                    resultAsString = await response.Content.ReadAsStringAsync(ctx).ConfigureAwait(false);
 #else
                     resultAsString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 #endif
@@ -201,7 +214,18 @@ namespace Anthropic.SDK
                         "Additionally, the following error was thrown when attempting to read the response content: " +
                         e.ToString();
                 }
-
+#if NET6_0_OR_GREATER
+                if(response.StatusCode == HttpStatusCode.TooManyRequests)
+#else
+                if(response.StatusCode == ((HttpStatusCode)429))
+#endif
+                {
+                    throw new RateLimitsExceeded(
+                        "Anthropic has rate limited your request.  Please wait and retry your request.  " +
+                        GetErrorMessage(resultAsString, response, url, url), GetRateLimits(response), response.StatusCode);
+                }
+                else
+                
                 if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                 {
                     throw new AuthenticationException(
@@ -210,29 +234,29 @@ namespace Anthropic.SDK
                 }
                 else if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
                 {
-#if NET6_0_OR_GREATER
-            throw new HttpRequestException(
-                "Anthropic had an internal server error, which can happen occasionally.  Please retry your request.  " +
-                GetErrorMessage(resultAsString, response, url, url), null, response.StatusCode);
-#else
-                    throw new HttpRequestException(
+                    throw GetHttpRequestException(
                         "Anthropic had an internal server error, which can happen occasionally.  Please retry your request.  " +
-                        GetErrorMessage(resultAsString, response, url, url), null);
-#endif
+                        GetErrorMessage(resultAsString, response, url, url));
                 }
                 else
                 {
-#if NET6_0_OR_GREATER
-            throw new HttpRequestException(GetErrorMessage(resultAsString, response, url, url), null, response.StatusCode);
-#else
-                    throw new HttpRequestException(GetErrorMessage(resultAsString, response, url, url), null);
-#endif
+                    throw GetHttpRequestException(GetErrorMessage(resultAsString, response, url, url));
                 }
+            }
+
+            HttpRequestException GetHttpRequestException(string message)
+            {
+#if NET6_0_OR_GREATER
+                return new HttpRequestException(message, null, response.StatusCode);
+#else
+                return new HttpRequestException(message, null);
+#endif
             }
         }
 
 
-        protected async IAsyncEnumerable<MessageResponse> HttpStreamingRequestMessages(string url = null, HttpMethod verb = null,
+        protected async IAsyncEnumerable<MessageResponse> HttpStreamingRequestMessages(string url = null,
+            HttpMethod verb = null,
             object postData = null, [EnumeratorCancellation] CancellationToken ctx = default)
         {
             var response = await HttpRequestRaw(url, verb, postData, true, ctx).ConfigureAwait(false);
@@ -272,16 +296,18 @@ namespace Anthropic.SDK
                         currentEvent.EventType == "message_delta")
                     {
                         var res = await JsonSerializer.DeserializeAsync<MessageResponse>(
-                            new MemoryStream(Encoding.UTF8.GetBytes(currentEvent.Data)), cancellationToken: ctx).ConfigureAwait(false);
-                        
-                        PopulateLimits(response, res);
-                        
+                                new MemoryStream(Encoding.UTF8.GetBytes(currentEvent.Data)), cancellationToken: ctx)
+                            .ConfigureAwait(false);
+
+                        res.RateLimits = GetRateLimits(response);
+
                         yield return res;
                     }
                     else if (currentEvent.EventType == "error")
                     {
                         var res = await JsonSerializer.DeserializeAsync<ErrorResponse>(
-                            new MemoryStream(Encoding.UTF8.GetBytes(currentEvent.Data)), cancellationToken: ctx).ConfigureAwait(false);
+                                new MemoryStream(Encoding.UTF8.GetBytes(currentEvent.Data)), cancellationToken: ctx)
+                            .ConfigureAwait(false);
                         throw new Exception(res.Error.Message);
                     }
 
