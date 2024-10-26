@@ -13,6 +13,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using Anthropic.SDK.Batches;
 using Anthropic.SDK.Messaging;
 
 namespace Anthropic.SDK
@@ -112,6 +113,93 @@ namespace Anthropic.SDK
             res.RateLimits = GetRateLimits(response);
 
             return res;
+        }
+
+        protected async Task<BatchResponse> HttpRequestBatches(string url = null, HttpMethod verb = null,
+            object postData = null, CancellationToken ctx = default)
+        {
+            var response = await HttpRequestRaw(url, verb, postData, ctx: ctx).ConfigureAwait(false);
+#if NET6_0_OR_GREATER
+            string resultAsString = await response.Content.ReadAsStringAsync(ctx).ConfigureAwait(false);
+#else
+            string resultAsString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+#endif
+            var res = await JsonSerializer.DeserializeAsync<BatchResponse>(
+                new MemoryStream(Encoding.UTF8.GetBytes(resultAsString)), cancellationToken: ctx);
+
+            
+            return res;
+        }
+
+        protected async Task<BatchList> HttpRequestBatchesList(string url = null, HttpMethod verb = null,
+            object postData = null, CancellationToken ctx = default)
+        {
+            var response = await HttpRequestRaw(url, verb, postData, ctx: ctx).ConfigureAwait(false);
+#if NET6_0_OR_GREATER
+            string resultAsString = await response.Content.ReadAsStringAsync(ctx).ConfigureAwait(false);
+#else
+            string resultAsString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+#endif
+            var res = await JsonSerializer.DeserializeAsync<BatchList>(
+                new MemoryStream(Encoding.UTF8.GetBytes(resultAsString)), cancellationToken: ctx);
+
+
+            return res;
+        }
+
+        protected async IAsyncEnumerable<BatchLine> HttpStreamingRequestBatches(string url = null,
+            HttpMethod verb = null,
+            object postData = null, [EnumeratorCancellation] CancellationToken ctx = default)
+        {
+            var response = await HttpRequestRaw(url, verb, postData, true, ctx).ConfigureAwait(false);
+
+
+#if NET6_0_OR_GREATER
+            await using var stream = await response.Content.ReadAsStreamAsync(ctx).ConfigureAwait(false);
+#else
+            using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+#endif
+            using StreamReader reader = new StreamReader(stream);
+            string line;
+#if NET8_0_OR_GREATER
+            while ((line = await reader.ReadLineAsync(ctx).ConfigureAwait(false)) != null)
+#else
+            while ((line = await reader.ReadLineAsync().ConfigureAwait(false)) != null)
+#endif
+            {
+                var options = new JsonSerializerOptions
+                {
+                    Converters = { ContentConverter.Instance }
+                };
+                var res = await JsonSerializer.DeserializeAsync<BatchLine>(
+                    new MemoryStream(Encoding.UTF8.GetBytes(line)), options, cancellationToken: ctx);
+                yield return res;
+            }
+        }
+
+        protected async IAsyncEnumerable<string> HttpStreamingRequestBatchesJsonl(string url = null,
+            HttpMethod verb = null,
+            object postData = null, [EnumeratorCancellation] CancellationToken ctx = default)
+        {
+            var response = await HttpRequestRaw(url, verb, postData, true, ctx).ConfigureAwait(false);
+
+
+#if NET6_0_OR_GREATER
+            await using var stream = await response.Content.ReadAsStreamAsync(ctx).ConfigureAwait(false);
+#else
+            using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+#endif
+            using StreamReader reader = new StreamReader(stream);
+            string line;
+#if NET8_0_OR_GREATER
+            while ((line = await reader.ReadLineAsync(ctx).ConfigureAwait(false)) != null)
+#else
+            while ((line = await reader.ReadLineAsync().ConfigureAwait(false)) != null)
+#endif
+            {
+                
+                yield return line;
+            }
         }
 
 
