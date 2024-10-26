@@ -14,6 +14,7 @@ Anthropic.SDK is an unofficial C# client designed for interacting with the Claud
   - [Non-Streaming Call](#non-streaming-call)
   - [Streaming Call](#streaming-call)
   - [Prompt Caching](#prompt-caching)
+  - [Batching](#batching)
   - [Tools](#tools)
 - [Contributing](#contributing)
 - [License](#license)
@@ -273,6 +274,58 @@ Console.WriteLine(res2.Usage.CacheReadInputTokens);
 
 See unit tests for additional examples.
 
+### Batching
+
+The `AnthropicClient` supports the new batching API.  Abbreviated call examples are listed below, please check the `Anthropic.SDK.BatchTester` project for a more comprehensive example.
+
+```csharp
+//list batches
+var list = await client.Batches.ListBatchesAsync();
+foreach (var batch in list.Batches)
+{
+    Console.WriteLine("Batch: " + batch.Id);
+}
+
+//create batch
+var messages = new List<Message>();
+messages.Add(new Message(RoleType.User, "Write me a sonnet about the Statue of Liberty"));
+var parameters = new MessageParameters()
+{
+    Messages = messages,
+    MaxTokens = 512,
+    Model = AnthropicModels.Claude35Sonnet,
+    Stream = false,
+    Temperature = 1.0m,
+};
+
+var batchRequest = new BatchRequest()
+{
+    CustomId = "BatchTester",
+    MessageParameters = parameters
+};
+
+var response = await client.Batches.CreateBatchAsync(new List<BatchRequest> { batchRequest });
+Console.WriteLine("Batch created: " + response.Id);
+
+//cancel batch
+var cancelResponse = await client.Batches.CancelBatchAsync(response.Id);
+
+//check batch status
+var status = await client.Batches.RetrieveBatchStatusAsync(response.Id);
+
+//stream strongly typed batch results when complete
+await foreach (var result in client.Batches.RetrieveBatchResultsAsync(response.Id))
+{
+    //do something with results (which are wrapped messages)
+}
+
+//stream jsonl batch results when complete
+await foreach (var result in client.Batches.RetrieveBatchResultsJsonlAsync(response.Id))
+{
+    Console.WriteLine("Result: " + result);
+}
+
+```
 
 ### Tools
 
