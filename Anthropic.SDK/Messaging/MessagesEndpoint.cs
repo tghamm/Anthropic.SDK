@@ -9,7 +9,7 @@ using Anthropic.SDK.Common;
 
 namespace Anthropic.SDK.Messaging
 {
-    public class MessagesEndpoint : EndpointBase
+    public partial class MessagesEndpoint : EndpointBase
     {
         /// <summary>
         /// Constructor of the api endpoint.  Rather than instantiating this yourself, access it through an instance of <see cref="AnthropicClient"/> as <see cref="AnthropicClient.Completions"/>.
