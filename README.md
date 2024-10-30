@@ -13,6 +13,7 @@ Anthropic.SDK is an unofficial C# client designed for interacting with the Claud
 - [Examples](#examples)
   - [Non-Streaming Call](#non-streaming-call)
   - [Streaming Call](#streaming-call)
+  - [IChatClient](#ichatclient)
   - [Prompt Caching](#prompt-caching)
   - [Batching](#batching)
   - [Tools](#tools)
@@ -37,7 +38,24 @@ The `AnthropicClient` can optionally take a custom `HttpClient` in the `Anthropi
 
 ## Usage
 
-To start using the Claude AI API, simply create an instance of the `AnthropicClient` class.
+There are two ways to start using the `AnthropicClient`.  The first is to simply new up an instance of the `AnthropicClient` and start using it, the second is to use the messaging client with the new `Microsoft.Extensions.AI.Abstractions` builder.
+Brief examples of each are below.
+
+Option 1:
+
+```csharp
+var client = new AnthropicClient();
+```
+
+Option 2:
+
+```csharp
+IChatClient client = new ChatClientBuilder()
+    .UseFunctionInvocation() //optional
+    .Use(new AnthropicClient().Messages);
+```
+
+Both support all the core features of the `AnthropicClient's` Messaging and Tooling capabilities, but the latter will be fully featured in .NET 9 and provide built in telemetry and DI and make it easier to choose which SDK you are using.
 
 ## Examples
 
@@ -148,6 +166,98 @@ Console.WriteLine(string.Empty);
 Console.WriteLine($@"Used Tokens - Input:{outputs.First().StreamStartMessage.Usage.InputTokens}.
                             Output: {outputs.Last().Usage.OutputTokens}");
 ```
+
+### IChatClient
+
+The `AnthropicClient` has support for the new `IChatClient` from Microsoft and offers a slightly different mechanism for using the `AnthropicClient`.  Below are a few examples.
+
+```csharp
+//function calling
+IChatClient client = new ChatClientBuilder()
+    .UseFunctionInvocation()
+    .Use(new AnthropicClient().Messages);
+
+ChatOptions options = new()
+{
+    ModelId = AnthropicModels.Claude3Haiku,
+    MaxOutputTokens = 512,
+    Tools = [AIFunctionFactory.Create((string personName) => personName switch {
+        "Alice" => "25",
+        _ => "40"
+    }, "GetPersonAge", "Gets the age of the person whose name is specified.")]
+};
+
+var res = await client.CompleteAsync("How old is Alice?", options);
+
+Assert.IsTrue(
+    res.Message.Text?.Contains("25") is true, 
+    res.Message.Text);
+
+//non-streaming
+IChatClient client = new AnthropicClient().Messages;
+
+ChatOptions options = new()
+{
+    ModelId = AnthropicModels.Claude_v2_1,
+    MaxOutputTokens = 512,
+    Temperature = 1.0f,
+};
+
+var res = await client.CompleteAsync("Write a sonnet about the Statue of Liberty. The response must include the word green.", options);
+
+Assert.IsTrue(res.Message.Text?.Contains("green") is true, res.Message.Text);
+
+//streaming call
+IChatClient client = new AnthropicClient().Messages;
+
+ChatOptions options = new()
+{
+    ModelId = AnthropicModels.Claude_v2_1,
+    MaxOutputTokens = 512,
+    Temperature = 1.0f,
+};
+
+StringBuilder sb = new();
+await foreach (var res in client.CompleteStreamingAsync("Write a sonnet about the Statue of Liberty. The response must include the word green.", options))
+{
+    sb.Append(res);
+}
+
+Assert.IsTrue(sb.ToString().Contains("green") is true, sb.ToString());
+
+//Image call
+string resourceName = "Anthropic.SDK.Tests.Red_Apple.jpg";
+
+Assembly assembly = Assembly.GetExecutingAssembly();
+
+await using Stream stream = assembly.GetManifestResourceStream(resourceName)!;
+byte[] imageBytes;
+using (var memoryStream = new MemoryStream())
+{
+    await stream.CopyToAsync(memoryStream);
+    imageBytes = memoryStream.ToArray();
+}
+
+IChatClient client = new AnthropicClient().Messages;
+
+var res = await client.CompleteAsync(
+[
+    new ChatMessage(ChatRole.User,
+    [
+        new ImageContent(imageBytes, "image/jpeg"),
+        new TextContent("What is this a picture of?"),
+    ])
+], new()
+{
+    ModelId = AnthropicModels.Claude3Opus,
+    MaxOutputTokens = 512,
+    Temperature = 0f,
+});
+
+Assert.IsTrue(res.Message.Text?.Contains("apple", StringComparison.OrdinalIgnoreCase) is true, res.Message.Text);
+
+```
+Please see the unit tests for even more examples.
 
 ### Prompt Caching
 
