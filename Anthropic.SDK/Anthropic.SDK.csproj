@@ -6,7 +6,7 @@
 	  <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	  <Authors>Grant Hamm</Authors>
 	  <Product>Claude API</Product>
-	  <Description>A C# / .NET library to use with Anthropic's Claude API.  Supports Streaming, Tools, and Batching</Description>
+	  <Description>A C# / .NET library to use with Anthropic's Claude API.  Supports Streaming, Tools, Batching, and Semantic Kernel Integration</Description>
 	  <Copyright>This library is licensed MIT, in the public domain</Copyright>
 	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
 	  <PackageProjectUrl>https://github.com/tghamm/Anthropic.SDK</PackageProjectUrl>
@@ -14,12 +14,12 @@
 	  <PackageTags>Claude, AI, ML, API, Anthropic</PackageTags>
 	  <Title>Claude API</Title>
 	  <PackageReleaseNotes>
-		  Implements IChatClient from Microsoft.Extensions.AI.Abstractions
+		  Updates IChatClient from Microsoft.Extensions.AI.Abstractions
 	  </PackageReleaseNotes>
 	  <PackageId>Anthropic.SDK</PackageId>
-	  <Version>4.3.0</Version>
-	  <AssemblyVersion>4.3.0.0</AssemblyVersion>
-	  <FileVersion>4.3.0.0</FileVersion>
+	  <Version>4.3.1</Version>
+	  <AssemblyVersion>4.3.1.0</AssemblyVersion>
+	  <FileVersion>4.3.1.0</FileVersion>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
 	  <PackageReadmeFile>README.md</PackageReadmeFile>
 	  <PackageIcon>icon.png</PackageIcon>
