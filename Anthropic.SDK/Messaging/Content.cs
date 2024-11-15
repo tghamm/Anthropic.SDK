@@ -153,7 +153,7 @@ namespace Anthropic.SDK.Messaging
         /// Content of the Tool Result
         /// </summary>
         [JsonPropertyName("content")]
-        public string Content { get; set; }
+        public List<ContentBase> Content { get; set; }
 
         /// <summary>
         /// Indicates if the Tool Result is an Error

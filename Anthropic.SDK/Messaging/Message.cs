@@ -30,7 +30,26 @@ namespace Anthropic.SDK.Messaging
             Content = new List<ContentBase>() { new ToolResultContent()
             {
                 ToolUseId = toolCall.Id,
-                Content = functionResult,
+                Content = new List<ContentBase>() { new TextContent() { Text = functionResult } },
+                CacheControl = cacheControl
+            }};
+            if (isError)
+            {
+                (Content[0] as ToolResultContent).IsError = true;
+            }
+            Role = RoleType.User;
+        }
+
+        public Message(Function toolCall, string data, string mediaType, bool isError = false, CacheControl cacheControl = null)
+        {
+            Content = new List<ContentBase>() { new ToolResultContent()
+            {
+                ToolUseId = toolCall.Id,
+                Content = new List<ContentBase>() { new ImageContent() { Source = new ImageSource()
+                {
+                    Data = data,
+                    MediaType = mediaType
+                } }},
                 CacheControl = cacheControl
             }};
             if (isError)

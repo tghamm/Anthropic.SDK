@@ -14,12 +14,12 @@
 	  <PackageTags>Claude, AI, ML, API, Anthropic</PackageTags>
 	  <Title>Claude API</Title>
 	  <PackageReleaseNotes>
-		  Updates IChatClient from Microsoft.Extensions.AI.Abstractions
+		  Support for Computer Use Tooling
 	  </PackageReleaseNotes>
 	  <PackageId>Anthropic.SDK</PackageId>
-	  <Version>4.3.1</Version>
-	  <AssemblyVersion>4.3.1.0</AssemblyVersion>
-	  <FileVersion>4.3.1.0</FileVersion>
+	  <Version>4.4.0</Version>
+	  <AssemblyVersion>4.4.0.0</AssemblyVersion>
+	  <FileVersion>4.4.0.0</FileVersion>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
 	  <PackageReadmeFile>README.md</PackageReadmeFile>
 	  <PackageIcon>icon.png</PackageIcon>

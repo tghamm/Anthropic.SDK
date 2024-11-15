@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.Json.Nodes;
@@ -47,6 +48,23 @@ namespace Anthropic.SDK.Common
             functionCache[Name] = this;
         }
 
+        public Function(string name, string type, Dictionary<string, object> additionalData)
+        {
+            if (!System.Text.RegularExpressions.Regex.IsMatch(name, NameRegex))
+            {
+                throw new ArgumentException($"The name of the function does not conform to naming standards: {NameRegex}");
+            }
+
+            Name = name;
+            Type = type;
+            Description = null;
+            Parameters = null;
+            AdditionalData = additionalData.Select(p =>
+                    new KeyValuePair<string, JsonElement>(p.Key, JsonSerializer.SerializeToElement(p.Value)))
+                .ToDictionary(pair => pair.Key, pair => pair.Value);
+            functionCache[Name] = this;
+        }
+
         /// <summary>
         /// Creates a new function description to insert into a chat conversation.
         /// </summary>
@@ -72,6 +90,8 @@ namespace Anthropic.SDK.Common
             Parameters = JsonNode.Parse(parameters);
             functionCache[Name] = this;
         }
+
+        
 
 
         internal Function(string name, string description, MethodInfo method, object instance = null)
@@ -141,8 +161,16 @@ namespace Anthropic.SDK.Common
         public string Name { get; private set; }
 
         [JsonInclude]
+        [JsonPropertyName("type")]
+        public string Type { get; private set; }
+
+        [JsonInclude]
         [JsonPropertyName("cache_control")]
         public CacheControl CacheControl { get; set; }
+
+        [JsonExtensionData]
+        public Dictionary<string, JsonElement> AdditionalData { get; set; } = new Dictionary<string, JsonElement>();
+
 
         /// <summary>
         /// Id to Send to the API.
@@ -241,6 +269,21 @@ namespace Anthropic.SDK.Common
             if (other.Parameters != null)
             {
                 parametersString += other.Parameters.ToString();
+            }
+
+            if (other.CacheControl != null)
+            {
+                CacheControl = other.CacheControl;
+            }
+
+            if (other.AdditionalData != null)
+            {
+                AdditionalData = other.AdditionalData;
+            }
+
+            if (other.Type != null)
+            {
+                Type = other.Type;
             }
         }
 

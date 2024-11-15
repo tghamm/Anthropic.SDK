@@ -7,7 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Anthropic.SDK", "Anthropic.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Anthropic.SDK.Tests", "Anthropic.SDK.Tests\Anthropic.SDK.Tests.csproj", "{435E889F-D043-4338-9AEF-BA356F8CCD07}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Anthropic.SDK.BatchTester", "Anthropic.SDK.BatchTester\Anthropic.SDK.BatchTester.csproj", "{4E30BEB5-756E-496C-B16F-22B863595DC5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Anthropic.SDK.BatchTester", "Anthropic.SDK.BatchTester\Anthropic.SDK.BatchTester.csproj", "{4E30BEB5-756E-496C-B16F-22B863595DC5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Anthropic.SDK.ComputerUse", "Anthropic.SDK.ComputerUse\Anthropic.SDK.ComputerUse.csproj", "{4524E945-5935-452B-BAD1-00E369C287B8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{4E30BEB5-756E-496C-B16F-22B863595DC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4E30BEB5-756E-496C-B16F-22B863595DC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4E30BEB5-756E-496C-B16F-22B863595DC5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4524E945-5935-452B-BAD1-00E369C287B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4524E945-5935-452B-BAD1-00E369C287B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4524E945-5935-452B-BAD1-00E369C287B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4524E945-5935-452B-BAD1-00E369C287B8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -260,7 +260,7 @@ public partial class MessagesEndpoint : IChatClient
                             m.Content.Add(new ToolResultContent()
                             {
                                 ToolUseId = frc.CallId,
-                                Content = frc.Result?.ToString() ?? string.Empty,
+                                Content = new List<ContentBase>() { new TextContent () { Text = frc.Result?.ToString() ?? string.Empty } },
                                 IsError = frc.Exception is not null,
                             });
                             break;
