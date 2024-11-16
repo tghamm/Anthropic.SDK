@@ -10,11 +10,13 @@
 
   <ItemGroup>
     <None Remove="BillyBudd.txt" />
+    <None Remove="Claude3ModelCard.pdf" />
     <None Remove="Red_Apple.jpg" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="BillyBudd.txt" />
+    <EmbeddedResource Include="Claude3ModelCard.pdf" />
     <EmbeddedResource Include="Red_Apple.jpg" />
   </ItemGroup>
 

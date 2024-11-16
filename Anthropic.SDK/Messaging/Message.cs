@@ -24,6 +24,12 @@ namespace Anthropic.SDK.Messaging
             } };
         }
 
+        public Message(RoleType role, DocumentContent content)
+        {
+            Role = role;
+            Content = new List<ContentBase>() { content };
+        }
+
 
         public Message(Function toolCall, string functionResult, bool isError = false, CacheControl cacheControl = null)
         {
