@@ -1,44 +1,142 @@
-﻿
-
-using System;
-using System.Collections.Generic;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Drawing.Imaging;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+using System.Runtime.InteropServices;
 
 namespace Anthropic.SDK.ComputerUse.ScreenCapture
 {
     public class WindowsScreenCapturer : IScreenCapturer
     {
+        // Define RECT structure
+        [StructLayout(LayoutKind.Sequential)]
+        public struct RECT
+        {
+            public int Left, Top, Right, Bottom;
+        }
+
+        // Define MONITORINFO structure
+        [StructLayout(LayoutKind.Sequential)]
+        public struct MONITORINFO
+        {
+            public uint cbSize;
+            public RECT rcMonitor;
+            public RECT rcWork;
+            public uint dwFlags;
+        }
+
+        // Delegate for monitor enumeration callback
+        private delegate bool MonitorEnumDelegate(IntPtr hMonitor, IntPtr hdcMonitor, ref RECT lprcMonitor, IntPtr dwData);
+
+        // P/Invoke declarations
+        [DllImport("user32.dll")]
+        private static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr lprcClip,
+           MonitorEnumDelegate lpfnEnum, IntPtr dwData);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+
+        [DllImport("gdi32.dll")]
+        private static extern IntPtr CreateDC(string lpszDriver, string lpszDevice,
+           string lpszOutput, IntPtr lpInitData);
+
+        [DllImport("gdi32.dll")]
+        private static extern IntPtr CreateCompatibleDC(IntPtr hdc);
+
+        [DllImport("gdi32.dll")]
+        private static extern IntPtr CreateCompatibleBitmap(IntPtr hdc, int nWidth, int nHeight);
+
+        [DllImport("gdi32.dll")]
+        private static extern IntPtr SelectObject(IntPtr hdc, IntPtr hgdiobj);
+
+        [DllImport("gdi32.dll")]
+        private static extern bool BitBlt(IntPtr hdcDest, int nXDest, int nYDest, int nWidth,
+           int nHeight, IntPtr hdcSrc, int nXSrc, int nYSrc, CopyPixelOperation dwRop);
+
+        [DllImport("gdi32.dll")]
+        private static extern bool DeleteDC(IntPtr hdc);
+
+        [DllImport("gdi32.dll")]
+        private static extern bool DeleteObject(IntPtr hObject);
+
+        // Class to hold monitor information
+        public class MonitorInfo
+        {
+            public IntPtr MonitorHandle;
+            public RECT MonitorArea;
+        }
+
+        // Method to get all connected monitors
+        public static List<MonitorInfo> GetMonitors()
+        {
+            var monitors = new List<MonitorInfo>();
+
+            bool Callback(IntPtr hMonitor, IntPtr hdcMonitor, ref RECT lprcMonitor, IntPtr dwData)
+            {
+                var mi = new MONITORINFO { cbSize = (uint)Marshal.SizeOf(typeof(MONITORINFO)) };
+                if (GetMonitorInfo(hMonitor, ref mi))
+                {
+                    monitors.Add(new MonitorInfo
+                    {
+                        MonitorHandle = hMonitor,
+                        MonitorArea = mi.rcMonitor
+                    });
+                }
+                return true; // Continue enumeration
+            }
+
+            EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, Callback, IntPtr.Zero);
+            return monitors;
+        }
+
+        // Method to capture a specific monitor
+        public static Bitmap CaptureMonitor(MonitorInfo monitor)
+        {
+            int width = monitor.MonitorArea.Right - monitor.MonitorArea.Left;
+            int height = monitor.MonitorArea.Bottom - monitor.MonitorArea.Top;
+
+            IntPtr hdcSrc = CreateDC("DISPLAY", null, null, IntPtr.Zero);
+            IntPtr hdcDest = CreateCompatibleDC(hdcSrc);
+            IntPtr hBitmap = CreateCompatibleBitmap(hdcSrc, width, height);
+            IntPtr hOld = SelectObject(hdcDest, hBitmap);
+
+            bool success = BitBlt(hdcDest, 0, 0, width, height, hdcSrc,
+                monitor.MonitorArea.Left, monitor.MonitorArea.Top, CopyPixelOperation.SourceCopy | CopyPixelOperation.CaptureBlt);
+
+            Bitmap bmp = null;
+
+            if (success)
+            {
+                bmp = Image.FromHbitmap(hBitmap);
+            }
+
+            // Clean up
+            SelectObject(hdcDest, hOld);
+            DeleteObject(hBitmap);
+            DeleteDC(hdcDest);
+            DeleteDC(hdcSrc);
+
+            return bmp;
+        }
+
         public byte[] CaptureScreen(int screenIndex)
         {
-            // Get all screens
-            var screens = Screen.AllScreens;
+            // Get all monitors
+            var monitors = GetMonitors();
 
             // Validate the screen index
-            if (screenIndex < 0 || screenIndex >= screens.Length)
+            if (screenIndex < 0 || screenIndex >= monitors.Count)
             {
                 throw new ArgumentOutOfRangeException(nameof(screenIndex), "Invalid screen index.");
             }
 
-            var screen = screens[screenIndex];
-            var bounds = screen.Bounds;
+            var monitor = monitors[screenIndex];
+            using var bitmap = CaptureMonitor(monitor);
 
-            // Create a bitmap with the screen's dimensions
-            var bitmap = new Bitmap(bounds.Width, bounds.Height);
-
-            // Capture the screen
-            using (var graphics = Graphics.FromImage(bitmap))
-            {
-                graphics.CopyFromScreen(bounds.Location, Point.Empty, bounds.Size);
-            }
             using var ms = new System.IO.MemoryStream();
             bitmap.Save(ms, ImageFormat.Jpeg);
 
             return ms.ToArray();
         }
+
+        
     }
 }

@@ -16,10 +16,15 @@ namespace Anthropic.SDK.ComputerUse
     {
         static async Task Main(string[] args)
         {
-            IScreenCapturer capturer = new WindowsScreenCapturer();
-            var screenCap = DownscaleScreenshot(capturer.CaptureScreen(1));
+            Console.WriteLine("Open Chrome and Maximize it in a given window. Then enter which Monitor Number you are using:");
+            var displayNumber = Convert.ToInt32(Console.ReadLine());
 
-            var displayNumber = 2;
+
+
+            IScreenCapturer capturer = new WindowsScreenCapturer();
+            var screenCap = DownscaleScreenshot(capturer.CaptureScreen(displayNumber -1));
+
+            
 
             var client = new AnthropicClient();
 
@@ -117,7 +122,7 @@ namespace Anthropic.SDK.ComputerUse
 
                 TakeAction(action, text,
                     coordinate == null ? null : new Tuple<int, int>(Convert.ToInt32(coordinate[0].ToString()),
-                        Convert.ToInt32(coordinate[1].ToString())), 1);
+                        Convert.ToInt32(coordinate[1].ToString())), displayNumber - 1);
                 await Task.Delay(1000);
                 cb.Add(new ToolResultContent()
                 {
@@ -164,7 +169,7 @@ namespace Anthropic.SDK.ComputerUse
                                 Content =new List<ContentBase>() { new ImageContent()
                                 {
                                     Source = new ImageSource() {
-                                        Data = DownscaleScreenshot(capturer.CaptureScreen(1)),
+                                        Data = DownscaleScreenshot(capturer.CaptureScreen(displayNumber - 1)),
                                         MediaType = "image/jpeg"
                                     }
                                 } }
@@ -176,6 +181,8 @@ namespace Anthropic.SDK.ComputerUse
 
             var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
             messages.Add(finalResult.Message);
+            Console.WriteLine("----------------------------------------------");
+            Console.WriteLine("Final Result:");
             Console.WriteLine(finalResult.FirstMessage.ToString());
             Console.ReadLine();
         }
@@ -187,7 +194,7 @@ namespace Anthropic.SDK.ComputerUse
             switch (action)
             {
                 case "left_click":
-                    MouseController.LeftClick();
+                    WindowsMouseController.LeftClick();
                     break;
                 case "type":
                     KeyboardSimulator.SimulateTextInput(text);
@@ -197,7 +204,7 @@ namespace Anthropic.SDK.ComputerUse
                     break;
                 case "mouse_move":
                     var scaledCoord = coordScaler.ScaleCoordinates(ScalingSource.API, coordinate.Item1, coordinate.Item2);
-                    MouseController.SetCursorPositionOnMonitor(monitorIndex, scaledCoord.Item1, scaledCoord.Item2);
+                    WindowsMouseController.SetCursorPositionOnMonitor(monitorIndex, scaledCoord.Item1, scaledCoord.Item2);
                     break;
                 default:
                     throw new ToolError($"Action {action} is not supported");
@@ -219,7 +226,7 @@ namespace Anthropic.SDK.ComputerUse
 
             // Save the image
             using var ms = new MemoryStream();
-            image.Save(ms, new JpegEncoder()); // Format is inferred from the file extension
+            image.Save(ms, new JpegEncoder());
             ms.Position = 0; // Reset stream position
             //convert to byte 64 string
             byte[] imageBytes = ms.ToArray();

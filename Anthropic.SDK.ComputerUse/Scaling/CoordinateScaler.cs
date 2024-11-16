@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Anthropic.SDK.ComputerUse.Scaling
+﻿namespace Anthropic.SDK.ComputerUse.Scaling
 {
     public enum ScalingSource
     {
