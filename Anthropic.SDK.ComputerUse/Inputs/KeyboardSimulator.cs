@@ -44,6 +44,8 @@ namespace Anthropic.SDK.ComputerUse.Inputs
             { "RWin", KeyCode.VcRightMeta },
             { "Enter", KeyCode.VcEnter },
             { "Return", KeyCode.VcEnter },
+            { "Super", KeyCode.VcLeftMeta },
+            { "Windows", KeyCode.VcLeftMeta },
                 // Add other keys as needed
         };
 

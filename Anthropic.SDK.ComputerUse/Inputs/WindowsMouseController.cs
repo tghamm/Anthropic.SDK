@@ -114,6 +114,15 @@ namespace Anthropic.SDK.ComputerUse.Inputs
 
         }
 
+        public static void RightClick()
+        {
+            IEventSimulator simulator = new EventSimulator();
+            simulator.SimulateMousePress(MouseButton.Button2);
+            simulator.SimulateMouseRelease(MouseButton.Button2);
+
+        }
+
+
         // Method to move the cursor and perform a left-click at specified coordinates on a specific monitor
         public static void ClickAtPositionOnMonitor(int monitorIndex, int x, int y)
         {

@@ -33,8 +33,8 @@
 
         private static readonly List<Dimension> MaxScalingTargets = new List<Dimension>
     {
-        new Dimension(1920, 1080),
-        new Dimension(1280, 720),
+        //new Dimension(1920, 1080),
+        new Dimension(1366, 768),
         // Add more dimensions as needed
     };
 
