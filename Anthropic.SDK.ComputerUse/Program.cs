@@ -16,16 +16,11 @@ namespace Anthropic.SDK.ComputerUse
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine("Open Chrome and Maximize it in a given window. Then enter which Monitor Number you are using:");
+            Console.WriteLine("Open Chrome in Incognito Mode in a given window. Then enter which Monitor Number you are using for Chrome:");
             var displayNumber = Convert.ToInt32(Console.ReadLine());
-
-
-
-            IScreenCapturer capturer = new WindowsScreenCapturer();
-            //var screenCap = ;
-
             
-
+            IScreenCapturer capturer = new WindowsScreenCapturer();
+            
             var client = new AnthropicClient();
 
             var messages = new List<Message>();
@@ -38,9 +33,8 @@ namespace Anthropic.SDK.ComputerUse
                     {
                         Text = """
                                Find Flights between ATL and NYC using a Google Search. 
-                               Google Chrome is already open and maximized in the appropriate window. 
-                               It is not focused, so you'll need to click on it once to focus on it. 
-                               Use keyboard shortcuts to access the search bar and complete your search once you've focused on the window.
+                               Once you've searched for the flights and have viewed the initial results, 
+                               switch the toggle to first class and take a screenshot of the results and tell me the price of the flights.
                                """
                     }
                 }
@@ -66,6 +60,10 @@ namespace Anthropic.SDK.ComputerUse
                 System = new List<SystemMessage>()
                 {
                     new SystemMessage($""""
+                                      A Google Chrome Incognito window is already open and maximized in the appropriate monitor. Use that instance. Do not open a new instance of Google Chrome. 
+                                      It is not focused, so you'll need to click on it once to focus on it.
+                                      Use keyboard shortcuts to access the search bar in Google Chrome and complete your search once you've focused on the window.
+                                      
                                       <SYSTEM_CAPABILITY>
                                       * You are utilising a Windows machine with internet access and Google Chrome installed.
                                       * When viewing a page it can be helpful to zoom out so that you can see everything on the page.  Either that, or make sure you scroll down to see everything before deciding something isn't available.
@@ -152,109 +150,6 @@ namespace Anthropic.SDK.ComputerUse
             }
 
 
-            //var res = await client.Messages.GetClaudeMessageAsync(parameters);
-
-            //messages.Add(res.Message);
-
-            //var toolUse = res.Content.OfType<ToolUseContent>().First();
-            //var id = toolUse.Id;
-            //var param1 = toolUse.Input["action"].ToString();
-            //switch (param1)
-            //{
-            //    case "screenshot":
-            //        messages.Add(new Message()
-            //        {
-            //            Role = RoleType.User,
-            //            Content = new List<ContentBase>()
-            //            {
-            //                new ToolResultContent()
-            //                {
-            //                    ToolUseId = id,
-            //                    Content =new List<ContentBase>() { new ImageContent()
-            //                    {
-            //                        Source = new ImageSource() { 
-            //                            Data = screenCap,
-            //                            MediaType = "image/jpeg"
-            //                        }
-            //                    } }
-            //                }
-            //            }
-            //        });
-            //        break;
-            //}
-
-            //var workingResult = await client.Messages.GetClaudeMessageAsync(parameters);
-            //messages.Add(workingResult.Message);
-
-            //var toolUse2 = workingResult.Content.OfType<ToolUseContent>().ToList();
-            
-            //foreach (var tool in toolUse2)
-            //{
-            //    var action = tool.Input["action"].ToString();
-            //    var text = tool.Input["text"]?.ToString();
-            //    var coordinate = tool.Input["coordinate"] as JsonArray;
-
-            //    TakeAction(action, text,
-            //        coordinate == null ? null : new Tuple<int, int>(Convert.ToInt32(coordinate[0].ToString()),
-            //            Convert.ToInt32(coordinate[1].ToString())), displayNumber - 1);
-            //    await Task.Delay(1000);
-            //    cb.Add(new ToolResultContent()
-            //    {
-            //        ToolUseId = tool.Id,
-            //        Content = new List<ContentBase>()
-            //        {
-            //            new TextContent()
-            //            {
-            //                Text = "Action completed"
-            //            }
-            //        }
-            //    });
-            //}
-
-            //cb.Add(new TextContent()
-            //{
-            //    Text = "How much does the cheapest flight from ATL to NYC you see on the page without scrolling cost?"
-            //});
-
-            //messages.Add(new Message()
-            //{
-            //    Role = RoleType.User,
-            //    Content = cb
-            //});
-            //await Task.Delay(5000);
-            //var workingResult2 = await client.Messages.GetClaudeMessageAsync(parameters);
-
-            //messages.Add(workingResult2.Message);
-
-            //var toolUse3 = workingResult2.Content.OfType<ToolUseContent>().First();
-            //var id2 = toolUse3.Id;
-            //var param2 = toolUse3.Input["action"].ToString();
-            //switch (param2)
-            //{
-            //    case "screenshot":
-            //        messages.Add(new Message()
-            //        {
-            //            Role = RoleType.User,
-            //            Content = new List<ContentBase>()
-            //            {
-            //                new ToolResultContent()
-            //                {
-            //                    ToolUseId = id2,
-            //                    Content =new List<ContentBase>() { new ImageContent()
-            //                    {
-            //                        Source = new ImageSource() {
-            //                            Data = DownscaleScreenshot(capturer.CaptureScreen(displayNumber - 1)),
-            //                            MediaType = "image/jpeg"
-            //                        }
-            //                    } }
-            //                }
-            //            }
-            //        });
-            //        break;
-            //}
-
-            //var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
-            //messages.Add(finalResult.Message);
             Console.WriteLine("----------------------------------------------");
             Console.WriteLine("Final Result:");
             Console.WriteLine(messages.Last().Content.OfType<TextContent>().First().Text);
