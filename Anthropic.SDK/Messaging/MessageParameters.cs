@@ -62,7 +62,7 @@ namespace Anthropic.SDK.Messaging
                 TopP = this.TopP,
                 Tools = [..this.Tools],
                 PromptCaching = this.PromptCaching,
-                ToolChoice = this.ToolChoice.Clone();
+                ToolChoice = this.ToolChoice.Clone()
             };
             return clone;
         }
