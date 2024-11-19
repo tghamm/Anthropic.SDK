@@ -13,5 +13,19 @@ namespace Anthropic.SDK.Messaging
         public ToolChoiceType Type { get; set; } = ToolChoiceType.Auto;
         [JsonPropertyName("name")]
         public string Name { get; set; }
+        
+        /// <summary>
+        /// Creates a copy of the current <see cref="ToolChoice"/> object.
+        /// </summary>
+        /// <returns></returns>
+        public virtual ToolChoice Clone()
+        {
+            var clone = new ToolChoice
+            {
+                Type = this.Type,
+                Name = this.Name
+            }; 
+            return clone;
+        }
     }
 }
