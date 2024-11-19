@@ -157,7 +157,7 @@ public partial class MessagesEndpoint : IChatClient
     TService IChatClient.GetService<TService>(object key) where TService : class =>
         this as TService;
 
-    private static MessageParameters CreateMessageParameters(IList<ChatMessage> chatMessages, ChatOptions options)
+    private MessageParameters CreateMessageParameters(IList<ChatMessage> chatMessages, ChatOptions options)
     {
         MessageParameters parameters = new();
 
@@ -212,6 +212,8 @@ public partial class MessagesEndpoint : IChatClient
                     .ToList();
             }
         }
+
+        parameters.Model ??= this.Client.ModelId;
 
         foreach (ChatMessage message in chatMessages)
         {

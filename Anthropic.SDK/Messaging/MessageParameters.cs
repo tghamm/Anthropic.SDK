@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Anthropic.SDK.Extensions;
 
@@ -42,6 +43,21 @@ namespace Anthropic.SDK.Messaging
         public PromptCacheType PromptCaching { get; set; } = PromptCacheType.None;
         [JsonPropertyName("tool_choice")]
         public ToolChoice ToolChoice { get; set; }
+        
+        /// <summary>
+        /// Creates a shallow copy of the current <see cref="MessageParameters"/> object.
+        /// </summary>
+        /// <returns></returns>
+        public virtual MessageParameters Clone()
+        {
+            var clone = (this.MemberwiseClone() as MessageParameters)!;
+            clone.Messages = [..this.Messages];
+            clone.System = [..this.System];
+            clone.StopSequences = [..this.StopSequences];
+            clone.Tools = [..this.Tools];
+            clone.Metadata = JsonSerializer.Deserialize<dynamic>(JsonSerializer.Serialize(this.Metadata));
+            return clone;
+        }
     }
 
 }
