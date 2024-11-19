@@ -43,7 +43,7 @@ namespace Anthropic.SDK.Messaging
         public ToolChoice ToolChoice { get; set; }
         
         /// <summary>
-        /// Creates a shallow copy of the current <see cref="MessageParameters"/> object.
+        /// Creates a copy of the current <see cref="MessageParameters"/> object.
         /// </summary>
         /// <returns></returns>
         public virtual MessageParameters Clone()
