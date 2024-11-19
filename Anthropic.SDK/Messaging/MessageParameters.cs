@@ -50,12 +50,20 @@ namespace Anthropic.SDK.Messaging
         /// <returns></returns>
         public virtual MessageParameters Clone()
         {
-            var clone = (this.MemberwiseClone() as MessageParameters)!;
-            clone.Messages = [..this.Messages];
-            clone.System = [..this.System];
-            clone.StopSequences = [..this.StopSequences];
-            clone.Tools = [..this.Tools];
-            clone.Metadata = JsonSerializer.Deserialize<dynamic>(JsonSerializer.Serialize(this.Metadata));
+            var clone = new MessageParameters 
+            {
+                Model = this.Model,
+                Messages = [..this.Messages],
+                System = [..this.System],
+                MaxTokens = this.MaxTokens,
+                Metadata = JsonSerializer.Deserialize<dynamic>(JsonSerializer.Serialize(this.Metadata)),
+                StopSequences = [..this.StopSequences],
+                Stream = this.Stream,
+                Temperature = this.Temperature,
+                TopK = this.TopK,
+                TopP = this.TopP,
+                Tools = [..this.Tools],
+            };
             return clone;
         }
     }
