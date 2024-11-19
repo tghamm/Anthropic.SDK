@@ -26,6 +26,8 @@ namespace Anthropic.SDK.Messaging
         /// <param name="ctx"></param>
         public async Task<MessageResponse> GetClaudeMessageAsync(MessageParameters parameters, CancellationToken ctx = default)
         {
+            parameters = GetValidatedMessageParameters(parameters);
+
             SetCacheControls(parameters);
 
             parameters.Stream = false;
@@ -50,6 +52,22 @@ namespace Anthropic.SDK.Messaging
             response.ToolCalls = toolCalls;
 
             return response;
+        }
+
+        private MessageParameters GetValidatedMessageParameters(MessageParameters parameters)
+        {
+            if (parameters == null)
+            {
+                throw new ArgumentNullException(nameof(parameters));
+            }
+
+            if (parameters.Model == null)
+            {
+                parameters = parameters.Clone();
+                parameters.Model = Client.ModelId;
+            }
+
+            return parameters;
         }
 
         private static void SetCacheControls(MessageParameters parameters)
@@ -109,6 +127,8 @@ namespace Anthropic.SDK.Messaging
         /// <param name="ctx"></param>
         public async IAsyncEnumerable<MessageResponse> StreamClaudeMessageAsync(MessageParameters parameters, [EnumeratorCancellation] CancellationToken ctx = default)
         {
+            parameters = GetValidatedMessageParameters(parameters);
+            
             SetCacheControls(parameters);
 
             parameters.Stream = true;

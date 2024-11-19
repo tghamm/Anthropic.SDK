@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Anthropic.SDK.Extensions;
 
@@ -42,6 +41,31 @@ namespace Anthropic.SDK.Messaging
         public PromptCacheType PromptCaching { get; set; } = PromptCacheType.None;
         [JsonPropertyName("tool_choice")]
         public ToolChoice ToolChoice { get; set; }
+        
+        /// <summary>
+        /// Creates a copy of the current <see cref="MessageParameters"/> object.
+        /// </summary>
+        /// <returns></returns>
+        public virtual MessageParameters Clone()
+        {
+            var clone = new MessageParameters 
+            {
+                Model = this.Model,
+                Messages = [..this.Messages],
+                System = [..this.System],
+                MaxTokens = this.MaxTokens,
+                Metadata = JsonSerializer.Deserialize<dynamic>(JsonSerializer.Serialize(this.Metadata)),
+                StopSequences = [..this.StopSequences],
+                Stream = this.Stream,
+                Temperature = this.Temperature,
+                TopK = this.TopK,
+                TopP = this.TopP,
+                Tools = [..this.Tools],
+                PromptCaching = this.PromptCaching,
+                ToolChoice = this.ToolChoice.Clone()
+            };
+            return clone;
+        }
     }
 
 }
