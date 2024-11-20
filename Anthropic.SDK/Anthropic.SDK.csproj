@@ -14,7 +14,7 @@
 	  <PackageTags>Claude, AI, ML, API, Anthropic</PackageTags>
 	  <Title>Claude API</Title>
 	  <PackageReleaseNotes>
-		  Support for Computer Use Tooling
+		  Support for Computer Use Tooling, PDF Support
 	  </PackageReleaseNotes>
 	  <PackageId>Anthropic.SDK</PackageId>
 	  <Version>4.4.0</Version>
