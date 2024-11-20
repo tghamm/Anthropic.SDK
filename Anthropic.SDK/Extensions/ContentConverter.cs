@@ -30,6 +30,8 @@ namespace Anthropic.SDK.Extensions
                         return JsonSerializer.Deserialize<ImageContent>(root.GetRawText(), options);
                     case "tool_result":
                         return JsonSerializer.Deserialize<ToolResultContent>(root.GetRawText(), options);
+                    case "document":
+                        return JsonSerializer.Deserialize<DocumentContent>(root.GetRawText(), options);
                     // Add cases for other types as necessary
                     default:
                         throw new JsonException($"Unknown type {type}");

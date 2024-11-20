@@ -433,7 +433,7 @@ namespace Anthropic.SDK.Tests
                 Content = new List<ContentBase>() { new ToolResultContent()
                 {
                     ToolUseId = id,
-                    Content = weather
+                    Content = new List<ContentBase>() { new TextContent() { Text = weather } }
                 }
             }});
 

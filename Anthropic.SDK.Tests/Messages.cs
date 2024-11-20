@@ -64,6 +64,24 @@ namespace Anthropic.SDK.Tests
         }
 
         [TestMethod]
+        public async Task TestBasicClaude35HaikuMessage()
+        {
+            var client = new AnthropicClient();
+            var messages = new List<Message>();
+            messages.Add(new Message(RoleType.User, "Write me a sonnet about the Statue of Liberty"));
+            var parameters = new MessageParameters()
+            {
+                Messages = messages,
+                MaxTokens = 512,
+                Model = AnthropicModels.Claude35Haiku,
+                Stream = false,
+                Temperature = 1.0m,
+            };
+            var res = await client.Messages.GetClaudeMessageAsync(parameters);
+            Assert.IsNotNull(res.Message.ToString());
+        }
+
+        [TestMethod]
         public async Task TestStreamingClaude3HaikuMessage()
         {
             var client = new AnthropicClient();

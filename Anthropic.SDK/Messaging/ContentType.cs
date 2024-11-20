@@ -19,6 +19,8 @@ namespace Anthropic.SDK.Messaging
         
         tool_use, // "tool_use
         
-        tool_result
+        tool_result,
+
+        document
     }
 }

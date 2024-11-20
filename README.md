@@ -15,8 +15,10 @@ Anthropic.SDK is an unofficial C# client designed for interacting with the Claud
   - [Streaming Call](#streaming-call)
   - [IChatClient](#ichatclient)
   - [Prompt Caching](#prompt-caching)
+  - [PDF Support](#pdf-support)
   - [Batching](#batching)
   - [Tools](#tools)
+  - [Computer Use](#computer-use)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -38,7 +40,7 @@ The `AnthropicClient` can optionally take a custom `HttpClient` in the `Anthropi
 
 ## Usage
 
-There are two ways to start using the `AnthropicClient`.  The first is to simply new up an instance of the `AnthropicClient` and start using it, the second is to use the messaging client with the new `Microsoft.Extensions.AI.Abstractions` builder.
+There are two ways to start using the `AnthropicClient`.  The first is to simply new up an instance of the `AnthropicClient` and start using it, the second is to use the messaging client with `Microsoft.SemanticKernel`.
 Brief examples of each are below.
 
 Option 1:
@@ -50,12 +52,15 @@ var client = new AnthropicClient();
 Option 2:
 
 ```csharp
-IChatClient client = new ChatClientBuilder()
-    .UseFunctionInvocation() //optional
-    .Use(new AnthropicClient().Messages);
+using Microsoft.SemanticKernel;
+
+var skChatService = 
+    new ChatClientBuilder()
+        .UseFunctionInvocation()
+        .Use(new AnthropicClient().Messages)
+        .AsChatCompletionService();
 ```
 
-Both support all the core features of the `AnthropicClient's` Messaging and Tooling capabilities, but the latter will be fully featured in .NET 9 and provide built in telemetry and DI and make it easier to choose which SDK you are using.
 
 ## Examples
 
@@ -384,6 +389,54 @@ Console.WriteLine(res2.Usage.CacheReadInputTokens);
 
 See unit tests for additional examples.
 
+### PDF Support
+The `AnthropicClient` supports the new PDF Upload mechanism enabled by Claude.
+
+```csharp
+string resourceName = "Anthropic.SDK.Tests.Claude3ModelCard.pdf";
+
+Assembly assembly = Assembly.GetExecutingAssembly();
+
+await using Stream stream = assembly.GetManifestResourceStream(resourceName);
+//read stream into byte array
+using var ms = new MemoryStream();
+await stream.CopyToAsync(ms);
+byte[] pdfBytes = ms.ToArray();
+string base64String = Convert.ToBase64String(pdfBytes);
+
+
+var client = new AnthropicClient();
+var messages = new List<Message>()
+{
+    new Message(RoleType.User, new DocumentContent()
+    {
+        Source = new ImageSource()
+        {
+            Data = base64String,
+            MediaType = "application/pdf"
+        },
+        CacheControl = new CacheControl()
+        {
+            Type = CacheControlType.ephemeral
+        }
+    }),
+    new Message(RoleType.User, "Which model has the highest human preference win rates across each use-case?"),
+};
+
+var parameters = new MessageParameters()
+{
+    Messages = messages,
+    MaxTokens = 1024,
+    Model = AnthropicModels.Claude35Sonnet,
+    Stream = false,
+    Temperature = 0m,
+    PromptCaching = PromptCacheType.FineGrained
+};
+var res = await client.Messages.GetClaudeMessageAsync(parameters);
+
+Console.WriteLine(res.Message);
+```
+
 ### Batching
 
 The `AnthropicClient` supports the new batching API.  Abbreviated call examples are listed below, please check the `Anthropic.SDK.BatchTester` project for a more comprehensive example.
@@ -708,7 +761,7 @@ messages.Add(new Message()
     Content = new List<ContentBase>() { new ToolResultContent()
     {
         ToolUseId = id,
-        Content = weather
+        Content = new List<ContentBase>() { new TextContent() { Text = weather } }
     }
 }});
 
@@ -844,9 +897,45 @@ Output From Json Mode
 }
 ```
 
+### Computer Use
+
+The `AnthropicClient` supports calling computer use functionality, and in this repository is a demonstration application that should work reasonably well on Windows and mirrors in many ways the example application provided by Anthropic.
+Please see the Anthropic.SDK.ComputerUse application for a complete example.
+
+```csharp
+var client = new AnthropicClient();
+
+var messages = new List<Message>();
+messages.Add(new Message()
+{
+    Role = RoleType.User,
+    Content = new List<ContentBase>()
+    {
+        new TextContent()
+        {
+            Text = """
+                   Find Flights between ATL and NYC using a Google Search. 
+                   Once you've searched for the flights and have viewed the initial results, 
+                   switch the toggle to first class and take a screenshot of the results and tell me the price of the flights.
+                   """
+        }
+    }
+});
+
+var tools = new List<Common.Tool>()
+{
+    new Function("computer", "computer_20241022",new Dictionary<string, object>()
+    {
+        {"display_width_px", scaledX },
+        {"display_height_px", scaledY },
+        {"display_number", displayNumber }
+    })
+};
+```
+
 ## Contributing
 
-Pull requests are welcome. If you're planning to make a major change, please open an issue first to discuss your proposed changes.
+Pull requests are welcome with associated unit tests. If you're planning to make a major change, please open an issue first to discuss your proposed changes.
 
 ## License
 

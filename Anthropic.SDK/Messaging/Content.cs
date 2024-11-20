@@ -64,8 +64,23 @@ namespace Anthropic.SDK.Messaging
         public ImageSource Source { get; set; }
     }
 
+    public class DocumentContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (Image, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.document;
+
+        /// <summary>
+        /// Source of Document
+        /// </summary>
+        [JsonPropertyName("source")]
+        public ImageSource Source { get; set; }
+    }
+
     /// <summary>
-    /// Image Format Types
+    /// Image/Document Format Types
     /// </summary>
     public static class ImageSourceType
     {
@@ -76,7 +91,7 @@ namespace Anthropic.SDK.Messaging
     }
 
     /// <summary>
-    /// Definition of image to be sent to Claude
+    /// Definition of image/document to be sent to Claude
     /// </summary>
     public class ImageSource
     {
@@ -153,7 +168,7 @@ namespace Anthropic.SDK.Messaging
         /// Content of the Tool Result
         /// </summary>
         [JsonPropertyName("content")]
-        public string Content { get; set; }
+        public List<ContentBase> Content { get; set; }
 
         /// <summary>
         /// Indicates if the Tool Result is an Error

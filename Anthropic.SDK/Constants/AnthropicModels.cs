@@ -38,6 +38,11 @@
         public const string Claude35Sonnet = "claude-3-5-sonnet-20241022";
 
         /// <summary>
+        /// Claude 3.5 Haiku
+        /// </summary>
+        public const string Claude35Haiku = "claude-3-5-haiku-20241022";
+
+        /// <summary>
         /// Claude 3 Haiku
         /// </summary>
         public const string Claude3Haiku = "claude-3-haiku-20240307";
