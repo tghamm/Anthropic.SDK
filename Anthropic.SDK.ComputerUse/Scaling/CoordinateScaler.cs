@@ -2,6 +2,7 @@
 {
     public enum ScalingSource
     {
+        COMPUTER,
         API,
         // Add other possible values if needed
     }
@@ -33,8 +34,9 @@
 
         private static readonly List<Dimension> MaxScalingTargets = new List<Dimension>
     {
-        //new Dimension(1920, 1080),
-        new Dimension(1366, 768),
+        new Dimension(1024, 768), //XGA 4:3
+        new Dimension(1280, 800), //WXGA 16:10
+        new Dimension(1366, 768), //FWXGA 16:9
         // Add more dimensions as needed
     };
 

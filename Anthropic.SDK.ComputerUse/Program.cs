@@ -20,7 +20,16 @@ namespace Anthropic.SDK.ComputerUse
             var displayNumber = Convert.ToInt32(Console.ReadLine());
             
             IScreenCapturer capturer = new WindowsScreenCapturer();
-            
+
+            var (width, height) = capturer.GetScreenSize(displayNumber - 1);
+            Console.WriteLine($"Screen Size: {width}x{height}");
+
+            var coordScaler = new CoordinateScaler(true, width, height);
+
+            var (scaledX, scaledY) = coordScaler.ScaleCoordinates(ScalingSource.COMPUTER, width, height);
+
+            Console.WriteLine($"Scaled Screen Size: {scaledX}x{scaledY}");
+
             var client = new AnthropicClient();
 
             var messages = new List<Message>();
@@ -44,8 +53,8 @@ namespace Anthropic.SDK.ComputerUse
             {
                 new Function("computer", "computer_20241022",new Dictionary<string, object>()
                 {
-                    {"display_width_px", 1366 },
-                    {"display_height_px", 768 },
+                    {"display_width_px", scaledX },
+                    {"display_height_px", scaledY },
                     {"display_number", displayNumber }
                 })
             };
@@ -110,7 +119,7 @@ namespace Anthropic.SDK.ComputerUse
                                         Content =new List<ContentBase>() { new ImageContent()
                                         {
                                             Source = new ImageSource() {
-                                                Data = DownscaleScreenshot(capturer.CaptureScreen(displayNumber -1)),
+                                                Data = DownscaleScreenshot(capturer.CaptureScreen(displayNumber -1), scaledX, scaledY),
                                                 MediaType = "image/jpeg"
                                             }
                                         } }
@@ -121,7 +130,7 @@ namespace Anthropic.SDK.ComputerUse
                         default:
                             TakeAction(action, text,
                                 coordinate == null ? null : new Tuple<int, int>(Convert.ToInt32(coordinate[0].ToString()),
-                                    Convert.ToInt32(coordinate[1].ToString())), displayNumber - 1);
+                                    Convert.ToInt32(coordinate[1].ToString())), displayNumber - 1, coordScaler);
                             await Task.Delay(1000);
                             cb.Add(new ToolResultContent()
                             {
@@ -156,10 +165,8 @@ namespace Anthropic.SDK.ComputerUse
             Console.ReadLine();
         }
 
-        public static void TakeAction(string action, string? text, Tuple<int, int>? coordinate, int monitorIndex)
+        public static void TakeAction(string action, string? text, Tuple<int, int>? coordinate, int monitorIndex, CoordinateScaler coordScaler)
         {
-            var coordScaler = new CoordinateScaler(true, 1920, 1080);
-            
             switch (action)
             {
                 case "left_click":
@@ -184,7 +191,7 @@ namespace Anthropic.SDK.ComputerUse
         }
 
 
-        public static string DownscaleScreenshot(byte[] screenshot)
+        public static string DownscaleScreenshot(byte[] screenshot, int scaledX, int scaledY)
         {
             // Convert Bitmap to MemoryStream
             using var memoryStream = new MemoryStream(screenshot);
@@ -193,8 +200,8 @@ namespace Anthropic.SDK.ComputerUse
 
             // Load the image into ImageSharp
             using var image = SixLabors.ImageSharp.Image.Load<Rgba32>(memoryStream);
-            // Resize the image to 1280x780
-            image.Mutate(x => x.Resize(1366, 768));
+            // Resize the image to scaled dimensions
+            image.Mutate(x => x.Resize(scaledX, scaledY));
 
             // Save the image
             using var ms = new MemoryStream();

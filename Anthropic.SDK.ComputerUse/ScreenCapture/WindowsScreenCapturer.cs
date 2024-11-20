@@ -87,6 +87,21 @@ namespace Anthropic.SDK.ComputerUse.ScreenCapture
             return monitors;
         }
 
+        public (int x, int y) GetScreenSize(int screenIndex)
+        {
+            // Get all monitors
+            var monitors = GetMonitors();
+
+            // Validate the screen index
+            if (screenIndex < 0 || screenIndex >= monitors.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(screenIndex), "Invalid screen index.");
+            }
+
+            var monitor = monitors[screenIndex];
+            return (monitor.MonitorArea.Right - monitor.MonitorArea.Left, monitor.MonitorArea.Bottom - monitor.MonitorArea.Top);
+        }
+
         // Method to capture a specific monitor
         public static Bitmap CaptureMonitor(MonitorInfo monitor)
         {
