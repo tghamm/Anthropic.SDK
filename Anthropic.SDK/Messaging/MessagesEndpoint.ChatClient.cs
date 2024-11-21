@@ -154,8 +154,8 @@ public partial class MessagesEndpoint : IChatClient
     void IDisposable.Dispose() { }
 
     /// <inheritdoc />
-    TService IChatClient.GetService<TService>(object key) where TService : class =>
-        this as TService;
+    object IChatClient.GetService(Type serviceType, object key) =>
+        key is null && serviceType?.IsInstanceOfType(this) is true ? this : null;
 
     private static MessageParameters CreateMessageParameters(IList<ChatMessage> chatMessages, ChatOptions options)
     {
