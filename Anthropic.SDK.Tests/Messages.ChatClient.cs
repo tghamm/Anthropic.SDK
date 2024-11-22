@@ -51,9 +51,10 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestNonStreamingFunctionCalls()
         {
-            IChatClient client = new ChatClientBuilder()
+            IChatClient client = new AnthropicClient().Messages
+                .AsBuilder()
                 .UseFunctionInvocation()
-                .Use(new AnthropicClient().Messages);
+                .Build();
 
             ChatOptions options = new()
             {
@@ -75,9 +76,10 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestStreamingFunctionCalls()
         {
-            IChatClient client = new ChatClientBuilder()
+            IChatClient client = new AnthropicClient().Messages
+                .AsBuilder()
                 .UseFunctionInvocation()
-                .Use(new AnthropicClient().Messages);
+                .Build();
 
             ChatOptions options = new()
             {
