@@ -54,13 +54,18 @@ Option 2:
 ```csharp
 using Microsoft.SemanticKernel;
 
-var skChatService = 
-    new ChatClientBuilder()
+var skChatService =
+    new ChatClientBuilder(new AnthropicClient().Messages)
         .UseFunctionInvocation()
-        .Use(new AnthropicClient().Messages)
+        .Build()
         .AsChatCompletionService();
-```
 
+
+var sk = Kernel.CreateBuilder();
+sk.Plugins.AddFromType<SkPlugins>("Weather");
+sk.Services.AddSingleton<IChatCompletionService>(skChatService);
+```
+See integration tests for a more complete example.
 
 ## Examples
 
@@ -178,9 +183,10 @@ The `AnthropicClient` has support for the new `IChatClient` from Microsoft and o
 
 ```csharp
 //function calling
-IChatClient client = new ChatClientBuilder()
+IChatClient client = new AnthropicClient().Messages
+    .AsBuilder()
     .UseFunctionInvocation()
-    .Use(new AnthropicClient().Messages);
+    .Build();
 
 ChatOptions options = new()
 {
