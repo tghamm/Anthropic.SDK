@@ -95,7 +95,7 @@ public partial class MessagesEndpoint : IChatClient
         {
             InputTokenCount = usage.InputTokens,
             OutputTokenCount = usage.OutputTokens,
-            AdditionalProperties = new()
+            AdditionalCounts = new()
             {
                 [nameof(usage.CacheCreationInputTokens)] = usage.CacheCreationInputTokens,
                 [nameof(usage.CacheReadInputTokens)] = usage.CacheReadInputTokens,
