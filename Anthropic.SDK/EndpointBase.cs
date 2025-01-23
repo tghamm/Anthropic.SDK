@@ -72,18 +72,35 @@ namespace Anthropic.SDK
 
             var client = customClient ?? new HttpClient();
 
-            client.DefaultRequestHeaders.Add("x-api-key", Client.Auth.ApiKey);
-            client.DefaultRequestHeaders.Add("anthropic-version", Client.AnthropicVersion);
-            if (!string.IsNullOrWhiteSpace(Client.AnthropicBetaVersion))
+            if (!client.DefaultRequestHeaders.Contains("x-api-key"))
+            {
+                client.DefaultRequestHeaders.Add("x-api-key", Client.Auth.ApiKey);
+            }
+
+            if (!client.DefaultRequestHeaders.Contains("anthropic-version"))
+            {
+                client.DefaultRequestHeaders.Add("anthropic-version", Client.AnthropicVersion);
+            }
+
+            if (!string.IsNullOrWhiteSpace(Client.AnthropicBetaVersion) &&
+                !client.DefaultRequestHeaders.Contains("anthropic-beta"))
             {
                 client.DefaultRequestHeaders.Add("anthropic-beta", Client.AnthropicBetaVersion);
             }
 
-            client.DefaultRequestHeaders.Add("User-Agent", UserAgent);
-            client.DefaultRequestHeaders
-                .Accept
-                .Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            if (!client.DefaultRequestHeaders.Contains("User-Agent"))
+            {
+                client.DefaultRequestHeaders.Add("User-Agent", UserAgent);
+            }
 
+            if (!client.DefaultRequestHeaders.Accept.Contains(new MediaTypeWithQualityHeaderValue("application/json")))
+            {
+
+                client.DefaultRequestHeaders
+                    .Accept
+                    .Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            }
 
             return client;
         }
