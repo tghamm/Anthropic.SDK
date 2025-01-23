@@ -71,6 +71,19 @@ namespace Anthropic.SDK.BatchTester
                 await foreach (var result in client.Batches.RetrieveBatchResultsAsync(response.Id))
                 {
                     Console.WriteLine("Result: " + result);
+                    messages.Add(new Message(RoleType.Assistant, result.Result.Message.FirstMessage.Text));
+                    messages.Add(new Message(RoleType.User, "Who created the Statue of Liberty?"));
+                    parameters = new MessageParameters()
+                    {
+                        Messages = messages,
+                        MaxTokens = 512,
+                        Model = AnthropicModels.Claude35Sonnet,
+                        Stream = false,
+                        Temperature = 1.0m,
+                    };
+
+                    var clientResponse = await client.Messages.GetClaudeMessageAsync(parameters);
+                    Console.WriteLine(clientResponse.FirstMessage.Text);
                 }
 
                 await foreach (var result in client.Batches.RetrieveBatchResultsJsonlAsync(response.Id))
