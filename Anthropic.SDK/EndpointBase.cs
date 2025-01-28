@@ -1,4 +1,4 @@
-﻿using Anthropic.SDK.Extensions;
+using Anthropic.SDK.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -111,7 +111,7 @@ namespace Anthropic.SDK
             return $"{resultAsString ?? "<no content>"}";
         }
 
-        protected async Task<MessageResponse> HttpRequestMessages(string url = null, HttpMethod verb = null,
+        protected async Task<TResponse> HttpRequestMessages<TResponse>(string url = null, HttpMethod verb = null,
             object postData = null, CancellationToken ctx = default)
         {
             var response = await HttpRequestRaw(url, verb, postData, ctx: ctx).ConfigureAwait(false);
@@ -124,10 +124,13 @@ namespace Anthropic.SDK
             {
                 Converters = { ContentConverter.Instance }
             };
-            var res = await JsonSerializer.DeserializeAsync<MessageResponse>(
+            var res = await JsonSerializer.DeserializeAsync<TResponse>(
                 new MemoryStream(Encoding.UTF8.GetBytes(resultAsString)), options, cancellationToken: ctx);
 
-            res.RateLimits = GetRateLimits(response);
+            if (res is MessageResponse messageResponse)
+            {
+                messageResponse.RateLimits = GetRateLimits(response);
+            }
 
             return res;
         }
