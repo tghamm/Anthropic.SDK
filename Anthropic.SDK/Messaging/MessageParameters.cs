@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
 using Anthropic.SDK.Extensions;
@@ -15,7 +15,7 @@ namespace Anthropic.SDK.Messaging
         [JsonPropertyName("system")]
         public List<SystemMessage> System { get; set; }
         [JsonPropertyName("tools")]
-        private List<Common.Function> ToolsForClaude => Tools?.Select(p => p.Function).ToList();
+        protected List<Common.Function> ToolsForClaude => Tools?.Select(p => p.Function).ToList();
         [JsonIgnore]
         public IList<Common.Tool> Tools { get; set; }
         [JsonPropertyName("tool_choice")]
