@@ -82,6 +82,21 @@ namespace Anthropic.SDK.Tests
         }
 
         [TestMethod]
+        public async Task TestBasicTokenCountMessage()
+        {
+            var client = new AnthropicClient();
+            var messages = new List<Message>();
+            messages.Add(new Message(RoleType.User, "Write me a sonnet about the Statue of Liberty"));
+            var parameters = new MessageCountTokenParameters
+            {
+                Messages = messages,
+                Model = AnthropicModels.Claude35Haiku
+            };
+            var res = await client.Messages.CountMessageTokensAsync(parameters);
+            Assert.IsTrue(res.InputTokens > 0);
+        }
+
+        [TestMethod]
         public async Task TestStreamingClaude3HaikuMessage()
         {
             var client = new AnthropicClient();

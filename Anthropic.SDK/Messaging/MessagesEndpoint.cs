@@ -29,7 +29,7 @@ namespace Anthropic.SDK.Messaging
             SetCacheControls(parameters);
 
             parameters.Stream = false;
-            var response = await HttpRequestMessages(Url, HttpMethod.Post, parameters, ctx).ConfigureAwait(false);
+            var response = await HttpRequestMessages<MessageResponse>(Url, HttpMethod.Post, parameters, ctx).ConfigureAwait(false);
 
             var toolCalls = new List<Function>();
             foreach (var message in response.Content)
@@ -147,7 +147,11 @@ namespace Anthropic.SDK.Messaging
                 
                 yield return result;
             }
-            
+        }
+
+        public async Task<MessageCountTokenResponse> CountMessageTokensAsync(MessageCountTokenParameters parameters, CancellationToken ctx = default)
+        {
+            return await HttpRequestMessages<MessageCountTokenResponse>($"{Url}/count_tokens", HttpMethod.Post, parameters, ctx).ConfigureAwait(false);
         }
     }
 }

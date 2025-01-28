@@ -13,6 +13,7 @@ Anthropic.SDK is an unofficial C# client designed for interacting with the Claud
 - [Examples](#examples)
   - [Non-Streaming Call](#non-streaming-call)
   - [Streaming Call](#streaming-call)
+  - [Token Count](#token-count)
   - [IChatClient](#ichatclient)
   - [Prompt Caching](#prompt-caching)
   - [PDF Support](#pdf-support)
@@ -175,6 +176,22 @@ await foreach (var res in client.Messages.StreamClaudeMessageAsync(parameters))
 Console.WriteLine(string.Empty);
 Console.WriteLine($@"Used Tokens - Input:{outputs.First().StreamStartMessage.Usage.InputTokens}.
                             Output: {outputs.Last().Usage.OutputTokens}");
+```
+
+### Token Count
+The `AnthropicClient` has support for the [message token count endpoint](https://docs.anthropic.com/en/docs/build-with-claude/token-counting). Below is an example of how to use it.
+
+```csharp
+ var client = new AnthropicClient();
+ var messages = new List<Message>();
+ messages.Add(new Message(RoleType.User, "Write me a sonnet about the Statue of Liberty"));
+ var parameters = new MessageCountTokenParameters
+ {
+     Messages = messages,
+     Model = AnthropicModels.Claude35Haiku
+ };
+ var response = await client.Messages.CountMessageTokensAsync(parameters);
+ Assert.IsTrue(res.InputTokens > 0);
 ```
 
 ### IChatClient
