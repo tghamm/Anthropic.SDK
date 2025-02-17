@@ -20,10 +20,7 @@ public partial class MessagesEndpoint : IChatClient
     private ChatClientMetadata _metadata;
 
     /// <inheritdoc />
-    ChatClientMetadata IChatClient.Metadata => _metadata ??= new(nameof(AnthropicClient), new Uri(Url));
-
-    /// <inheritdoc />
-    async Task<ChatCompletion> IChatClient.CompleteAsync(
+    async Task<ChatResponse> IChatClient.GetResponseAsync(
         IList<ChatMessage> chatMessages, ChatOptions options, CancellationToken cancellationToken)
     {
         MessageResponse response = await this.GetClaudeMessageAsync(CreateMessageParameters(chatMessages, options), cancellationToken);
@@ -78,7 +75,7 @@ public partial class MessagesEndpoint : IChatClient
 
         return new(message)
         {
-            CompletionId = response.Id,
+            ResponseId = response.Id,
             FinishReason = response.StopReason switch
             {
                 "max_tokens" => ChatFinishReason.Length,
@@ -103,14 +100,14 @@ public partial class MessagesEndpoint : IChatClient
         };
 
     /// <inheritdoc />
-    async IAsyncEnumerable<StreamingChatCompletionUpdate> IChatClient.CompleteStreamingAsync(
+    async IAsyncEnumerable<ChatResponseUpdate> IChatClient.GetStreamingResponseAsync(
         IList<ChatMessage> chatMessages, ChatOptions options, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         await foreach (MessageResponse response in StreamClaudeMessageAsync(CreateMessageParameters(chatMessages, options), cancellationToken))
         {
-            var update = new StreamingChatCompletionUpdate
+            var update = new ChatResponseUpdate
             {
-                CompletionId = response.Id,
+                ResponseId = response.Id,
                 ModelId = response.Model,
                 RawRepresentation = response,
                 Role = ChatRole.Assistant,
@@ -154,8 +151,11 @@ public partial class MessagesEndpoint : IChatClient
     void IDisposable.Dispose() { }
 
     /// <inheritdoc />
-    object IChatClient.GetService(Type serviceType, object key) =>
-        key is null && serviceType?.IsInstanceOfType(this) is true ? this : null;
+    object IChatClient.GetService(Type serviceType, object serviceKey) =>
+        serviceKey is not null ? null :
+        serviceType == typeof(ChatClientMetadata) ? (_metadata ??= new(nameof(AnthropicClient), new Uri(Url))) :
+        serviceType?.IsInstanceOfType(this) is true ? this :
+        null;
 
     private static MessageParameters CreateMessageParameters(IList<ChatMessage> chatMessages, ChatOptions options)
     {
@@ -208,7 +208,7 @@ public partial class MessagesEndpoint : IChatClient
                 parameters.Tools = options
                     .Tools
                     .OfType<AIFunction>()
-                    .Select(f => new Common.Tool(new Function(f.Metadata.Name, f.Metadata.Description, FunctionParameters.CreateSchema(f))))
+                    .Select(f => new Common.Tool(new Function(f.Name, f.Description, JsonSerializer.SerializeToNode(JsonSerializer.Deserialize<FunctionParameters>(f.JsonSchema)))))
                     .ToList();
             }
         }
@@ -236,7 +236,7 @@ public partial class MessagesEndpoint : IChatClient
                             m.Content.Add(new TextContent() { Text = textContent.Text });
                             break;
 
-                        case Microsoft.Extensions.AI.ImageContent imageContent when imageContent.ContainsData:
+                        case Microsoft.Extensions.AI.DataContent imageContent when imageContent.MediaTypeStartsWith("image/") && imageContent.Data.HasValue:
                             m.Content.Add(new ImageContent()
                             {
                                 Source = new()
@@ -286,7 +286,7 @@ public partial class MessagesEndpoint : IChatClient
                     break;
 
                 case ImageContent ic:
-                    contents.Add(new Microsoft.Extensions.AI.ImageContent(ic.Source.Data, ic.Source.MediaType));
+                    contents.Add(new Microsoft.Extensions.AI.DataContent(ic.Source.Data, ic.Source.MediaType));
                     break;
 
                 case ToolUseContent tuc:
@@ -299,7 +299,6 @@ public partial class MessagesEndpoint : IChatClient
                 case ToolResultContent trc:
                     contents.Add(new FunctionResultContent(
                         trc.ToolUseId,
-                        string.Empty,
                         trc.Content));
                     break;
             }
@@ -310,8 +309,6 @@ public partial class MessagesEndpoint : IChatClient
 
     private sealed class FunctionParameters
     {
-        private static readonly JsonElement s_defaultParameterSchema = JsonDocument.Parse("{}").RootElement;
-
         [JsonPropertyName("type")]
         public string Type { get; set; } = "object";
 
@@ -320,24 +317,5 @@ public partial class MessagesEndpoint : IChatClient
 
         [JsonPropertyName("properties")]
         public Dictionary<string, JsonElement> Properties { get; set; } = [];
-
-        public static JsonNode CreateSchema(AIFunction f)
-        {
-            var parameters = f.Metadata.Parameters;
-
-            FunctionParameters schema = new();
-
-            foreach (AIFunctionParameterMetadata parameter in parameters)
-            {
-                schema.Properties.Add(parameter.Name, parameter.Schema is JsonElement e ? e : s_defaultParameterSchema);
-
-                if (parameter.IsRequired)
-                {
-                    schema.Required.Add(parameter.Name);
-                }
-            }
-
-            return JsonSerializer.SerializeToNode(schema);
-        }
     }
 }
