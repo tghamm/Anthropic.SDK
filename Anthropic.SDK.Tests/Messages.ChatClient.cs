@@ -22,7 +22,7 @@ namespace Anthropic.SDK.Tests
                 Temperature = 1.0f,
             };
 
-            var res = await client.CompleteAsync("Write a sonnet about the Statue of Liberty. The response must include the word green.", options);
+            var res = await client.GetResponseAsync("Write a sonnet about the Statue of Liberty. The response must include the word green.", options);
 
             Assert.IsTrue(res.Message.Text?.Contains("green") is true, res.Message.Text);
         }
@@ -40,7 +40,7 @@ namespace Anthropic.SDK.Tests
             };
 
             StringBuilder sb = new();
-            await foreach (var res in client.CompleteStreamingAsync("Write a sonnet about the Statue of Liberty. The response must include the word green.", options))
+            await foreach (var res in client.GetStreamingResponseAsync("Write a sonnet about the Statue of Liberty. The response must include the word green.", options))
             {
                 sb.Append(res);
             }
@@ -66,7 +66,7 @@ namespace Anthropic.SDK.Tests
                 }, "GetPersonAge", "Gets the age of the person whose name is specified.")]
             };
 
-            var res = await client.CompleteAsync("How old is Alice?", options);
+            var res = await client.GetResponseAsync("How old is Alice?", options);
 
             Assert.IsTrue(
                 res.Message.Text?.Contains("25") is true, 
@@ -92,7 +92,7 @@ namespace Anthropic.SDK.Tests
             };
 
             StringBuilder sb = new();
-            await foreach (var update in client.CompleteStreamingAsync("How old is Alice?", options))
+            await foreach (var update in client.GetStreamingResponseAsync("How old is Alice?", options))
             {
                 sb.Append(update);
             }
@@ -119,11 +119,11 @@ namespace Anthropic.SDK.Tests
 
             IChatClient client = new AnthropicClient().Messages;
 
-            var res = await client.CompleteAsync(
+            var res = await client.GetResponseAsync(
             [
                 new ChatMessage(ChatRole.User,
                 [
-                    new ImageContent(imageBytes, "image/jpeg"),
+                    new DataContent(imageBytes, "image/jpeg"),
                     new TextContent("What is this a picture of?"),
                 ])
             ], new()
