@@ -14,12 +14,12 @@
 	  <PackageTags>Claude, AI, ML, API, Anthropic</PackageTags>
 	  <Title>Claude API</Title>
 	  <PackageReleaseNotes>
-		  Support for Count Message Tokens Endpoint
+		  Update to Microsoft.Extensions.AI.Abstractions
 	  </PackageReleaseNotes>
 	  <PackageId>Anthropic.SDK</PackageId>
-	  <Version>4.5.0</Version>
-	  <AssemblyVersion>4.5.0.0</AssemblyVersion>
-	  <FileVersion>4.5.0.0</FileVersion>
+	  <Version>4.6.0</Version>
+	  <AssemblyVersion>4.6.0.0</AssemblyVersion>
+	  <FileVersion>4.6.0.0</FileVersion>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
 	  <PackageReadmeFile>README.md</PackageReadmeFile>
 	  <PackageIcon>icon.png</PackageIcon>
