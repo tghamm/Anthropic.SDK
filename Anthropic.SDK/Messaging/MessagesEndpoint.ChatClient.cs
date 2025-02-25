@@ -103,6 +103,7 @@ public partial class MessagesEndpoint : IChatClient
     async IAsyncEnumerable<ChatResponseUpdate> IChatClient.GetStreamingResponseAsync(
         IList<ChatMessage> chatMessages, ChatOptions options, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
+        var thinking = string.Empty;
         await foreach (MessageResponse response in StreamClaudeMessageAsync(CreateMessageParameters(chatMessages, options), cancellationToken))
         {
             var update = new ChatResponseUpdate
@@ -110,7 +111,7 @@ public partial class MessagesEndpoint : IChatClient
                 ResponseId = response.Id,
                 ModelId = response.Model,
                 RawRepresentation = response,
-                Role = ChatRole.Assistant,
+                Role = ChatRole.Assistant
             };
 
             if (response.Delta is not null)
@@ -119,7 +120,18 @@ public partial class MessagesEndpoint : IChatClient
                 {
                     update.Contents.Add(new Microsoft.Extensions.AI.TextContent(response.Delta.Text));
                 }
-                
+
+                if (!string.IsNullOrEmpty(response.Delta.Thinking))
+                {
+                    thinking += response.Delta.Thinking;
+                }
+
+                if (!string.IsNullOrEmpty(response.Delta.Signature))
+                {
+                    update.Contents.Add(new Anthropic.SDK.Extensions.MEAI.ThinkingContent(thinking, response.Delta.Signature));
+                }
+
+
                 if (response.Delta?.StopReason is string stopReason)
                 {
                     update.FinishReason = response.Delta.StopReason switch
@@ -141,6 +153,7 @@ public partial class MessagesEndpoint : IChatClient
                 {
                     update.Contents.Add(new FunctionCallContent(f.Id, f.Name, JsonSerializer.Deserialize<Dictionary<string, object>>(f.Arguments.ToString())));
                 }
+                
             }
 
             yield return update;
@@ -195,6 +208,11 @@ public partial class MessagesEndpoint : IChatClient
                 parameters.PromptCaching = pct;
             }
 
+            if (options.AdditionalProperties?.TryGetValue(nameof(parameters.Thinking), out ThinkingParameters think) is true)
+            {
+                parameters.Thinking = think;
+            }
+
             if (options.Tools is { Count: > 0 })
             {
                 parameters.ToolChoice = new();
@@ -232,6 +250,14 @@ public partial class MessagesEndpoint : IChatClient
                 {
                     switch (content)
                     {
+                        case Anthropic.SDK.Extensions.MEAI.ThinkingContent thinkingContent:
+                            m.Content.Add(new Messaging.ThinkingContent() { Thinking = thinkingContent.Thinking, Signature = thinkingContent.Signature });
+                            break;
+
+                        case Anthropic.SDK.Extensions.MEAI.RedactedThinkingContent redactedThinkingContent:
+                            m.Content.Add(new Messaging.RedactedThinkingContent() { Data = redactedThinkingContent.Data });
+                            break;
+
                         case Microsoft.Extensions.AI.TextContent textContent:
                             m.Content.Add(new TextContent() { Text = textContent.Text });
                             break;
@@ -281,6 +307,14 @@ public partial class MessagesEndpoint : IChatClient
         {
             switch (content)
             {
+                case Messaging.ThinkingContent thinkingContent:
+                    contents.Add(new Anthropic.SDK.Extensions.MEAI.ThinkingContent(thinkingContent.Thinking, thinkingContent.Signature));
+                    break;
+
+                case Messaging.RedactedThinkingContent redactedThinkingContent:
+                    contents.Add(new Anthropic.SDK.Extensions.MEAI.RedactedThinkingContent(redactedThinkingContent.Data));
+                    break;
+
                 case TextContent tc:
                     contents.Add(new Microsoft.Extensions.AI.TextContent(tc.Text));
                     break;
@@ -318,4 +352,28 @@ public partial class MessagesEndpoint : IChatClient
         [JsonPropertyName("properties")]
         public Dictionary<string, JsonElement> Properties { get; set; } = [];
     }
+
+    //public sealed class ThinkingContent : Microsoft.Extensions.AI.AIContent
+    //{
+    //    public ThinkingContent() { }
+    //    public ThinkingContent(string thinking, string signature)
+    //    {
+    //        Thinking = thinking;
+    //        Signature = signature;
+    //    }
+    //    public string Thinking { get; set; }
+
+    //    public string Signature { get; set; }
+    //    public override string ToString() => Thinking;
+    //}
+
+    //public sealed class RedactedThinkingContent : Microsoft.Extensions.AI.AIContent
+    //{
+    //    public RedactedThinkingContent() { }
+    //    public RedactedThinkingContent(string data)
+    //    {
+    //        Data = data;
+    //    }
+    //    public string Data { get; set; }
+    //}
 }
