@@ -36,6 +36,14 @@ namespace Anthropic.SDK.Messaging
                         message.Content.Add(textContent);
                     }
                 }
+                else if (item is ThinkingContent thinkingContent)
+                {
+                    message.Content.Add(item);
+                }
+                else if (item is RedactedThinkingContent redactedThinkingContent)
+                {
+                    message.Content.Add(item);
+                }
             }
             return message;
         }

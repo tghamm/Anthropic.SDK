@@ -66,8 +66,8 @@ namespace Anthropic.SDK.Messaging
         /// <summary>
         /// Encrypted Data
         /// </summary>
-        [JsonPropertyName("data")]
-        public string Data { get; set; }
+        [JsonPropertyName("signature")]
+        public string Signature { get; set; }
     }
 
     /// <summary>

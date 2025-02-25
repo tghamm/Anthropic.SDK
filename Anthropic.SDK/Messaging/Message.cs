@@ -70,9 +70,32 @@ namespace Anthropic.SDK.Messaging
             Content = new();
             var arguments = string.Empty;
             var text = string.Empty;
+            var thinking = string.Empty;
+            var signature = string.Empty;
             var name = string.Empty;
             bool captureTool = false;
             var id = string.Empty;
+
+            foreach (var result in asyncResponses)
+            {
+                if (!string.IsNullOrWhiteSpace(result.Delta?.Thinking))
+                {
+                    thinking += result.Delta.Thinking;
+                }
+                if (!string.IsNullOrWhiteSpace(result.Delta?.Signature))
+                {
+                    signature += result.Delta.Signature;
+                }
+            }
+            if (!string.IsNullOrWhiteSpace(thinking))
+            {
+                Content.Add(new ThinkingContent()
+                {
+                    Thinking = thinking,
+                    Signature = signature
+                });
+            }
+
 
             foreach (var result in asyncResponses)
             {
@@ -89,6 +112,8 @@ namespace Anthropic.SDK.Messaging
                     Text = text
                 });
             }
+
+            
 
 
             foreach (var result in asyncResponses)
@@ -135,9 +160,13 @@ namespace Anthropic.SDK.Messaging
         [JsonPropertyName("content")]
         public List<ContentBase> Content { get; set; }
 
-        
+        [JsonIgnore]
+        public string ThinkingContent => Content.OfType<ThinkingContent>()?.FirstOrDefault()?.Thinking ??
+                                          (Content.OfType<RedactedThinkingContent>()?.FirstOrDefault() != null
+                                              ? "Some of Claude's internal reasoning has been automatically encrypted for safety reasons. This doesn't affect the quality of responses."
+                                              : string.Empty);
 
-        public override string ToString() => (Content.FirstOrDefault() as TextContent)?.ToString() ?? string.Empty;
+        public override string ToString() => Content.OfType<TextContent>().FirstOrDefault()?.Text ?? string.Empty;
 
         public static implicit operator string(Message textContent) => textContent?.ToString();
 

@@ -105,6 +105,10 @@ namespace Anthropic.SDK.Messaging
 
         [JsonPropertyName("text")] 
         public string Text { get; set; }
+        [JsonPropertyName("thinking")]
+        public string Thinking { get; set; }
+        [JsonPropertyName("signature")]
+        public string Signature { get; set; }
         [JsonPropertyName("usage")]
         public Usage Usage { get; set; }
         
@@ -128,6 +132,9 @@ namespace Anthropic.SDK.Messaging
 
         [JsonPropertyName("name")]
         public string? Name { get; set; }
+
+        [JsonPropertyName("data")]
+        public string? Data { get; set; }
     }
 
     public class Usage
