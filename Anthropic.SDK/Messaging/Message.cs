@@ -72,9 +72,25 @@ namespace Anthropic.SDK.Messaging
             var text = string.Empty;
             var thinking = string.Empty;
             var signature = string.Empty;
+            var data = string.Empty;
             var name = string.Empty;
             bool captureTool = false;
             var id = string.Empty;
+
+            foreach (var result in asyncResponses)
+            {
+                if (result.ContentBlock?.Type == "redacted_thinking")
+                {
+                    data = result.ContentBlock.Data;
+                }
+            }
+            if (!string.IsNullOrWhiteSpace(data))
+            {
+                Content.Add(new RedactedThinkingContent()
+                {
+                    Data = data
+                });
+            }
 
             foreach (var result in asyncResponses)
             {
