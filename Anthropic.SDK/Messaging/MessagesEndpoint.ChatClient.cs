@@ -114,6 +114,11 @@ public partial class MessagesEndpoint : IChatClient
                 Role = ChatRole.Assistant
             };
 
+            if (!string.IsNullOrEmpty(response.ContentBlock?.Data))
+            {
+                update.Contents.Add(new SDK.Extensions.MEAI.RedactedThinkingContent(response.ContentBlock?.Data));
+            }
+
             if (response.Delta is not null)
             {
                 if (!string.IsNullOrEmpty(response.Delta.Text))
