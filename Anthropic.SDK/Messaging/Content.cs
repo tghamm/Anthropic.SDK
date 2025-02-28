@@ -47,6 +47,48 @@ namespace Anthropic.SDK.Messaging
     }
 
     /// <summary>
+    /// Helper Class for Thinking Content
+    /// </summary>
+    public class ThinkingContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (Text, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.thinking;
+
+        /// <summary>
+        /// Thinking Block
+        /// </summary>
+        [JsonPropertyName("thinking")]
+        public string Thinking { get; set; }
+
+        /// <summary>
+        /// Encrypted Data
+        /// </summary>
+        [JsonPropertyName("signature")]
+        public string Signature { get; set; }
+    }
+
+    /// <summary>
+    /// Helper Class for Redacted Thinking Content
+    /// </summary>
+    public class RedactedThinkingContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (Text, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.redacted_thinking;
+
+        /// <summary>
+        /// Encrypted Data
+        /// </summary>
+        [JsonPropertyName("data")]
+        public string Data { get; set; }
+    }
+
+    /// <summary>
     /// Helper Class for Image Content to Send to Claude
     /// </summary>
     public class ImageContent: ContentBase

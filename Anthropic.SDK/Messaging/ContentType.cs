@@ -21,6 +21,10 @@ namespace Anthropic.SDK.Messaging
         
         tool_result,
 
-        document
+        document,
+
+        thinking,
+
+        redacted_thinking
     }
 }
