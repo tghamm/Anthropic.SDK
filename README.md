@@ -14,6 +14,7 @@ Anthropic.SDK is an unofficial C# client designed for interacting with the Claud
   - [Non-Streaming Call](#non-streaming-call)
   - [Streaming Call](#streaming-call)
   - [Token Count](#token-count)
+  - [Extended Thinking](#extended-thinking)
   - [IChatClient](#ichatclient)
   - [Prompt Caching](#prompt-caching)
   - [PDF Support](#pdf-support)
@@ -192,6 +193,33 @@ The `AnthropicClient` has support for the [message token count endpoint](https:/
  };
  var response = await client.Messages.CountMessageTokensAsync(parameters);
  Assert.IsTrue(res.InputTokens > 0);
+```
+
+### Extended Thinking
+The `AnthropicClient` has support for the [Sonnet 3.7 with extended thinking support](https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking). Below is an example of how to use it. Streaming is supported similarly.
+
+```csharp
+var client = new AnthropicClient();
+var messages = new List<Message>();
+messages.Add(new Message(RoleType.User, "How many r's are in the word strawberry?"));
+var parameters = new MessageParameters()
+{
+    Messages = messages,
+    MaxTokens = 20000,
+    Model = AnthropicModels.Claude37Sonnet,
+    Stream = false,
+    Temperature = 1.0m,
+    Thinking = new ThinkingParameters()
+    {
+        BudgetTokens = 16000
+    }
+};
+var res = await client.Messages.GetClaudeMessageAsync(parameters);
+Assert.IsTrue(res.Content.OfType<ThinkingContent>().Any());
+var response = res.Message.ToString();
+var thoughts = res.Message.ThinkingContent;
+Assert.IsNotNull(thoughts);
+Assert.IsNotNull(response);
 ```
 
 ### IChatClient
