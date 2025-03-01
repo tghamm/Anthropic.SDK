@@ -118,7 +118,12 @@ public partial class MessagesEndpoint : IChatClient
             {
                 update.Contents.Add(new SDK.Extensions.MEAI.RedactedThinkingContent(response.ContentBlock?.Data));
             }
-
+            
+            if (response.StreamStartMessage?.Usage is {} startStreamMessageUsage)
+            {
+                update.Contents.Add(new UsageContent(CreateUsageDetails(startStreamMessageUsage)));
+            }
+            
             if (response.Delta is not null)
             {
                 if (!string.IsNullOrEmpty(response.Delta.Text))

@@ -173,13 +173,19 @@ namespace Anthropic.SDK.Tests
                 Temperature = 1.0f,
             };
 
-            StringBuilder sb = new();
+            List<ChatResponseUpdate> updates = new();
             await foreach (var res in client.GetStreamingResponseAsync("Write a sonnet about the Statue of Liberty. The response must include the word green.", options))
             {
-                sb.Append(res);
+                updates.Add(res);
             }
 
-            Assert.IsTrue(sb.ToString().Contains("green") is true, sb.ToString());
+            var chatResponse = updates.ToChatResponse();
+
+            Assert.IsTrue(chatResponse.Message.Text!.Contains("green"));
+
+            Assert.IsNotNull(chatResponse.Usage);
+
+            Assert.IsTrue(chatResponse.Usage.InputTokenCount > 0);
         }
 
         [TestMethod]
