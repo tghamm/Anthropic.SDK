@@ -172,14 +172,15 @@ namespace Anthropic.SDK.Tests
                 MaxOutputTokens = 512,
                 Temperature = 1.0f,
             };
+            
+            var chatResponse = await client
+                .GetStreamingResponseAsync("Write a sonnet about the Statue of Liberty. The response must include the word green.", options)
+                .ToChatResponseAsync();
+            
+            Assert.IsTrue(chatResponse.Message.Text!.Contains("green"));
 
-            StringBuilder sb = new();
-            await foreach (var res in client.GetStreamingResponseAsync("Write a sonnet about the Statue of Liberty. The response must include the word green.", options))
-            {
-                sb.Append(res);
-            }
-
-            Assert.IsTrue(sb.ToString().Contains("green") is true, sb.ToString());
+            Assert.IsNotNull(chatResponse.Usage);
+            Assert.IsTrue(chatResponse.Usage.InputTokenCount > 0);
         }
 
         [TestMethod]
