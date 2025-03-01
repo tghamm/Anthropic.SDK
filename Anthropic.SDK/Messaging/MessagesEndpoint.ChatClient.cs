@@ -83,19 +83,19 @@ public partial class MessagesEndpoint : IChatClient
             },
             ModelId = response.Model,
             RawRepresentation = response,
-            Usage = response.Usage is { } usage ? CreateUsageDetails(new List<Usage>() { usage }) : null
+            Usage = response.Usage is { } usage ? CreateUsageDetails(usage) : null
         };
     }
 
-    private static UsageDetails CreateUsageDetails(IList<Usage> usage) => 
+    private static UsageDetails CreateUsageDetails(Usage usage) => 
         new()
         {
-            InputTokenCount = usage.Select(p => p.InputTokens).Sum(),
-            OutputTokenCount = usage.Select(p => p.OutputTokens).Sum(),
+            InputTokenCount = usage.InputTokens,
+            OutputTokenCount = usage.OutputTokens,
             AdditionalCounts = new()
             {
-                [nameof(Usage.CacheCreationInputTokens)] = usage.Select(p => p.CacheCreationInputTokens).Sum(),
-                [nameof(Usage.CacheReadInputTokens)] = usage.Select(p => p.CacheReadInputTokens).Sum(),
+                [nameof(usage.CacheCreationInputTokens)] = usage.CacheCreationInputTokens,
+                [nameof(usage.CacheReadInputTokens)] = usage.CacheReadInputTokens,
             }
         };
 
@@ -104,7 +104,6 @@ public partial class MessagesEndpoint : IChatClient
         IList<ChatMessage> chatMessages, ChatOptions options, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var thinking = string.Empty;
-        List<Usage> usageBag = new();
         await foreach (MessageResponse response in StreamClaudeMessageAsync(CreateMessageParameters(chatMessages, options), cancellationToken))
         {
             var update = new ChatResponseUpdate
@@ -122,7 +121,7 @@ public partial class MessagesEndpoint : IChatClient
             
             if (response.StreamStartMessage?.Usage is {} startStreamMessageUsage)
             {
-                usageBag.Add(startStreamMessageUsage);
+                update.Contents.Add(new UsageContent(CreateUsageDetails(startStreamMessageUsage)));
             }
             
             if (response.Delta is not null)
@@ -142,10 +141,6 @@ public partial class MessagesEndpoint : IChatClient
                     update.Contents.Add(new Anthropic.SDK.Extensions.MEAI.ThinkingContent(thinking, response.Delta.Signature));
                 }
 
-                if (response.Usage is { } usage)
-                {
-                    usageBag.Add(usage);
-                }
 
                 if (response.Delta?.StopReason is string stopReason)
                 {
@@ -154,15 +149,12 @@ public partial class MessagesEndpoint : IChatClient
                         "max_tokens" => ChatFinishReason.Length,
                         _ => ChatFinishReason.Stop,
                     };
-
-                    if (usageBag.Any())
-                    {
-                        update.Contents.Add(new UsageContent(CreateUsageDetails(usageBag)));
-                    }
-
                 }
 
-                
+                if (response.Usage is { } usage)
+                {
+                    update.Contents.Add(new UsageContent(CreateUsageDetails(usage)));
+                }
             }
 
             if (response.ToolCalls is { Count: > 0 })
@@ -176,7 +168,6 @@ public partial class MessagesEndpoint : IChatClient
 
             yield return update;
         }
-
     }
 
     /// <inheritdoc />
