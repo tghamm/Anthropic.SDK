@@ -172,14 +172,19 @@ namespace Anthropic.SDK.Tests
                 MaxOutputTokens = 512,
                 Temperature = 1.0f,
             };
-            
-            var chatResponse = await client
-                .GetStreamingResponseAsync("Write a sonnet about the Statue of Liberty. The response must include the word green.", options)
-                .ToChatResponseAsync();
-            
+
+            List<ChatResponseUpdate> updates = new();
+            await foreach (var res in client.GetStreamingResponseAsync("Write a sonnet about the Statue of Liberty. The response must include the word green.", options))
+            {
+                updates.Add(res);
+            }
+
+            var chatResponse = updates.ToChatResponse();
+
             Assert.IsTrue(chatResponse.Message.Text!.Contains("green"));
 
             Assert.IsNotNull(chatResponse.Usage);
+
             Assert.IsTrue(chatResponse.Usage.InputTokenCount > 0);
         }
 
