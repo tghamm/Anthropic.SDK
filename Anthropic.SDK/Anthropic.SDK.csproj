@@ -17,9 +17,9 @@
 		  Support for Extended Thinking
 	  </PackageReleaseNotes>
 	  <PackageId>Anthropic.SDK</PackageId>
-	  <Version>4.7.0</Version>
-	  <AssemblyVersion>4.7.0.0</AssemblyVersion>
-	  <FileVersion>4.7.0.0</FileVersion>
+	  <Version>4.7.1</Version>
+	  <AssemblyVersion>4.7.1.0</AssemblyVersion>
+	  <FileVersion>4.7.1.0</FileVersion>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
 	  <PackageReadmeFile>README.md</PackageReadmeFile>
 	  <PackageIcon>icon.png</PackageIcon>
