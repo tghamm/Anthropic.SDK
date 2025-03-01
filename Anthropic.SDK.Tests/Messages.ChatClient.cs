@@ -178,7 +178,9 @@ namespace Anthropic.SDK.Tests
             {
                 updates.Add(res);
             }
-
+            
+            Assert.IsTrue(updates.Last().Contents.OfType<UsageContent>().First().Details.InputTokenCount > 0);
+            
             var chatResponse = updates.ToChatResponse();
 
             Assert.IsTrue(chatResponse.Message.Text!.Contains("green"));
