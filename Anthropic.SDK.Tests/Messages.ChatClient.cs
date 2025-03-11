@@ -26,7 +26,7 @@ namespace Anthropic.SDK.Tests
 
             var res = await client.GetResponseAsync("Write a sonnet about the Statue of Liberty. The response must include the word green.", options);
 
-            Assert.IsTrue(res.Message.Text?.Contains("green") is true, res.Message.Text);
+            Assert.IsTrue(res.Text.Contains("green") is true, res.Text);
         }
 
         [TestMethod]
@@ -54,11 +54,11 @@ namespace Anthropic.SDK.Tests
             };
 
             var res = await client.GetResponseAsync(messages, options);
-            Assert.IsTrue(res.Message.Text?.Contains("3") is true, res.Message.Text);
-            messages.Add(res.Message);
+            Assert.IsTrue(res.Text.Contains("3") is true, res.Text);
+            messages.AddMessages(res);
             messages.Add(new ChatMessage(ChatRole.User, "and how many letters total?"));
             res = await client.GetResponseAsync(messages, options);
-            Assert.IsTrue(res.Message.Text?.Contains("10") is true, res.Message.Text);
+            Assert.IsTrue(res.Text?.Contains("10") is true, res.Text);
         }
 
         [TestMethod]
@@ -95,7 +95,7 @@ namespace Anthropic.SDK.Tests
 
             Assert.IsTrue(sb.ToString().Contains("3") is true, sb.ToString());
 
-            messages.Add(updates.ToChatResponse().Message);
+            messages.AddMessages(updates);
 
             Assert.IsTrue(messages.Last().Contents.OfType<Extensions.MEAI.ThinkingContent>().Any());
             
@@ -143,7 +143,7 @@ namespace Anthropic.SDK.Tests
             }
             
 
-            messages.Add(updates.ToChatResponse().Message);
+            messages.AddMessages(updates);
 
             Assert.IsTrue(messages.Last().Contents.OfType<Extensions.MEAI.RedactedThinkingContent>().Any());
 
@@ -154,9 +154,8 @@ namespace Anthropic.SDK.Tests
             {
                 updates.Add(res);
             }
-            var assistantMessage = updates.ToChatResponse().Message;
-            var text = string.Join("",
-                updates.SelectMany(p => p.Contents.OfType<TextContent>()).Select(p => p.Text));
+
+            var text = string.Concat(updates.ToChatResponse().Text);
 
             Assert.IsTrue(text.Contains("10") is true, text);
         }
@@ -181,7 +180,7 @@ namespace Anthropic.SDK.Tests
 
             var chatResponse = updates.ToChatResponse();
 
-            Assert.IsTrue(chatResponse.Message.Text!.Contains("green"));
+            Assert.IsTrue(chatResponse.Text.Contains("green"));
 
             Assert.IsNotNull(chatResponse.Usage);
 
@@ -216,8 +215,8 @@ namespace Anthropic.SDK.Tests
             var res = await client.GetResponseAsync("How old is Alice?", options);
 
             Assert.IsTrue(
-                res.Message.Text?.Contains("25") is true,
-                res.Message.Text);
+                res.Text.Contains("25") is true,
+                res.Text);
         }
 
         [TestMethod]
@@ -241,8 +240,8 @@ namespace Anthropic.SDK.Tests
             var res = await client.GetResponseAsync("How old is Alice?", options);
 
             Assert.IsTrue(
-                res.Message.Text?.Contains("25") is true, 
-                res.Message.Text);
+                res.Text.Contains("25") is true, 
+                res.Text);
         }
 
         [TestMethod]
@@ -340,7 +339,7 @@ namespace Anthropic.SDK.Tests
                 Temperature = 0f,
             });
 
-            Assert.IsTrue(res.Message.Text?.Contains("apple", StringComparison.OrdinalIgnoreCase) is true, res.Message.Text);
+            Assert.IsTrue(res.Text.Contains("apple", StringComparison.OrdinalIgnoreCase) is true, res.Text);
         }
     }
 }
