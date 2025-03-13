@@ -45,19 +45,14 @@ namespace Anthropic.SDK
         protected abstract string Endpoint { get; }
 
         /// <summary>
-        /// Gets the URL of the endpoint, based on the base Anthropic API URL followed by the endpoint name.  For example "https://api.anthropic.com/v1/complete"
+        /// Gets the URL of the endpoint.
         /// </summary>
         protected string Url => string.Format(Client.ApiUrlFormat, Client.ApiVersion, Endpoint);
 
         private HttpClient InnerClient => _client.Value;
-        //private HttpClient innerClient
-        //{
-        //    get { return _client ??= GetClient(); }
-        //}
-
 
         /// <summary>
-        /// Gets an HTTPClient with the appropriate authorization and other headers set
+        /// Gets an HTTPClient with the appropriate authorization and other headers set.
         /// </summary>
         /// <returns>The fully initialized HttpClient</returns>
         /// <exception cref="AuthenticationException">Thrown if there is no valid authentication.</exception>
@@ -69,63 +64,62 @@ namespace Anthropic.SDK
             }
 
             var customClient = Client.HttpClient;
-
             var client = customClient ?? new HttpClient();
 
-            if (!client.DefaultRequestHeaders.Contains("x-api-key"))
+            AddHeaderIfNotPresent(client.DefaultRequestHeaders, "x-api-key", Client.Auth.ApiKey);
+            AddHeaderIfNotPresent(client.DefaultRequestHeaders, "anthropic-version", Client.AnthropicVersion);
+
+            if (!string.IsNullOrWhiteSpace(Client.AnthropicBetaVersion))
             {
-                client.DefaultRequestHeaders.Add("x-api-key", Client.Auth.ApiKey);
+                AddHeaderIfNotPresent(client.DefaultRequestHeaders, "anthropic-beta", Client.AnthropicBetaVersion);
             }
 
-            if (!client.DefaultRequestHeaders.Contains("anthropic-version"))
-            {
-                client.DefaultRequestHeaders.Add("anthropic-version", Client.AnthropicVersion);
-            }
-
-            if (!string.IsNullOrWhiteSpace(Client.AnthropicBetaVersion) &&
-                !client.DefaultRequestHeaders.Contains("anthropic-beta"))
-            {
-                client.DefaultRequestHeaders.Add("anthropic-beta", Client.AnthropicBetaVersion);
-            }
-
-            if (!client.DefaultRequestHeaders.Contains("User-Agent"))
-            {
-                client.DefaultRequestHeaders.Add("User-Agent", UserAgent);
-            }
+            AddHeaderIfNotPresent(client.DefaultRequestHeaders, "User-Agent", UserAgent);
 
             if (!client.DefaultRequestHeaders.Accept.Contains(new MediaTypeWithQualityHeaderValue("application/json")))
             {
-
-                client.DefaultRequestHeaders
-                    .Accept
-                    .Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             }
 
             return client;
         }
 
-        private string GetErrorMessage(string resultAsString, HttpResponseMessage response, string name,
-            string description = "")
+        private static void AddHeaderIfNotPresent(HttpRequestHeaders headers, string name, string value)
+        {
+            if (!headers.Contains(name))
+            {
+                headers.Add(name, value);
+            }
+        }
+
+        private string GetErrorMessage(string resultAsString, HttpResponseMessage response, string name, string description = "")
         {
             return $"{resultAsString ?? "<no content>"}";
+        }
+
+        // Helper method to read the response content as a string.
+        private async Task<string> ReadResponseContentAsync(HttpResponseMessage response, CancellationToken ct)
+        {
+#if NET6_0_OR_GREATER
+            return await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+#else
+                return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+#endif
         }
 
         protected async Task<TResponse> HttpRequestMessages<TResponse>(string url = null, HttpMethod verb = null,
             object postData = null, CancellationToken ctx = default)
         {
-            var response = await HttpRequestRaw(url, verb, postData, ctx: ctx).ConfigureAwait(false);
-#if NET6_0_OR_GREATER
-            string resultAsString = await response.Content.ReadAsStringAsync(ctx).ConfigureAwait(false);
-#else
-            string resultAsString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-#endif
+            var response = await HttpRequestRaw(url, verb, postData, false, ctx).ConfigureAwait(false);
+            string resultAsString = await ReadResponseContentAsync(response, ctx).ConfigureAwait(false);
+
             var options = new JsonSerializerOptions
             {
                 Converters = { ContentConverter.Instance }
             };
-            var res = await JsonSerializer.DeserializeAsync<TResponse>(
-                new MemoryStream(Encoding.UTF8.GetBytes(resultAsString)), options, cancellationToken: ctx);
+
+            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(resultAsString));
+            var res = await JsonSerializer.DeserializeAsync<TResponse>(ms, options, cancellationToken: ctx).ConfigureAwait(false);
 
             if (res is MessageResponse messageResponse)
             {
@@ -138,32 +132,22 @@ namespace Anthropic.SDK
         protected async Task<BatchResponse> HttpRequestBatches(string url = null, HttpMethod verb = null,
             object postData = null, CancellationToken ctx = default)
         {
-            var response = await HttpRequestRaw(url, verb, postData, ctx: ctx).ConfigureAwait(false);
-#if NET6_0_OR_GREATER
-            string resultAsString = await response.Content.ReadAsStringAsync(ctx).ConfigureAwait(false);
-#else
-            string resultAsString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-#endif
-            var res = await JsonSerializer.DeserializeAsync<BatchResponse>(
-                new MemoryStream(Encoding.UTF8.GetBytes(resultAsString)), cancellationToken: ctx);
+            var response = await HttpRequestRaw(url, verb, postData, false, ctx).ConfigureAwait(false);
+            string resultAsString = await ReadResponseContentAsync(response, ctx).ConfigureAwait(false);
 
-            
+            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(resultAsString));
+            var res = await JsonSerializer.DeserializeAsync<BatchResponse>(ms, cancellationToken: ctx).ConfigureAwait(false);
             return res;
         }
 
         protected async Task<BatchList> HttpRequestBatchesList(string url = null, HttpMethod verb = null,
             object postData = null, CancellationToken ctx = default)
         {
-            var response = await HttpRequestRaw(url, verb, postData, ctx: ctx).ConfigureAwait(false);
-#if NET6_0_OR_GREATER
-            string resultAsString = await response.Content.ReadAsStringAsync(ctx).ConfigureAwait(false);
-#else
-            string resultAsString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-#endif
-            var res = await JsonSerializer.DeserializeAsync<BatchList>(
-                new MemoryStream(Encoding.UTF8.GetBytes(resultAsString)), cancellationToken: ctx);
+            var response = await HttpRequestRaw(url, verb, postData, false, ctx).ConfigureAwait(false);
+            string resultAsString = await ReadResponseContentAsync(response, ctx).ConfigureAwait(false);
 
-
+            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(resultAsString));
+            var res = await JsonSerializer.DeserializeAsync<BatchList>(ms, cancellationToken: ctx).ConfigureAwait(false);
             return res;
         }
 
@@ -171,28 +155,26 @@ namespace Anthropic.SDK
             HttpMethod verb = null,
             object postData = null, [EnumeratorCancellation] CancellationToken ctx = default)
         {
-            var response = await HttpRequestRaw(url, verb, postData, true, ctx).ConfigureAwait(false);
-
-
+            var response = await HttpRequestRaw(url, verb, postData, streaming: true, ctx).ConfigureAwait(false);
 #if NET6_0_OR_GREATER
             await using var stream = await response.Content.ReadAsStreamAsync(ctx).ConfigureAwait(false);
 #else
-            using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
 #endif
-            using StreamReader reader = new StreamReader(stream);
+            using var reader = new StreamReader(stream);
             string line;
-#if NET8_0_OR_GREATER
+#if NET6_0_OR_GREATER
             while ((line = await reader.ReadLineAsync(ctx).ConfigureAwait(false)) != null)
 #else
-            while ((line = await reader.ReadLineAsync().ConfigureAwait(false)) != null)
+                while ((line = await reader.ReadLineAsync().ConfigureAwait(false)) != null)
 #endif
             {
                 var options = new JsonSerializerOptions
                 {
                     Converters = { ContentConverter.Instance }
                 };
-                var res = await JsonSerializer.DeserializeAsync<BatchLine>(
-                    new MemoryStream(Encoding.UTF8.GetBytes(line)), options, cancellationToken: ctx);
+                using var ms = new MemoryStream(Encoding.UTF8.GetBytes(line));
+                var res = await JsonSerializer.DeserializeAsync<BatchLine>(ms, options, cancellationToken: ctx).ConfigureAwait(false);
                 yield return res;
             }
         }
@@ -201,76 +183,47 @@ namespace Anthropic.SDK
             HttpMethod verb = null,
             object postData = null, [EnumeratorCancellation] CancellationToken ctx = default)
         {
-            var response = await HttpRequestRaw(url, verb, postData, true, ctx).ConfigureAwait(false);
-
-
+            var response = await HttpRequestRaw(url, verb, postData, streaming: true, ctx).ConfigureAwait(false);
 #if NET6_0_OR_GREATER
             await using var stream = await response.Content.ReadAsStreamAsync(ctx).ConfigureAwait(false);
 #else
             using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
 #endif
-            using StreamReader reader = new StreamReader(stream);
+            using var reader = new StreamReader(stream);
             string line;
-#if NET8_0_OR_GREATER
+#if NET6_0_OR_GREATER
             while ((line = await reader.ReadLineAsync(ctx).ConfigureAwait(false)) != null)
 #else
             while ((line = await reader.ReadLineAsync().ConfigureAwait(false)) != null)
 #endif
             {
-                
                 yield return line;
             }
         }
 
-
         private static RateLimits GetRateLimits(HttpResponseMessage message)
         {
             var rateLimits = new RateLimits();
-            if (message.Headers.TryGetValues("anthropic-ratelimit-requests-limit", out var requestsLimit)
-                && long.TryParse(requestsLimit.First(), out var parsedRequestsLimit))
-            {
-                rateLimits.RequestsLimit = parsedRequestsLimit;
-            }
 
-            if (message.Headers.TryGetValues("anthropic-ratelimit-requests-remaining", out var requestsRemaining) &&
-                long.TryParse(requestsRemaining.First(), out var parsedRequestsRemaining))
-            {
-                rateLimits.RequestsRemaining = parsedRequestsRemaining;
-            }
-
-            if (message.Headers.TryGetValues("anthropic-ratelimit-requests-reset", out var requestsReset)
-                && DateTime.TryParse(requestsReset.First(), out var parsedRequestsReset))
-            {
-                rateLimits.RequestsReset = parsedRequestsReset;
-            }
-
-            if (message.Headers.TryGetValues("anthropic-ratelimit-tokens-limit", out var tokensLimit)
-                && long.TryParse(tokensLimit.First(), out var parsedTokensLimit))
-            {
-                rateLimits.TokensLimit = parsedTokensLimit;
-            }
-
-            if (message.Headers.TryGetValues("anthropic-ratelimit-tokens-remaining", out var tokensRemaining) &&
-                long.TryParse(tokensRemaining.First(), out var parsedTokensRemaining))
-            {
-                rateLimits.TokensRemaining = parsedTokensRemaining;
-            }
-
-            if (message.Headers.TryGetValues("anthropic-ratelimit-tokens-reset", out var tokensReset)
-                && DateTime.TryParse(tokensReset.First(), out var parsedTokensReset))
-            {
-                rateLimits.TokensReset = parsedTokensReset;
-            }
-
-            if (message.Headers.TryGetValues("retry-after", out var retryAfter)
-                && long.TryParse(retryAfter.First(), out var parsedRetryAfter))
-            {
-                rateLimits.RetryAfter = TimeSpan.FromSeconds(parsedRetryAfter);
-            }
+            TryParseHeaderValue(message, "anthropic-ratelimit-requests-limit", long.Parse, value => rateLimits.RequestsLimit = value);
+            TryParseHeaderValue(message, "anthropic-ratelimit-requests-remaining", long.Parse, value => rateLimits.RequestsRemaining = value);
+            TryParseHeaderValue(message, "anthropic-ratelimit-requests-reset", DateTime.Parse, value => rateLimits.RequestsReset = value);
+            TryParseHeaderValue(message, "anthropic-ratelimit-tokens-limit", long.Parse, value => rateLimits.TokensLimit = value);
+            TryParseHeaderValue(message, "anthropic-ratelimit-tokens-remaining", long.Parse, value => rateLimits.TokensRemaining = value);
+            TryParseHeaderValue(message, "anthropic-ratelimit-tokens-reset", DateTime.Parse, value => rateLimits.TokensReset = value);
 
             return rateLimits;
         }
 
+        private static void TryParseHeaderValue<T>(HttpResponseMessage message, string headerName, Func<string, T> parser, Action<T> setter)
+        {
+            if (message.Headers.TryGetValues(headerName, out var values) &&
+                values.FirstOrDefault() is string value &&
+                parser(value) is T parsedValue)
+            {
+                setter(parsedValue);
+            }
+        }
 
         private async Task<HttpResponseMessage> HttpRequestRaw(string url = null, HttpMethod verb = null,
             object postData = null, bool streaming = false, CancellationToken ctx = default)
@@ -278,17 +231,15 @@ namespace Anthropic.SDK
             if (string.IsNullOrEmpty(url))
                 url = this.Url;
 
-            HttpResponseMessage response = null;
+            HttpResponseMessage response;
             string resultAsString = null;
-
-            // Ensure HttpRequestMessage is created per thread
-            HttpRequestMessage req = new HttpRequestMessage(verb, url);
+            var req = new HttpRequestMessage(verb, url);
 
             if (postData != null)
             {
-                if (postData is HttpContent)
+                if (postData is HttpContent content)
                 {
-                    req.Content = postData as HttpContent;
+                    req.Content = content;
                 }
                 else
                 {
@@ -298,12 +249,10 @@ namespace Anthropic.SDK
                         Converters = { ContentConverter.Instance }
                     };
                     string jsonContent = JsonSerializer.Serialize(postData, options);
-                    var stringContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-                    req.Content = stringContent;
+                    req.Content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
                 }
             }
 
-            // Ensure innerClient is thread-safe or use a separate instance per thread
             response = await InnerClient.SendAsync(req,
                     streaming ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead,
                     ctx)
@@ -320,7 +269,7 @@ namespace Anthropic.SDK
 #if NET6_0_OR_GREATER
                     resultAsString = await response.Content.ReadAsStringAsync(ctx).ConfigureAwait(false);
 #else
-                    resultAsString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        resultAsString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 #endif
                 }
                 catch (Exception e)
@@ -330,27 +279,25 @@ namespace Anthropic.SDK
                         e.ToString();
                 }
 #if NET6_0_OR_GREATER
-                if(response.StatusCode == HttpStatusCode.TooManyRequests)
+                if (response.StatusCode == HttpStatusCode.TooManyRequests)
 #else
-                if(response.StatusCode == ((HttpStatusCode)429))
+                    if(response.StatusCode == ((HttpStatusCode)429))
 #endif
                 {
                     throw new RateLimitsExceeded(
-                        "Anthropic has rate limited your request.  Please wait and retry your request.  " +
+                        "Anthropic has rate limited your request. Please wait and retry your request. " +
                         GetErrorMessage(resultAsString, response, url, url), GetRateLimits(response), response.StatusCode);
                 }
-                else
-                
-                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                else if (response.StatusCode == HttpStatusCode.Unauthorized)
                 {
                     throw new AuthenticationException(
                         "Anthropic rejected your authorization, most likely due to an invalid API Key. Full API response follows: " +
                         resultAsString);
                 }
-                else if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
+                else if (response.StatusCode == HttpStatusCode.InternalServerError)
                 {
                     throw GetHttpRequestException(
-                        "Anthropic had an internal server error, which can happen occasionally.  Please retry your request.  " +
+                        "Anthropic had an internal server error, which can happen occasionally. Please retry your request. " +
                         GetErrorMessage(resultAsString, response, url, url));
                 }
                 else
@@ -364,28 +311,25 @@ namespace Anthropic.SDK
 #if NET6_0_OR_GREATER
                 return new HttpRequestException(message, null, response.StatusCode);
 #else
-                return new HttpRequestException(message, null);
+                    return new HttpRequestException(message, null);
 #endif
             }
         }
-
 
         protected async IAsyncEnumerable<MessageResponse> HttpStreamingRequestMessages(string url = null,
             HttpMethod verb = null,
             object postData = null, [EnumeratorCancellation] CancellationToken ctx = default)
         {
-            var response = await HttpRequestRaw(url, verb, postData, true, ctx).ConfigureAwait(false);
-
-
+            var response = await HttpRequestRaw(url, verb, postData, streaming: true, ctx).ConfigureAwait(false);
 #if NET6_0_OR_GREATER
             await using var stream = await response.Content.ReadAsStreamAsync(ctx).ConfigureAwait(false);
 #else
             using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
 #endif
-            using StreamReader reader = new StreamReader(stream);
+            using var reader = new StreamReader(stream);
             string line;
             SseEvent currentEvent = new SseEvent();
-#if NET8_0_OR_GREATER
+#if NET6_0_OR_GREATER
             while ((line = await reader.ReadLineAsync(ctx).ConfigureAwait(false)) != null)
 #else
             while ((line = await reader.ReadLineAsync().ConfigureAwait(false)) != null)
@@ -402,7 +346,7 @@ namespace Anthropic.SDK
                         currentEvent.Data = line.Substring("data:".Length).Trim();
                     }
                 }
-                else // an empty line indicates the end of an event
+                else
                 {
                     if (currentEvent.EventType == "message_start" ||
                         currentEvent.EventType == "content_block_delta" ||
@@ -410,23 +354,17 @@ namespace Anthropic.SDK
                         currentEvent.EventType == "content_block_stop" ||
                         currentEvent.EventType == "message_delta")
                     {
-                        var res = await JsonSerializer.DeserializeAsync<MessageResponse>(
-                                new MemoryStream(Encoding.UTF8.GetBytes(currentEvent.Data)), cancellationToken: ctx)
-                            .ConfigureAwait(false);
-
+                        using var ms = new MemoryStream(Encoding.UTF8.GetBytes(currentEvent.Data));
+                        var res = await JsonSerializer.DeserializeAsync<MessageResponse>(ms, cancellationToken: ctx).ConfigureAwait(false);
                         res.RateLimits = GetRateLimits(response);
-
                         yield return res;
                     }
                     else if (currentEvent.EventType == "error")
                     {
-                        var res = await JsonSerializer.DeserializeAsync<ErrorResponse>(
-                                new MemoryStream(Encoding.UTF8.GetBytes(currentEvent.Data)), cancellationToken: ctx)
-                            .ConfigureAwait(false);
+                        using var ms = new MemoryStream(Encoding.UTF8.GetBytes(currentEvent.Data));
+                        var res = await JsonSerializer.DeserializeAsync<ErrorResponse>(ms, cancellationToken: ctx).ConfigureAwait(false);
                         throw new Exception(res.Error.Message);
                     }
-
-                    // Reset the current event for the next one
                     currentEvent = new SseEvent();
                 }
             }
