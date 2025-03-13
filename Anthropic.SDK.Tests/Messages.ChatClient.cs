@@ -297,15 +297,15 @@ namespace Anthropic.SDK.Tests
                     }}
                 }
             };
-
-            //TODO: this currently throws an exception because the functioninvokingchatclient does not yet handle thinking models
-            await Assert.ThrowsExceptionAsync<HttpRequestException>(async () =>
+            StringBuilder sb = new();
+            await foreach (var update in client.GetStreamingResponseAsync("How old is Alice?", options))
             {
-                await foreach (var update in client.GetStreamingResponseAsync("How old is Alice?", options))
-                {
-                   
-                }
-            });
+                sb.Append(update);
+            }
+
+            Assert.IsTrue(
+                sb.ToString().Contains("25") is true,
+                sb.ToString());
         }
 
         [TestMethod]
