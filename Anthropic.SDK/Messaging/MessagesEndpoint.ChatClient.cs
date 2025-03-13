@@ -21,9 +21,9 @@ public partial class MessagesEndpoint : IChatClient
 
     /// <inheritdoc />
     async Task<ChatResponse> IChatClient.GetResponseAsync(
-        IList<ChatMessage> chatMessages, ChatOptions options, CancellationToken cancellationToken)
+        IEnumerable<ChatMessage> messages, ChatOptions options, CancellationToken cancellationToken)
     {
-        MessageResponse response = await this.GetClaudeMessageAsync(CreateMessageParameters(chatMessages, options), cancellationToken);
+        MessageResponse response = await this.GetClaudeMessageAsync(CreateMessageParameters(messages, options), cancellationToken);
 
         ChatMessage message = new(ChatRole.Assistant, ProcessResponseContent(response));
 
@@ -101,10 +101,10 @@ public partial class MessagesEndpoint : IChatClient
 
     /// <inheritdoc />
     async IAsyncEnumerable<ChatResponseUpdate> IChatClient.GetStreamingResponseAsync(
-        IList<ChatMessage> chatMessages, ChatOptions options, [EnumeratorCancellation] CancellationToken cancellationToken)
+        IEnumerable<ChatMessage> messages, ChatOptions options, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var thinking = string.Empty;
-        await foreach (MessageResponse response in StreamClaudeMessageAsync(CreateMessageParameters(chatMessages, options), cancellationToken))
+        await foreach (MessageResponse response in StreamClaudeMessageAsync(CreateMessageParameters(messages, options), cancellationToken))
         {
             var update = new ChatResponseUpdate
             {
@@ -180,7 +180,7 @@ public partial class MessagesEndpoint : IChatClient
         serviceType?.IsInstanceOfType(this) is true ? this :
         null;
 
-    private static MessageParameters CreateMessageParameters(IList<ChatMessage> chatMessages, ChatOptions options)
+    private static MessageParameters CreateMessageParameters(IEnumerable<ChatMessage> messages, ChatOptions options)
     {
         MessageParameters parameters = new();
 
@@ -241,7 +241,7 @@ public partial class MessagesEndpoint : IChatClient
             }
         }
 
-        foreach (ChatMessage message in chatMessages)
+        foreach (ChatMessage message in messages)
         {
             if (message.Role == ChatRole.System)
             {
@@ -272,12 +272,12 @@ public partial class MessagesEndpoint : IChatClient
                             m.Content.Add(new TextContent() { Text = textContent.Text });
                             break;
 
-                        case Microsoft.Extensions.AI.DataContent imageContent when imageContent.MediaTypeStartsWith("image/") && imageContent.Data.HasValue:
+                        case Microsoft.Extensions.AI.DataContent imageContent when imageContent.HasTopLevelMediaType("image"):
                             m.Content.Add(new ImageContent()
                             {
                                 Source = new()
                                 {
-                                    Data = Convert.ToBase64String(imageContent.Data.Value.ToArray()),
+                                    Data = Convert.ToBase64String(imageContent.Data.ToArray()),
                                     MediaType = imageContent.MediaType,
                                 }
                             });
