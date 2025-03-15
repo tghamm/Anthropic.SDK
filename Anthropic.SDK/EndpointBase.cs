@@ -103,7 +103,7 @@ namespace Anthropic.SDK
 #if NET6_0_OR_GREATER
             return await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
 #else
-                return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 #endif
         }
 
@@ -163,10 +163,10 @@ namespace Anthropic.SDK
 #endif
             using var reader = new StreamReader(stream);
             string line;
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
             while ((line = await reader.ReadLineAsync(ctx).ConfigureAwait(false)) != null)
 #else
-                while ((line = await reader.ReadLineAsync().ConfigureAwait(false)) != null)
+            while ((line = await reader.ReadLineAsync().ConfigureAwait(false)) != null)
 #endif
             {
                 var options = new JsonSerializerOptions
@@ -191,7 +191,7 @@ namespace Anthropic.SDK
 #endif
             using var reader = new StreamReader(stream);
             string line;
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
             while ((line = await reader.ReadLineAsync(ctx).ConfigureAwait(false)) != null)
 #else
             while ((line = await reader.ReadLineAsync().ConfigureAwait(false)) != null)
@@ -269,7 +269,7 @@ namespace Anthropic.SDK
 #if NET6_0_OR_GREATER
                     resultAsString = await response.Content.ReadAsStringAsync(ctx).ConfigureAwait(false);
 #else
-                        resultAsString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    resultAsString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 #endif
                 }
                 catch (Exception e)
@@ -281,7 +281,7 @@ namespace Anthropic.SDK
 #if NET6_0_OR_GREATER
                 if (response.StatusCode == HttpStatusCode.TooManyRequests)
 #else
-                    if(response.StatusCode == ((HttpStatusCode)429))
+                if(response.StatusCode == ((HttpStatusCode)429))
 #endif
                 {
                     throw new RateLimitsExceeded(
@@ -311,7 +311,7 @@ namespace Anthropic.SDK
 #if NET6_0_OR_GREATER
                 return new HttpRequestException(message, null, response.StatusCode);
 #else
-                    return new HttpRequestException(message, null);
+                return new HttpRequestException(message, null);
 #endif
             }
         }
@@ -329,7 +329,7 @@ namespace Anthropic.SDK
             using var reader = new StreamReader(stream);
             string line;
             SseEvent currentEvent = new SseEvent();
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
             while ((line = await reader.ReadLineAsync(ctx).ConfigureAwait(false)) != null)
 #else
             while ((line = await reader.ReadLineAsync().ConfigureAwait(false)) != null)
