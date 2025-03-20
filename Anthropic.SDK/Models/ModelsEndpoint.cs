@@ -14,7 +14,7 @@ namespace Anthropic.SDK.Models
     {
 
         /// <summary>
-        /// Constructor of the api endpoint.  Rather than instantiating this yourself, access it through an instance of <see cref="AnthropicClient"/> as <see cref="AnthropicClient.Completions"/>.
+        /// Constructor of the api endpoint.  Rather than instantiating this yourself, access it through an instance of <see cref="AnthropicClient"/> as <see cref="AnthropicClient.Models"/>.
         /// </summary>
         /// <param name="client"></param>
         internal ModelsEndpoint(AnthropicClient client) : base(client) { }

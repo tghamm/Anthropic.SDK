@@ -8,8 +8,14 @@ using Anthropic.SDK.Models;
 
 namespace Anthropic.SDK
 {
+    /// <summary>
+    /// Entry point to the Anthropic API, handling auth and allowing access to the various API endpoints
+    /// </summary>
     public class AnthropicClient : IDisposable
     {
+        /// <summary>
+        /// The base URL for the API
+        /// </summary>
         public string ApiUrlFormat { get; set; } = "https://api.anthropic.com/{0}/{1}";
 
         /// <summary>
@@ -110,6 +116,9 @@ namespace Anthropic.SDK
 
         private bool isDisposed;
 
+        /// <summary>
+        /// Disposes of the resources used by the <see cref="AnthropicClient"/>.
+        /// </summary>
         public void Dispose()
         {
             Dispose(true);

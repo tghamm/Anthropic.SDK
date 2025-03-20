@@ -12,7 +12,7 @@ namespace Anthropic.SDK.Messaging
     public partial class MessagesEndpoint : EndpointBase
     {
         /// <summary>
-        /// Constructor of the api endpoint.  Rather than instantiating this yourself, access it through an instance of <see cref="AnthropicClient"/> as <see cref="AnthropicClient.Completions"/>.
+        /// Constructor of the api endpoint.  Rather than instantiating this yourself, access it through an instance of <see cref="AnthropicClient"/> as <see cref="AnthropicClient.Messages"/>.
         /// </summary>
         /// <param name="client"></param>
         internal MessagesEndpoint(AnthropicClient client) : base(client) { }
@@ -61,15 +61,22 @@ namespace Anthropic.SDK.Messaging
             else if (parameters.PromptCaching == PromptCacheType.AutomaticToolsAndSystem)
             {
 
-                parameters.System.Last().CacheControl = new CacheControl()
+                if (parameters.System != null && parameters.System.Any())
                 {
-                    Type = CacheControlType.ephemeral
-                };
-
-                parameters.Tools.Last().Function.CacheControl = new CacheControl()
+                    parameters.System.Last().CacheControl = new CacheControl()
+                    {
+                        Type = CacheControlType.ephemeral
+                    };
+                }
+                
+                if (parameters.Tools != null && parameters.Tools.Any())
                 {
-                    Type = CacheControlType.ephemeral
-                };
+                    parameters.Tools.Last().Function.CacheControl = new CacheControl()
+                    {
+                        Type = CacheControlType.ephemeral
+                    };
+                }
+                
 
             }
             
@@ -121,7 +128,12 @@ namespace Anthropic.SDK.Messaging
                 yield return result;
             }
         }
-
+        /// <summary>
+        /// Makes a call to count the number of tokens in a request.
+        /// </summary>
+        /// <param name="parameters"></param>
+        /// <param name="ctx"></param>
+        /// <returns></returns>
         public async Task<MessageCountTokenResponse> CountMessageTokensAsync(MessageCountTokenParameters parameters, CancellationToken ctx = default)
         {
             return await HttpRequestMessages<MessageCountTokenResponse>($"{Url}/count_tokens", HttpMethod.Post, parameters, ctx).ConfigureAwait(false);

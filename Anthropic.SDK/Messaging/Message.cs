@@ -118,16 +118,24 @@ namespace Anthropic.SDK.Messaging
             {
                 if ((result.Type != "content_block_stop"))
                 {
-                    innerText += result.Delta?.Text ?? string.Empty;
+                    if (result.Delta?.Type == "text_delta")
+                    {
+                        innerText += result.Delta?.Text ?? string.Empty;
+                    }
+
                     citation ??= result.Delta?.Citation;
                 }
                 else if (result.Type == "content_block_stop")
                 {
-                    Content.Add(new TextContent()
+                    if (!string.IsNullOrEmpty(innerText))
                     {
-                        Text = innerText,
-                        Citations = citation!= null ? [citation] : null
-                    });
+                        Content.Add(new TextContent()
+                        {
+                            Text = innerText,
+                            Citations = citation != null ? [citation] : null
+                        });
+                    }
+
                     innerText = string.Empty;
                     citation = null;
                 }
