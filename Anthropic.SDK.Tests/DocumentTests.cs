@@ -11,7 +11,7 @@ using Anthropic.SDK.Messaging;
 namespace Anthropic.SDK.Tests
 {
     [TestClass]
-    public class PDFTests
+    public class DocumentTests
     {
         [TestMethod]
         public async Task TestPDF()
@@ -142,11 +142,54 @@ namespace Anthropic.SDK.Tests
             var message = new Message(responses);
             Assert.IsTrue(message.Content.SelectMany(p => (p as TextContent).Citations ?? new List<CitationResult>()).Any());
 
+        }
+
+        [TestMethod]
+        public async Task TestDocumentCitations()
+        {
+            string resourceName = "Anthropic.SDK.Tests.BillyBudd.txt";
+
+            Assembly assembly = Assembly.GetExecutingAssembly();
+
+            await using Stream stream = assembly.GetManifestResourceStream(resourceName);
+            using StreamReader reader = new StreamReader(stream);
+            string content = await reader.ReadToEndAsync();
 
 
+            var client = new AnthropicClient();
+            var messages = new List<Message>()
+            {
+                new Message(RoleType.User, new DocumentContent()
+                {
+                    Source = new DocumentSource()
+                    {
+                        Type = SourceType.content,
+                        Content = [new TextContent()
+                        {
+                            Text = content
+                        }]
+                    },
+                    Citations = new Citations() { Enabled = true }
+                }),
+                new Message(RoleType.User, "Who is the protagonist in this text? Use citations to back up your answer."),
+            };
+
+            var parameters = new MessageParameters()
+            {
+                Messages = messages,
+                MaxTokens = 1024,
+                Model = AnthropicModels.Claude35Sonnet,
+                Stream = false,
+                Temperature = 0m
+            };
+            var res = await client.Messages.GetClaudeMessageAsync(parameters);
+
+            Assert.IsTrue(res.Content.SelectMany(p => (p as TextContent).Citations ?? new List<CitationResult>()).Any());
 
 
         }
+
+
     }
 
 

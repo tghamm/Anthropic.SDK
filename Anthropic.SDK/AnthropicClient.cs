@@ -4,6 +4,7 @@ using Anthropic.SDK.Messaging;
 using System.Text.Json.Serialization;
 using System.Text.Json;
 using Anthropic.SDK.Batches;
+using Anthropic.SDK.Models;
 
 namespace Anthropic.SDK
 {
@@ -57,6 +58,7 @@ namespace Anthropic.SDK
             this.Auth = apiKeys.ThisOrDefault();
             Messages = new MessagesEndpoint(this);
             Batches = new BatchesEndpoint(this);
+            Models = new ModelsEndpoint(this);
         }
 
         internal static JsonSerializerOptions JsonSerializationOptions { get; } = new()
@@ -81,7 +83,7 @@ namespace Anthropic.SDK
             });
 #else
             return new HttpClient();
-            #endif
+#endif
         }
 
         ~AnthropicClient()
@@ -94,7 +96,15 @@ namespace Anthropic.SDK
         /// </summary>
         public MessagesEndpoint Messages { get; }
 
+        /// <summary>
+        /// Batches are a way to send multiple requests to the API at once. This is useful for when you have a large number of requests to make, or when you want to make multiple requests in parallel.
+        /// </summary>
         public BatchesEndpoint Batches { get; }
+
+        /// <summary>
+        /// Models are a way to manage the models that the API uses to generate completions. You can list models, as well as get information about a specific model.
+        /// </summary>
+        public ModelsEndpoint Models { get; }
 
         #region IDisposable
 

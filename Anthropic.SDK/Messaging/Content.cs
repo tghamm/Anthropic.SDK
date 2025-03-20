@@ -203,7 +203,11 @@ namespace Anthropic.SDK.Messaging
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public SourceType Type { get; set; }
 
-        
+        /// <summary>
+        /// Content of the Document
+        /// </summary>
+        [JsonPropertyName("content")]
+        public List<ContentBase> Content { get; set; }
 
         /// <summary>
         /// Image format

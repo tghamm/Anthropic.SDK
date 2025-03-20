@@ -10,7 +10,7 @@ namespace Anthropic.SDK.Batches
     public class BatchesEndpoint : EndpointBase
     {
         /// <summary>
-        /// Constructor of the api endpoint.  Rather than instantiating this yourself, access it through an instance of <see cref="AnthropicClient"/> as <see cref="AnthropicClient.Completions"/>.
+        /// Constructor of the api endpoint.  Rather than instantiating this yourself, access it through an instance of <see cref="AnthropicClient"/> as <see cref="AnthropicClient.Batches"/>.
         /// </summary>
         /// <param name="client"></param>
         internal BatchesEndpoint(AnthropicClient client) : base(client) { }
@@ -24,7 +24,7 @@ namespace Anthropic.SDK.Batches
         /// <param name="ctx"></param>
         public async Task<BatchResponse> CreateBatchAsync(List<BatchRequest> batches, CancellationToken ctx = default)
         {
-            var response = await HttpRequestBatches(Url, HttpMethod.Post, new { requests = batches }, ctx).ConfigureAwait(false);
+            var response = await HttpRequestSimple<BatchResponse>(Url, HttpMethod.Post, new { requests = batches }, ctx).ConfigureAwait(false);
 
             return response;
         }
@@ -36,7 +36,7 @@ namespace Anthropic.SDK.Batches
         /// <param name="ctx"></param>
         public async Task<BatchResponse> CancelBatchAsync(string batchId, CancellationToken ctx = default)
         {
-            var response = await HttpRequestBatches(Url + $"/{batchId}/cancel", HttpMethod.Post, null, ctx).ConfigureAwait(false);
+            var response = await HttpRequestSimple<BatchResponse>(Url + $"/{batchId}/cancel", HttpMethod.Post, null, ctx).ConfigureAwait(false);
 
             return response;
         }
@@ -48,7 +48,7 @@ namespace Anthropic.SDK.Batches
         /// <param name="ctx"></param>
         public async Task<BatchResponse> RetrieveBatchStatusAsync(string batchId, CancellationToken ctx = default)
         {
-            var response = await HttpRequestBatches(Url + $"/{batchId}", HttpMethod.Get, null, ctx).ConfigureAwait(false);
+            var response = await HttpRequestSimple<BatchResponse>(Url + $"/{batchId}", HttpMethod.Get, null, ctx).ConfigureAwait(false);
 
             return response;
         }
@@ -104,7 +104,7 @@ namespace Anthropic.SDK.Batches
                 url += $"&after_id={afterId}";
             }
 
-            var response = await HttpRequestBatchesList(url, HttpMethod.Get, null, ctx).ConfigureAwait(false);
+            var response = await HttpRequestSimple<BatchList>(url, HttpMethod.Get, null, ctx).ConfigureAwait(false);
 
             return response;
         }
