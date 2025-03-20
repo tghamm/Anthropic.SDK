@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
@@ -224,173 +225,259 @@ namespace Anthropic.SDK.Messaging
                 throw;
             }
             
+            // Process SSE events
+            SseEvent currentEvent = new SseEvent();
+            
             await foreach (var line in streamLines.ConfigureAwait(false))
             {
-                if (string.IsNullOrWhiteSpace(line) || !line.StartsWith("data:"))
-                    continue;
-                
-                // Extract the data part
-                var jsonData = line.Substring(5).Trim();
-                if (jsonData == "[DONE]")
-                    break;
-                
-                Console.WriteLine($"DEBUG - Stream data: {jsonData}");
-                
-                // Try to parse the response
-                JsonElement responseElement;
-                try
+                if (string.IsNullOrEmpty(line))
                 {
-                    responseElement = JsonSerializer.Deserialize<JsonElement>(jsonData);
-                }
-                catch (JsonException)
-                {
-                    continue; // Skip malformed JSON
-                }
-                
-                // Create a message response
-                var result = new MessageResponse
-                {
-                    Content = new List<ContentBase>(),
-                    Model = Model,
-                    Id = Guid.NewGuid().ToString(),
-                    Type = "message",
-                    Delta = new Delta()
-                };
-                
-                // Extract content from the response
-                string deltaText = string.Empty;
-                
-                if (responseElement.TryGetProperty("content", out var contentElement))
-                {
-                    if (contentElement.ValueKind == JsonValueKind.String)
+                    // Empty line indicates the end of an event
+                    if (!string.IsNullOrEmpty(currentEvent.Data))
                     {
-                        deltaText = contentElement.GetString();
-                    }
-                    else if (contentElement.ValueKind == JsonValueKind.Array)
-                    {
-                        // Array of content blocks
-                        foreach (var contentBlock in contentElement.EnumerateArray())
+                        if (currentEvent.Data == "[DONE]")
+                            break;
+                        
+                        Console.WriteLine($"DEBUG - SSE event data: {currentEvent.Data}");
+                        
+                        // Process the event data
+                        MessageResponse result = null;
+                        
+                        // First try to parse as a standard MessageResponse
+                        try
                         {
-                            if (contentBlock.TryGetProperty("type", out var typeEl1) &&
-                                contentBlock.TryGetProperty("text", out var textEl1) &&
-                                typeEl1.GetString() == "text")
-                            {
-                                deltaText += textEl1.GetString();
-                            }
+                            using var ms = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(currentEvent.Data));
+                            result = await JsonSerializer.DeserializeAsync<MessageResponse>(ms, cancellationToken: ctx).ConfigureAwait(false);
                         }
-                    }
-                }
-                else if (responseElement.TryGetProperty("delta", out var deltaElement))
-                {
-                    if (deltaElement.ValueKind == JsonValueKind.String)
-                    {
-                        deltaText = deltaElement.GetString();
-                    }
-                    else if (deltaElement.TryGetProperty("text", out var textEl))
-                    {
-                        deltaText = textEl.GetString();
-                    }
-                    else if (deltaElement.ValueKind == JsonValueKind.Object &&
-                             deltaElement.TryGetProperty("content", out var deltaContent))
-                    {
-                        if (deltaContent.ValueKind == JsonValueKind.String)
+                        catch (JsonException ex)
                         {
-                            deltaText = deltaContent.GetString();
-                        }
-                        else if (deltaContent.ValueKind == JsonValueKind.Array)
-                        {
-                            foreach (var contentBlock in deltaContent.EnumerateArray())
+                            Console.WriteLine($"ERROR - Failed to parse as MessageResponse: {ex.Message}");
+                            
+                            // Try to parse as a Vertex AI response
+                            try
                             {
-                                if (contentBlock.TryGetProperty("type", out var typeEl2) &&
-                                    contentBlock.TryGetProperty("text", out var textEl2) &&
-                                    typeEl2.GetString() == "text")
+                                var vertexResponse = JsonSerializer.Deserialize<JsonElement>(currentEvent.Data);
+                                
+                                // Check if it has predictions
+                                if (vertexResponse.TryGetProperty("predictions", out var predictions) &&
+                                    predictions.ValueKind == JsonValueKind.Array &&
+                                    predictions.GetArrayLength() > 0)
                                 {
-                                    deltaText += textEl2.GetString();
+                                    var prediction = predictions[0];
+                                    string content = string.Empty;
+                                    
+                                    // Try to get content as string
+                                    if (prediction.ValueKind == JsonValueKind.String)
+                                    {
+                                        content = prediction.GetString();
+                                    }
+                                    else if (prediction.TryGetProperty("content", out var contentElement))
+                                    {
+                                        content = contentElement.GetString();
+                                    }
+                                    
+                                    if (!string.IsNullOrEmpty(content))
+                                    {
+                                        // Create a simple message response
+                                        result = new MessageResponse
+                                        {
+                                            Content = new List<ContentBase> { new TextContent { Text = content } },
+                                            Model = Model,
+                                            Id = Guid.NewGuid().ToString(),
+                                            Type = "message"
+                                        };
+                                    }
                                 }
                             }
-                        }
-                    }
-                }
-                else if (responseElement.TryGetProperty("candidates", out var candidatesElement) &&
-                         candidatesElement.ValueKind == JsonValueKind.Array &&
-                         candidatesElement.GetArrayLength() > 0)
-                {
-                    var candidate = candidatesElement[0];
-                    if (candidate.TryGetProperty("content", out var candidateContent))
-                    {
-                        if (candidateContent.ValueKind == JsonValueKind.String)
-                        {
-                            deltaText = candidateContent.GetString();
-                        }
-                        else if (candidateContent.ValueKind == JsonValueKind.Array)
-                        {
-                            foreach (var contentBlock in candidateContent.EnumerateArray())
+                            catch (JsonException innerEx)
                             {
-                                if (contentBlock.TryGetProperty("type", out var typeEl3) &&
-                                    contentBlock.TryGetProperty("text", out var textEl3) &&
-                                    typeEl3.GetString() == "text")
-                                {
-                                    deltaText += textEl3.GetString();
-                                }
+                                Console.WriteLine($"ERROR - Failed to parse as Vertex AI response: {innerEx.Message}");
+                                // If we can't parse as JSON at all, just continue
                             }
                         }
+                        
+                        // Process the result if we have one
+                        if (result != null)
+                        {
+                            // Set model if not already set
+                            if (string.IsNullOrEmpty(result.Model))
+                            {
+                                result.Model = Model;
+                            }
+                            
+                            // Handle tool calls if present
+                            if (result.ContentBlock != null && result.ContentBlock.Type == "tool_use")
+                            {
+                                arguments = string.Empty;
+                                captureTool = true;
+                                name = result.ContentBlock.Name;
+                                id = result.ContentBlock.Id;
+                            }
+                            
+                            if (!string.IsNullOrWhiteSpace(result.Delta?.PartialJson))
+                            {
+                                arguments += result.Delta.PartialJson;
+                            }
+                            
+                            if (captureTool && result.Delta?.StopReason == "tool_use")
+                            {
+                                var tool = parameters.Tools?.FirstOrDefault(t => t.Function.Name == name);
+                                
+                                if (tool != null)
+                                {
+                                    tool.Function.Arguments = arguments;
+                                    tool.Function.Id = id;
+                                    toolCalls.Add(tool.Function);
+                                }
+                                captureTool = false;
+                                result.ToolCalls = toolCalls;
+                            }
+                            
+                            // If we have delta text, update the content
+                            if (!string.IsNullOrEmpty(result.Delta?.Text))
+                            {
+                                currentContent += result.Delta.Text;
+                                
+                                // Make sure we have a content list
+                                if (result.Content == null)
+                                {
+                                    result.Content = new List<ContentBase>();
+                                }
+                                
+                                // Update or add the text content
+                                bool foundTextContent = false;
+                                foreach (var content in result.Content)
+                                {
+                                    if (content is TextContent textContent)
+                                    {
+                                        textContent.Text = currentContent;
+                                        foundTextContent = true;
+                                        break;
+                                    }
+                                }
+                                
+                                if (!foundTextContent)
+                                {
+                                    result.Content.Add(new TextContent { Text = currentContent });
+                                }
+                            }
+                            
+                            yield return result;
+                        }
                     }
-                }
-                
-                // Extract additional metadata
-                if (responseElement.TryGetProperty("id", out var idElement))
-                {
-                    result.Id = idElement.GetString();
-                }
-                
-                if (responseElement.TryGetProperty("model", out var modelElement))
-                {
-                    result.Model = modelElement.GetString();
-                }
-                
-                if (responseElement.TryGetProperty("stop_reason", out var stopReasonElement))
-                {
-                    result.StopReason = stopReasonElement.GetString();
-                    result.Delta.StopReason = stopReasonElement.GetString();
-                }
-                
-                if (!string.IsNullOrEmpty(deltaText))
-                {
-                    currentContent += deltaText;
-                    result.Delta.Text = deltaText;
-                    result.Content.Add(new TextContent { Text = currentContent });
-                }
-                
-                // Handle tool calls if present
-                if (result.ContentBlock != null && result.ContentBlock.Type == "tool_use")
-                {
-                    arguments = string.Empty;
-                    captureTool = true;
-                    name = result.ContentBlock.Name;
-                    id = result.ContentBlock.Id;
-                }
-                
-                if (!string.IsNullOrWhiteSpace(result.Delta?.PartialJson))
-                {
-                    arguments += result.Delta.PartialJson;
-                }
-                
-                if (captureTool && result.Delta?.StopReason == "tool_use")
-                {
-                    var tool = parameters.Tools?.FirstOrDefault(t => t.Function.Name == name);
                     
-                    if (tool != null)
-                    {
-                        tool.Function.Arguments = arguments;
-                        tool.Function.Id = id;
-                        toolCalls.Add(tool.Function);
-                    }
-                    captureTool = false;
-                    result.ToolCalls = toolCalls;
+                    // Reset the event
+                    currentEvent = new SseEvent();
                 }
-                
-                yield return result;
+                else if (line.StartsWith("event:"))
+                {
+                    currentEvent.EventType = line.Substring("event:".Length).Trim();
+                }
+                else if (line.StartsWith("data:"))
+                {
+                    currentEvent.Data = line.Substring("data:".Length).Trim();
+                }
             }
+        }
+        
+        /// <summary>
+        /// Helper method to extract content from various possible response formats
+        /// </summary>
+        private bool TryExtractContent(JsonElement responseElement, out string deltaText)
+        {
+            deltaText = string.Empty;
+            
+            // Try to extract from direct content property
+            if (responseElement.TryGetProperty("content", out var contentElement))
+            {
+                if (contentElement.ValueKind == JsonValueKind.String)
+                {
+                    deltaText = contentElement.GetString();
+                    return true;
+                }
+                else if (contentElement.ValueKind == JsonValueKind.Array)
+                {
+                    // Array of content blocks
+                    foreach (var contentBlock in contentElement.EnumerateArray())
+                    {
+                        if (contentBlock.TryGetProperty("type", out var typeEl1) &&
+                            contentBlock.TryGetProperty("text", out var textEl1) &&
+                            typeEl1.GetString() == "text")
+                        {
+                            deltaText += textEl1.GetString();
+                        }
+                    }
+                    return !string.IsNullOrEmpty(deltaText);
+                }
+            }
+            
+            // Try to extract from delta property
+            if (responseElement.TryGetProperty("delta", out var deltaElement))
+            {
+                if (deltaElement.ValueKind == JsonValueKind.String)
+                {
+                    deltaText = deltaElement.GetString();
+                    return true;
+                }
+                else if (deltaElement.TryGetProperty("text", out var textEl))
+                {
+                    deltaText = textEl.GetString();
+                    return true;
+                }
+                else if (deltaElement.ValueKind == JsonValueKind.Object &&
+                         deltaElement.TryGetProperty("content", out var deltaContent))
+                {
+                    if (deltaContent.ValueKind == JsonValueKind.String)
+                    {
+                        deltaText = deltaContent.GetString();
+                        return true;
+                    }
+                    else if (deltaContent.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var contentBlock in deltaContent.EnumerateArray())
+                        {
+                            if (contentBlock.TryGetProperty("type", out var typeEl2) &&
+                                contentBlock.TryGetProperty("text", out var textEl2) &&
+                                typeEl2.GetString() == "text")
+                            {
+                                deltaText += textEl2.GetString();
+                            }
+                        }
+                        return !string.IsNullOrEmpty(deltaText);
+                    }
+                }
+            }
+            
+            // Try to extract from candidates property (Vertex AI format)
+            if (responseElement.TryGetProperty("candidates", out var candidatesElement) &&
+                candidatesElement.ValueKind == JsonValueKind.Array &&
+                candidatesElement.GetArrayLength() > 0)
+            {
+                var candidate = candidatesElement[0];
+                if (candidate.TryGetProperty("content", out var candidateContent))
+                {
+                    if (candidateContent.ValueKind == JsonValueKind.String)
+                    {
+                        deltaText = candidateContent.GetString();
+                        return true;
+                    }
+                    else if (candidateContent.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var contentBlock in candidateContent.EnumerateArray())
+                        {
+                            if (contentBlock.TryGetProperty("type", out var typeEl3) &&
+                                contentBlock.TryGetProperty("text", out var textEl3) &&
+                                typeEl3.GetString() == "text")
+                            {
+                                deltaText += textEl3.GetString();
+                            }
+                        }
+                        return !string.IsNullOrEmpty(deltaText);
+                    }
+                }
+            }
+            
+            return false;
         }
 
         /// <summary>
@@ -447,8 +534,8 @@ namespace Anthropic.SDK.Messaging
         /// </summary>
         private object CreateVertexAIRequest(MessageParameters parameters)
         {
-            // Create direct request structure based on Vertex AI documentation
-            var request = new
+            // Create the Anthropic-specific payload - same for both streaming and non-streaming
+            var anthropicPayload = new
             {
                 anthropic_version = "vertex-2023-10-16",
                 messages = parameters.Messages?.Select(m => new
@@ -485,13 +572,13 @@ namespace Anthropic.SDK.Messaging
             };
 
             // For debugging
-            Console.WriteLine($"DEBUG - Request structure: {JsonSerializer.Serialize(request)}");
+            Console.WriteLine($"DEBUG - Request structure: {JsonSerializer.Serialize(anthropicPayload)}");
             
-            return request;
+            return anthropicPayload;
         }
 
         /// <summary>
-        /// Makes a streaming HTTP request and returns the response as a stream of lines
+        /// Makes a streaming HTTP request and returns the response as a stream of SSE events
         /// </summary>
         private async IAsyncEnumerable<string> HttpStreamingRequest(string url, HttpMethod method, object data, [EnumeratorCancellation] CancellationToken ctx)
         {
@@ -502,16 +589,51 @@ namespace Anthropic.SDK.Messaging
             });
             request.Content = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
             
-            var response = await GetClient().SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ctx);
-            response.EnsureSuccessStatusCode();
+            // Add specific headers for streaming
+            request.Headers.Add("Accept", "text/event-stream");
             
-            using var stream = await response.Content.ReadAsStreamAsync();
-            using var reader = new System.IO.StreamReader(stream);
+            HttpResponseMessage response = null;
+            Stream stream = null;
+            StreamReader reader = null;
             
-            string line;
-            while ((line = await reader.ReadLineAsync()) != null)
+            try
             {
-                yield return line;
+                response = await GetClient().SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ctx);
+                response.EnsureSuccessStatusCode();
+                
+                stream = await response.Content.ReadAsStreamAsync();
+                reader = new StreamReader(stream);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERROR - Streaming request failed: {ex.Message}");
+                if (response != null)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"ERROR - Response content: {errorContent}");
+                }
+                throw;
+            }
+            
+            try
+            {
+                string line;
+                while ((line = await reader.ReadLineAsync()) != null)
+                {
+                    // Debug the raw response line
+                    Console.WriteLine($"DEBUG - Raw stream line: {line}");
+                    
+                    if (string.IsNullOrEmpty(line))
+                        continue;
+                    
+                    // Pass through the SSE line directly
+                    yield return line;
+                }
+            }
+            finally
+            {
+                reader?.Dispose();
+                stream?.Dispose();
             }
         }
     }

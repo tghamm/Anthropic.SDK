@@ -120,7 +120,7 @@ namespace Anthropic.SDK.VertexAIDemo
                     parameters.Stream = true;
                     
                     await foreach (var chunk in client.Messages
-                        .WithModel(VertexAIModels.Claude3Sonnet)
+                        .WithModel(VertexAIModels.Claude37Sonnet)
                         .StreamClaudeMessageAsync(parameters))
                     {
                         if (chunk.Delta?.Text != null)
