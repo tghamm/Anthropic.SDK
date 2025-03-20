@@ -67,7 +67,7 @@ namespace Anthropic.SDK.Messaging
 
         public Message(List<MessageResponse> asyncResponses)
         {
-            Content = new();
+            Content = [];
             var arguments = string.Empty;
             var text = string.Empty;
             var thinking = string.Empty;
@@ -112,22 +112,43 @@ namespace Anthropic.SDK.Messaging
                 });
             }
 
-
+            var innerText = string.Empty;
+            CitationResult citation = null; 
             foreach (var result in asyncResponses)
             {
-                if (!string.IsNullOrWhiteSpace(result.Delta?.Text))
+                if ((result.Type != "content_block_stop"))
                 {
-                    text += result.Delta.Text;
+                    if (result.Delta?.Type == "text_delta")
+                    {
+                        innerText += result.Delta?.Text ?? string.Empty;
+                    }
+
+                    citation ??= result.Delta?.Citation;
+                }
+                else if (result.Type == "content_block_stop")
+                {
+                    if (!string.IsNullOrEmpty(innerText))
+                    {
+                        Content.Add(new TextContent()
+                        {
+                            Text = innerText,
+                            Citations = citation != null ? [citation] : null
+                        });
+                    }
+
+                    innerText = string.Empty;
+                    citation = null;
                 }
 
             }
-            if (!string.IsNullOrWhiteSpace(text))
-            {
-                Content.Add(new TextContent()
-                {
-                    Text = text
-                });
-            }
+
+            //if (!string.IsNullOrEmpty(innerText))
+            //{
+            //    Content.Add(new TextContent()
+            //    {
+            //        Text = innerText
+            //    });
+            //}
 
             
 

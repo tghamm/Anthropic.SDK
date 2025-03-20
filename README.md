@@ -17,7 +17,9 @@ Anthropic.SDK is an unofficial C# client designed for interacting with the Claud
   - [Extended Thinking](#extended-thinking)
   - [IChatClient](#ichatclient)
   - [Prompt Caching](#prompt-caching)
-  - [PDF Support](#pdf-support)
+  - [Document Support](#document-support)
+  - [Citations](#citations)
+  - [List Models](#list-models)
   - [Batching](#batching)
   - [Tools](#tools)
   - [Computer Use](#computer-use)
@@ -317,7 +319,7 @@ Please see the unit tests for even more examples.
 
 ### Prompt Caching
 
-The `AnthropicClient` supports prompt caching of system messages, user messages (including images), assistant messages, tool_results, and tools in accordance with model limitations. Because the `AnthropicClient` does not have it's own tokenizer, you must ensure yourself that when enabling prompt caching, you are providing enough context to the qualifying model for it to cache or nothing will be cached. Check out the documentation on Anthropic's website for specific model limitations and requirements. 
+The `AnthropicClient` supports prompt caching of system messages, user messages (including images), assistant messages, tool_results, documents, and tools in accordance with model limitations. There are two primary mechanisms for prompt caching in the `AnthropicClient`. `FineGrained` and `AutomaticToolsAndSystem`. The former allows for complete control of all set-points of caching (up to the 4 set-points allowed) where-as `AutomaticToolsAndSystem` automatically caches the System prompt and Tools when present, leaving you the ability to add set-points in Messages yourself when you so choose.  When caching, be aware of the 5 minute expiry enforced by Anthropic, as well as other limitations that can cause a cache miss.  You can check the Token Usage data in results to ensure you are indeed receiving the benefits of caching. 
 
 ```csharp
 //load up a long form text you want to cache and ask questions of
@@ -350,8 +352,8 @@ var parameters = new MessageParameters()
     Stream = false,
     Temperature = 1.0m,
     System = systemMessages,
-    //Key ingredient: we tell Claude we want it to cache messages
-    PromptCaching = PromptCacheType.Messages
+    //Key ingredient: we tell Claude we want it to cache any tools and system messages
+    PromptCaching = PromptCacheType.AutomaticToolsAndSystem
 };
 var res = await client.Messages.GetClaudeMessageAsync(parameters);
 
@@ -369,24 +371,7 @@ var res2 = await client.Messages.GetClaudeMessageAsync(parameters);
 Console.WriteLine(res2.Usage.CacheReadInputTokens);
 ```
 
-To cache tools (if you have a LOT of tools registered) and cache messages at the same time, you can simply declare the prompt caching type as a bitwise operation like so:
-
-```csharp
-var parameters = new MessageParameters()
-{
-    Messages = messages,
-    MaxTokens = 1024,
-    Model = AnthropicModels.Claude35Sonnet,
-    Stream = false,
-    Temperature = 1.0m,
-    //Set caching as enabled for both messages and tools
-    PromptCaching = PromptCacheType.Messages | PromptCacheType.Tools,
-    Tools = tools
-};
-var res = await client.Messages.GetClaudeMessageAsync(parameters);
-```
-
-Additionally, there is a mode for fine-grained control of caching, where you manage the cache points yourself. Here, you declare the cache control setting at the message and tool level, giving you complete control.
+As mentioned, there is a mode for fine-grained control of caching, where you manage the cache points yourself. Here, you declare the cache control setting at the message and tool level, giving you complete control.  Just remember that only 4 cache points can be set in total.
 
 ```csharp
 string resourceName = "Anthropic.SDK.Tests.BillyBudd.txt";
@@ -440,8 +425,8 @@ Console.WriteLine(res2.Usage.CacheReadInputTokens);
 
 See unit tests for additional examples.
 
-### PDF Support
-The `AnthropicClient` supports the new PDF Upload mechanism enabled by Claude.
+### Document Support
+The `AnthropicClient` supports the new PDF Upload mechanism enabled by Claude as well as other document types.
 
 ```csharp
 string resourceName = "Anthropic.SDK.Tests.Claude3ModelCard.pdf";
@@ -461,8 +446,9 @@ var messages = new List<Message>()
 {
     new Message(RoleType.User, new DocumentContent()
     {
-        Source = new ImageSource()
+        Source = new DocumentSource()
         {
+            Type = SourceType.base64
             Data = base64String,
             MediaType = "application/pdf"
         },
@@ -488,9 +474,59 @@ var res = await client.Messages.GetClaudeMessageAsync(parameters);
 Console.WriteLine(res.Message);
 ```
 
+See Integration tests for more examples of other document types.
+
+### Citations
+
+The `AnthropicClient` supports Citations from the Claude API.  Both non-streaming and streaming are supported.
+
+```csharp
+var client = new AnthropicClient();
+var messages = new List<Message>()
+{
+    new Message(RoleType.User, new DocumentContent()
+    {
+        Source = new DocumentSource()
+        {
+            Type = SourceType.url,
+            Url = "https://assets.anthropic.com/m/1cd9d098ac3e6467/original/Claude-3-Model-Card-October-Addendum.pdf"
+        },
+        Citations = new Citations() { Enabled = true }
+    }),
+    new Message(RoleType.User, "What are the key findings in this document? Use citations to back up your answer."),
+};
+
+var parameters = new MessageParameters()
+{
+    Messages = messages,
+    MaxTokens = 1024,
+    Model = AnthropicModels.Claude35Sonnet,
+    Stream = false,
+    Temperature = 0m
+};
+var res = await client.Messages.GetClaudeMessageAsync(parameters);
+
+Assert.IsTrue(res.Content.SelectMany(p => (p as TextContent).Citations ?? new List<CitationResult>()).Any());
+```
+
+See integration tests for more examples like streaming.
+
+### List Models
+
+The `AnthropicClient` supports the Models API.
+
+```csharp
+var client = new AnthropicClient();
+var res = await client.Models.ListModelsAsync();
+Assert.IsNotNull(res.Models);
+var modelId = res.Models.First().Id;
+var model = await client.Models.GetModelAsync(modelId);
+Assert.IsNotNull(model);
+```
+
 ### Batching
 
-The `AnthropicClient` supports the new batching API.  Abbreviated call examples are listed below, please check the `Anthropic.SDK.BatchTester` project for a more comprehensive example.
+The `AnthropicClient` supports the batching API.  Abbreviated call examples are listed below, please check the `Anthropic.SDK.BatchTester` project for a more comprehensive example.
 
 ```csharp
 //list batches

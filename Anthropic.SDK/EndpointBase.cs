@@ -129,25 +129,14 @@ namespace Anthropic.SDK
             return res;
         }
 
-        protected async Task<BatchResponse> HttpRequestBatches(string url = null, HttpMethod verb = null,
+        protected async Task<T> HttpRequestSimple<T>(string url = null, HttpMethod verb = null,
             object postData = null, CancellationToken ctx = default)
         {
             var response = await HttpRequestRaw(url, verb, postData, false, ctx).ConfigureAwait(false);
             string resultAsString = await ReadResponseContentAsync(response, ctx).ConfigureAwait(false);
 
             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(resultAsString));
-            var res = await JsonSerializer.DeserializeAsync<BatchResponse>(ms, cancellationToken: ctx).ConfigureAwait(false);
-            return res;
-        }
-
-        protected async Task<BatchList> HttpRequestBatchesList(string url = null, HttpMethod verb = null,
-            object postData = null, CancellationToken ctx = default)
-        {
-            var response = await HttpRequestRaw(url, verb, postData, false, ctx).ConfigureAwait(false);
-            string resultAsString = await ReadResponseContentAsync(response, ctx).ConfigureAwait(false);
-
-            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(resultAsString));
-            var res = await JsonSerializer.DeserializeAsync<BatchList>(ms, cancellationToken: ctx).ConfigureAwait(false);
+            var res = await JsonSerializer.DeserializeAsync<T>(ms, cancellationToken: ctx).ConfigureAwait(false);
             return res;
         }
 

@@ -41,9 +41,41 @@ namespace Anthropic.SDK.Messaging
         [JsonPropertyName("text")]
         public string Text { get; set; }
 
+        /// <summary>
+        /// Citations
+        /// </summary>
+        [JsonPropertyName("citations")]
+        public List<CitationResult> Citations { get; set; }
+
         public override string ToString() => Text?.ToString() ?? string.Empty;
 
         public static implicit operator string(TextContent choice) => choice?.ToString();
+    }
+
+    public class CitationResult
+    {
+        [JsonPropertyName("type")]
+        public string Type { get; set; }
+        [JsonPropertyName("cited_text")]
+        public string CitedText { get; set; }
+        [JsonPropertyName("document_index")]
+        public int DocumentIndex { get; set; }
+        [JsonPropertyName("document_title")]
+        public string DocumentTitle { get; set; }
+        [JsonPropertyName("start_char_index")]
+        public long? StartCharIndex { get; set; }
+        [JsonPropertyName("end_char_index")]
+        public long? EndCharIndex { get; set; }
+        [JsonPropertyName("start_page_number")]
+        public long? StartPageNumber { get; set; }
+        [JsonPropertyName("end_page_number")]
+        public long? EndPageNumber { get; set; }
+        [JsonPropertyName("start_block_index")]
+        public long? StartBlockIndex { get; set; }
+        [JsonPropertyName("end_block_index")]
+        public long? EndBlockIndex { get; set; }
+
+
     }
 
     /// <summary>
@@ -118,22 +150,88 @@ namespace Anthropic.SDK.Messaging
         /// Source of Document
         /// </summary>
         [JsonPropertyName("source")]
-        public ImageSource Source { get; set; }
+        public DocumentSource Source { get; set; }
+
+        /// <summary>
+        /// Citations
+        /// </summary>
+        [JsonPropertyName("citations")]
+        public Citations Citations { get; set; }
+
+        /// <summary>
+        /// Context
+        /// </summary>
+        [JsonPropertyName("context")]
+        public string Context { get; set; }
+
+        /// <summary>
+        /// Title
+        /// </summary>
+        [JsonPropertyName("title")]
+        public string Title { get; set; }
+    }
+
+    /// <summary>
+    /// Helper Class for Citations
+    /// </summary>
+    public class Citations
+    {
+        [JsonPropertyName("enabled")]
+        public bool Enabled { get; set; }
     }
 
     /// <summary>
     /// Image/Document Format Types
     /// </summary>
-    public static class ImageSourceType
+    public enum SourceType
     {
-        /// <summary>
-        /// Base 64 Image Type
-        /// </summary>
-        public static string Base64 => "base64";
+        base64,
+        text,
+        url,
+        content
     }
 
     /// <summary>
-    /// Definition of image/document to be sent to Claude
+    /// Definition of document to be sent to Claude
+    /// </summary>
+    public class DocumentSource
+    {
+        /// <summary>
+        /// Image data format (pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public SourceType Type { get; set; }
+
+        /// <summary>
+        /// Content of the Document
+        /// </summary>
+        [JsonPropertyName("content")]
+        public List<ContentBase> Content { get; set; }
+
+        /// <summary>
+        /// Image format
+        /// </summary>
+        [JsonPropertyName("media_type")]
+        public string MediaType { get; set; }
+
+        /// <summary>
+        /// Base 64 image data
+        /// </summary>
+        [JsonPropertyName("data")]
+        public string Data { get; set; }
+
+        /// <summary>
+        /// Document URL
+        /// </summary>
+        [JsonPropertyName("url")]
+        public string Url { get; set; }
+    }
+
+
+
+    /// <summary>
+    /// Definition of image to be sent to Claude
     /// </summary>
     public class ImageSource
     {
@@ -141,13 +239,20 @@ namespace Anthropic.SDK.Messaging
         /// Image data format (pre-set)
         /// </summary>
         [JsonPropertyName("type")]
-        public string Type => ImageSourceType.Base64;
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public SourceType Type { get; set; }
 
         /// <summary>
         /// Image format
         /// </summary>
         [JsonPropertyName("media_type")]
         public string MediaType { get; set; }
+
+        /// <summary>
+        /// Image URL
+        /// </summary>
+        [JsonPropertyName("url")]
+        public string Url { get; set; }
 
         /// <summary>
         /// Base 64 image data

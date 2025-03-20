@@ -3,7 +3,7 @@
 namespace Anthropic.SDK.Messaging;
 
 /// <summary>
-/// Prompt Cache Type Definitions. Designed to be used as a bitwise assignment if you want to cache multiple types and are caching enough context.
+/// Prompt Cache Type Definitions. 
 /// </summary>
 [Flags]
 public enum PromptCacheType
@@ -13,15 +13,11 @@ public enum PromptCacheType
     /// </summary>
     None = 0,
     /// <summary>
-    /// Cache System and User Messages
+    /// Use the cache-control instructions from each message for fine-grained control
     /// </summary>
-    Messages = 1 << 0, // 1
+    FineGrained = 1,
     /// <summary>
-    /// Cache Tool Definitions
+    /// Use the cache-control instructions from the system messages for automatic tools and system message caching
     /// </summary>
-    Tools = 1 << 1, // 2
-    /// <summary>
-    /// Use the cache-control instructions from each message
-    /// </summary>
-    FineGrained = 1 << 2, // 4
+    AutomaticToolsAndSystem = 2,
 }

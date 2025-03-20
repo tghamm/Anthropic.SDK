@@ -12,7 +12,7 @@ namespace Anthropic.SDK.Messaging
     public partial class MessagesEndpoint : EndpointBase
     {
         /// <summary>
-        /// Constructor of the api endpoint.  Rather than instantiating this yourself, access it through an instance of <see cref="AnthropicClient"/> as <see cref="AnthropicClient.Completions"/>.
+        /// Constructor of the api endpoint.  Rather than instantiating this yourself, access it through an instance of <see cref="AnthropicClient"/> as <see cref="AnthropicClient.Messages"/>.
         /// </summary>
         /// <param name="client"></param>
         internal MessagesEndpoint(AnthropicClient client) : base(client) { }
@@ -54,50 +54,30 @@ namespace Anthropic.SDK.Messaging
 
         private static void SetCacheControls(MessageParameters parameters)
         {
-            if ( (parameters.PromptCaching & PromptCacheType.FineGrained) == PromptCacheType.FineGrained)
+            if (parameters.PromptCaching == PromptCacheType.FineGrained)
             {
                 // just use each one's cache control, assume they are already set
             }
-            else
+            else if (parameters.PromptCaching == PromptCacheType.AutomaticToolsAndSystem)
             {
-                bool hasMessageCaching = (parameters.PromptCaching & PromptCacheType.Messages) == PromptCacheType.Messages;
-                bool hasToolCaching = (parameters.PromptCaching & PromptCacheType.Tools) == PromptCacheType.Tools;
-                if (hasMessageCaching && parameters.System != null && parameters.System.Any())
+
+                if (parameters.System != null && parameters.System.Any())
                 {
                     parameters.System.Last().CacheControl = new CacheControl()
                     {
                         Type = CacheControlType.ephemeral
                     };
                 }
-
-                if (hasToolCaching && parameters.Tools != null && parameters.Tools.Any())
+                
+                if (parameters.Tools != null && parameters.Tools.Any())
                 {
                     parameters.Tools.Last().Function.CacheControl = new CacheControl()
                     {
                         Type = CacheControlType.ephemeral
                     };
                 }
+                
 
-                var count = parameters.Messages.Count(p => p.Role == RoleType.User);
-                if (hasMessageCaching && parameters.Messages != null &&  count > 1)
-                {
-                    var x = 1;
-                    foreach (var message in parameters.Messages.Where(p => p.Role == RoleType.User))
-                    {
-                        if (x < count - 2)
-                        {
-                            message.Content.ForEach(p => p.CacheControl = null);
-                        }
-                        else
-                        {
-                            message.Content.Last().CacheControl = new CacheControl() {
-                                Type = CacheControlType.ephemeral
-                            };
-                        }
-
-                        x++;
-                    }
-                }
             }
             
         }
@@ -148,7 +128,12 @@ namespace Anthropic.SDK.Messaging
                 yield return result;
             }
         }
-
+        /// <summary>
+        /// Makes a call to count the number of tokens in a request.
+        /// </summary>
+        /// <param name="parameters"></param>
+        /// <param name="ctx"></param>
+        /// <returns></returns>
         public async Task<MessageCountTokenResponse> CountMessageTokensAsync(MessageCountTokenParameters parameters, CancellationToken ctx = default)
         {
             return await HttpRequestMessages<MessageCountTokenResponse>($"{Url}/count_tokens", HttpMethod.Post, parameters, ctx).ConfigureAwait(false);
