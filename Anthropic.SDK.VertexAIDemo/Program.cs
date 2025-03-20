@@ -14,17 +14,65 @@ namespace Anthropic.SDK.VertexAIDemo
             Console.WriteLine("Anthropic SDK - Vertex AI Demo");
             Console.WriteLine("==============================");
             
+            Console.WriteLine("Checking for gcloud CLI authentication...");
+            bool isGcloudAuthenticated = false;
+            string gcloudAccessToken = null;
+            
+            try
+            {
+                var process = new System.Diagnostics.Process
+                {
+                    StartInfo = new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = "gcloud",
+                        Arguments = "auth print-access-token",
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        CreateNoWindow = true
+                    }
+                };
+                
+                process.Start();
+                gcloudAccessToken = process.StandardOutput.ReadToEnd().Trim();
+                process.WaitForExit();
+                
+                if (!string.IsNullOrEmpty(gcloudAccessToken) && !gcloudAccessToken.Contains("ERROR"))
+                {
+                    isGcloudAuthenticated = true;
+                    Console.WriteLine("Found existing gcloud CLI authentication.");
+                }
+            }
+            catch
+            {
+                Console.WriteLine("gcloud CLI not found or not authenticated.");
+            }
+            
             // Get Google Cloud project ID and region from environment variables or command line
-            string projectId = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_PROJECT") 
+            string projectId = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_PROJECT")
                 ?? GetInput("Enter your Google Cloud Project ID: ");
             
-            string region = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_REGION") 
+            string region = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_REGION")
                 ?? GetInput("Enter your Google Cloud Region (e.g., us-central1): ");
             
             // Create a Vertex AI client
-            var client = new VertexAIClient(
-                new VertexAIAuthentication(projectId, region)
-            );
+            VertexAIClient client;
+            
+            if (isGcloudAuthenticated)
+            {
+                // Use gcloud CLI authentication
+                client = new VertexAIClient(
+                    new VertexAIAuthentication(projectId, region, accessToken: gcloudAccessToken)
+                );
+                Console.WriteLine("Using gcloud CLI authentication.");
+            }
+            else
+            {
+                // Use default authentication (will try to use gcloud CLI in the background)
+                client = new VertexAIClient(
+                    new VertexAIAuthentication(projectId, region)
+                );
+                Console.WriteLine("Using default authentication mechanism.");
+            }
             
             // List available models
             Console.WriteLine("\nListing available Claude models on Vertex AI...");
@@ -88,7 +136,7 @@ namespace Anthropic.SDK.VertexAIDemo
                     Console.WriteLine("\nGetting response from Claude via Vertex AI...\n");
                     
                     var response = await client.Messages
-                        .WithModel(VertexAIModels.Claude3Sonnet)
+                        .WithModel(VertexAIModels.Claude37Sonnet)
                         .GetClaudeMessageAsync(parameters);
                     
                     Console.WriteLine($"Response: {response.Content[0]}");

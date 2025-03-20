@@ -14,6 +14,9 @@ Anthropic.SDK is an unofficial C# client designed for interacting with the Claud
   - [Usage](#usage)
   - [Vertex AI Support](#vertex-ai-support)
     - [Authentication](#authentication)
+      - [1. Explicit Authentication](#1-explicit-authentication)
+      - [2. Environment Variables](#2-environment-variables)
+      - [3. gcloud CLI Authentication (Recommended)](#3-gcloud-cli-authentication-recommended)
     - [Basic Usage](#basic-usage)
     - [Available Models](#available-models)
     - [Streaming Support](#streaming-support)
@@ -84,7 +87,11 @@ Anthropic.SDK now supports accessing Claude models through Google Cloud's Vertex
 
 ### Authentication
 
-To use Vertex AI, you'll need to provide your Google Cloud Project ID and Region:
+The SDK supports multiple authentication methods for Vertex AI:
+
+#### 1. Explicit Authentication
+
+You can provide your Google Cloud Project ID and Region explicitly:
 
 ```csharp
 // Create a Vertex AI client with project ID and region
@@ -96,11 +103,36 @@ var client = new VertexAIClient(
 );
 ```
 
-You can also load these values from environment variables:
+#### 2. Environment Variables
+
+You can load authentication values from environment variables:
 - `GOOGLE_CLOUD_PROJECT`: Your Google Cloud Project ID
 - `GOOGLE_CLOUD_REGION`: Your Google Cloud Region (e.g., "us-central1")
 - `GOOGLE_API_KEY`: (Optional) Your Google Cloud API Key
 - `GOOGLE_ACCESS_TOKEN`: (Optional) Your OAuth2 Access Token
+
+#### 3. gcloud CLI Authentication (Recommended)
+
+If you're already authenticated with the gcloud CLI, the SDK will automatically use your existing credentials:
+
+```bash
+# Authenticate with gcloud CLI (do this once)
+gcloud auth login
+
+# Verify authentication
+gcloud auth print-access-token
+```
+
+Then in your code:
+```csharp
+// The SDK will automatically use your gcloud CLI credentials
+var client = new VertexAIClient(
+    new VertexAIAuthentication(
+        projectId: "your-google-cloud-project-id",
+        region: "us-central1"
+    )
+);
+```
 
 ### Basic Usage
 

@@ -83,7 +83,41 @@ namespace Anthropic.SDK
                 // For API key authentication
                 AddHeaderIfNotPresent(client.DefaultRequestHeaders, "x-goog-api-key", Client.Auth.ApiKey);
             }
-            // If neither is provided, rely on default Google Cloud credentials
+            else
+            {
+                // Use default Google Cloud credentials from gcloud CLI
+                try
+                {
+                    // Try to get access token from gcloud CLI
+                    var process = new System.Diagnostics.Process
+                    {
+                        StartInfo = new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = "gcloud",
+                            Arguments = "auth print-access-token",
+                            UseShellExecute = false,
+                            RedirectStandardOutput = true,
+                            CreateNoWindow = true
+                        }
+                    };
+                    
+                    process.Start();
+                    string accessToken = process.StandardOutput.ReadToEnd().Trim();
+                    process.WaitForExit();
+                    
+                    if (!string.IsNullOrEmpty(accessToken))
+                    {
+                        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // If gcloud CLI is not available or fails, continue without authentication
+                    // The request will likely fail, but we'll let the API return the appropriate error
+                    Console.WriteLine($"Warning: Failed to get access token from gcloud CLI: {ex.Message}");
+                    Console.WriteLine("Please ensure you are authenticated with 'gcloud auth login' or provide explicit credentials.");
+                }
+            }
 
             AddHeaderIfNotPresent(client.DefaultRequestHeaders, "User-Agent", UserAgent);
 
