@@ -61,7 +61,7 @@ namespace Anthropic.SDK.Messaging
                 var jsonResponse = await HttpRequestSimple<JsonElement>(Url, HttpMethod.Post, vertexRequest, ctx).ConfigureAwait(false);
                 
                 // Debug the response
-                Console.WriteLine($"DEBUG - Response: {JsonSerializer.Serialize(jsonResponse)}");
+                System.Diagnostics.Debug.WriteLine($"DEBUG - Response: {JsonSerializer.Serialize(jsonResponse)}");
                 
                 // Create a MessageResponse from the raw response
                 var anthropicResponse = new MessageResponse
@@ -189,7 +189,7 @@ namespace Anthropic.SDK.Messaging
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ERROR - Failed to get Claude message: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"ERROR - Failed to get Claude message: {ex.Message}");
                 throw;
             }
         }
@@ -221,7 +221,7 @@ namespace Anthropic.SDK.Messaging
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ERROR - Failed to initialize stream: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"ERROR - Failed to initialize stream: {ex.Message}");
                 throw;
             }
             
@@ -238,7 +238,7 @@ namespace Anthropic.SDK.Messaging
                         if (currentEvent.Data == "[DONE]")
                             break;
                         
-                        Console.WriteLine($"DEBUG - SSE event data: {currentEvent.Data}");
+                        System.Diagnostics.Debug.WriteLine($"DEBUG - SSE event data: {currentEvent.Data}");
                         
                         // Process the event data
                         MessageResponse result = null;
@@ -251,7 +251,7 @@ namespace Anthropic.SDK.Messaging
                         }
                         catch (JsonException ex)
                         {
-                            Console.WriteLine($"ERROR - Failed to parse as MessageResponse: {ex.Message}");
+                            System.Diagnostics.Debug.WriteLine($"ERROR - Failed to parse as MessageResponse: {ex.Message}");
                             
                             // Try to parse as a Vertex AI response
                             try
@@ -284,14 +284,15 @@ namespace Anthropic.SDK.Messaging
                                             Content = new List<ContentBase> { new TextContent { Text = content } },
                                             Model = Model,
                                             Id = Guid.NewGuid().ToString(),
-                                            Type = "message"
+                                            Type = "message",
+                                            Delta = new Delta { Text = content } // Set Delta.Text so it can be printed in the demo
                                         };
                                     }
                                 }
                             }
                             catch (JsonException innerEx)
                             {
-                                Console.WriteLine($"ERROR - Failed to parse as Vertex AI response: {innerEx.Message}");
+                                System.Diagnostics.Debug.WriteLine($"ERROR - Failed to parse as Vertex AI response: {innerEx.Message}");
                                 // If we can't parse as JSON at all, just continue
                             }
                         }
@@ -572,7 +573,7 @@ namespace Anthropic.SDK.Messaging
             };
 
             // For debugging
-            Console.WriteLine($"DEBUG - Request structure: {JsonSerializer.Serialize(anthropicPayload)}");
+            System.Diagnostics.Debug.WriteLine($"DEBUG - Request structure: {JsonSerializer.Serialize(anthropicPayload)}");
             
             return anthropicPayload;
         }
@@ -606,11 +607,11 @@ namespace Anthropic.SDK.Messaging
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ERROR - Streaming request failed: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"ERROR - Streaming request failed: {ex.Message}");
                 if (response != null)
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"ERROR - Response content: {errorContent}");
+                    System.Diagnostics.Debug.WriteLine($"ERROR - Response content: {errorContent}");
                 }
                 throw;
             }
@@ -621,7 +622,7 @@ namespace Anthropic.SDK.Messaging
                 while ((line = await reader.ReadLineAsync()) != null)
                 {
                     // Debug the raw response line
-                    Console.WriteLine($"DEBUG - Raw stream line: {line}");
+                    System.Diagnostics.Debug.WriteLine($"DEBUG - Raw stream line: {line}");
                     
                     if (string.IsNullOrEmpty(line))
                         continue;

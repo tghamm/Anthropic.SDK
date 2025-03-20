@@ -119,6 +119,13 @@ namespace Anthropic.SDK.VertexAIDemo
                     Console.WriteLine("\nStreaming response from Claude via Vertex AI...\n");
                     parameters.Stream = true;
                     
+                    Console.WriteLine("Debug output will be shown in [DEBUG] blocks");
+                    Console.WriteLine("Actual response content will be shown directly\n");
+                    
+                    // Add a console trace listener to capture debug output
+                    System.Diagnostics.Trace.Listeners.Add(new System.Diagnostics.ConsoleTraceListener());
+                    
+                    string fullResponse = "";
                     await foreach (var chunk in client.Messages
                         .WithModel(VertexAIModels.Claude37Sonnet)
                         .StreamClaudeMessageAsync(parameters))
@@ -126,8 +133,12 @@ namespace Anthropic.SDK.VertexAIDemo
                         if (chunk.Delta?.Text != null)
                         {
                             Console.Write(chunk.Delta.Text);
+                            fullResponse += chunk.Delta.Text;
                         }
                     }
+                    
+                    Console.WriteLine("\n\nFull response:");
+                    Console.WriteLine(fullResponse);
                     Console.WriteLine("\n");
                 }
                 else
