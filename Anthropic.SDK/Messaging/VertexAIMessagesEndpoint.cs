@@ -50,148 +50,33 @@ namespace Anthropic.SDK.Messaging
         /// <param name="ctx">Cancellation token</param>
         public async Task<MessageResponse> GetClaudeMessageAsync(MessageParameters parameters, CancellationToken ctx = default)
         {
+            SetCacheControls(parameters);
+            
             parameters.Stream = false;
             
             // Create the Vertex AI request
             var vertexRequest = CreateVertexAIRequest(parameters);
             
-            try
+            var response = await HttpRequestMessages<MessageResponse>(Url, HttpMethod.Post, vertexRequest, ctx).ConfigureAwait(false);
+            
+            var toolCalls = new List<Function>();
+            foreach (var message in response.Content)
             {
-                // Make the request using HttpRequestSimple which is accessible
-                var jsonResponse = await HttpRequestSimple<JsonElement>(Url, HttpMethod.Post, vertexRequest, ctx).ConfigureAwait(false);
-                
-                // Debug the response
-                System.Diagnostics.Debug.WriteLine($"DEBUG - Response: {JsonSerializer.Serialize(jsonResponse)}");
-                
-                // Create a MessageResponse from the raw response
-                var anthropicResponse = new MessageResponse
+                if (message.Type == ContentType.tool_use)
                 {
-                    Content = new List<ContentBase>(),
-                    Model = Model,
-                    Id = Guid.NewGuid().ToString(),
-                    Type = "message"
-                };
-                
-                // Extract content from the response
-                if (jsonResponse.TryGetProperty("content", out var contentElement))
-                {
-                    if (contentElement.ValueKind == JsonValueKind.String)
-                    {
-                        // Simple string content
-                        anthropicResponse.Content.Add(new TextContent { Text = contentElement.GetString() });
-                    }
-                    else if (contentElement.ValueKind == JsonValueKind.Array)
-                    {
-                        // Array of content blocks
-                        foreach (var contentBlock in contentElement.EnumerateArray())
-                        {
-                            if (contentBlock.TryGetProperty("type", out var typeEl) &&
-                                contentBlock.TryGetProperty("text", out var textEl) &&
-                                typeEl.GetString() == "text")
-                            {
-                                anthropicResponse.Content.Add(new TextContent { Text = textEl.GetString() });
-                            }
-                        }
-                    }
-                }
-                else if (jsonResponse.TryGetProperty("candidates", out var candidatesElement) &&
-                         candidatesElement.ValueKind == JsonValueKind.Array &&
-                         candidatesElement.GetArrayLength() > 0)
-                {
-                    var candidate = candidatesElement[0];
-                    if (candidate.TryGetProperty("content", out var candidateContent))
-                    {
-                        if (candidateContent.ValueKind == JsonValueKind.String)
-                        {
-                            anthropicResponse.Content.Add(new TextContent { Text = candidateContent.GetString() });
-                        }
-                        else if (candidateContent.ValueKind == JsonValueKind.Array)
-                        {
-                            foreach (var contentBlock in candidateContent.EnumerateArray())
-                            {
-                                if (contentBlock.TryGetProperty("type", out var typeEl) &&
-                                    contentBlock.TryGetProperty("text", out var textEl) &&
-                                    typeEl.GetString() == "text")
-                                {
-                                    anthropicResponse.Content.Add(new TextContent { Text = textEl.GetString() });
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                // Extract additional metadata
-                if (jsonResponse.TryGetProperty("role", out var roleElement))
-                {
-                    // Set the role if present
-                    string role = roleElement.GetString();
-                    if (role == "assistant")
-                    {
-                        // Role is already set to assistant by default in MessageResponse
-                    }
-                }
-                
-                if (jsonResponse.TryGetProperty("id", out var idElement))
-                {
-                    anthropicResponse.Id = idElement.GetString();
-                }
-                
-                if (jsonResponse.TryGetProperty("model", out var modelElement))
-                {
-                    anthropicResponse.Model = modelElement.GetString();
-                }
-                
-                if (jsonResponse.TryGetProperty("stop_reason", out var stopReasonElement))
-                {
-                    anthropicResponse.StopReason = stopReasonElement.GetString();
-                }
-                
-                if (jsonResponse.TryGetProperty("stop_sequence", out var stopSequenceElement) &&
-                    stopSequenceElement.ValueKind != JsonValueKind.Null)
-                {
-                    anthropicResponse.StopSequence = stopSequenceElement.GetString();
-                }
-                
-                if (jsonResponse.TryGetProperty("usage", out var usageElement))
-                {
-                    anthropicResponse.Usage = new Usage();
+                    var tool = parameters.Tools?.FirstOrDefault(t => t.Function.Name == (message as ToolUseContent).Name);
                     
-                    if (usageElement.TryGetProperty("input_tokens", out var inputTokensElement))
+                    if (tool != null)
                     {
-                        anthropicResponse.Usage.InputTokens = inputTokensElement.GetInt32();
-                    }
-                    
-                    if (usageElement.TryGetProperty("output_tokens", out var outputTokensElement))
-                    {
-                        anthropicResponse.Usage.OutputTokens = outputTokensElement.GetInt32();
+                        tool.Function.Arguments = (message as ToolUseContent).Input;
+                        tool.Function.Id = (message as ToolUseContent).Id;
+                        toolCalls.Add(tool.Function);
                     }
                 }
-                
-                // Handle tool calls if present
-                var toolCalls = new List<Function>();
-                foreach (var message in anthropicResponse.Content)
-                {
-                    if (message.Type == ContentType.tool_use)
-                    {
-                        var tool = parameters.Tools?.FirstOrDefault(t => t.Function.Name == (message as ToolUseContent).Name);
-                        
-                        if (tool != null)
-                        {
-                            tool.Function.Arguments = (message as ToolUseContent).Input;
-                            tool.Function.Id = (message as ToolUseContent).Id;
-                            toolCalls.Add(tool.Function);
-                        }
-                    }
-                }
-                anthropicResponse.ToolCalls = toolCalls;
-                
-                return anthropicResponse;
             }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"ERROR - Failed to get Claude message: {ex.Message}");
-                throw;
-            }
+            response.ToolCalls = toolCalls;
+            
+            return response;
         }
 
         /// <summary>
@@ -201,6 +86,8 @@ namespace Anthropic.SDK.Messaging
         /// <param name="ctx">Cancellation token</param>
         public async IAsyncEnumerable<MessageResponse> StreamClaudeMessageAsync(MessageParameters parameters, [EnumeratorCancellation] CancellationToken ctx = default)
         {
+            SetCacheControls(parameters);
+            
             parameters.Stream = true;
             
             // Create the Vertex AI request
@@ -211,172 +98,63 @@ namespace Anthropic.SDK.Messaging
             var name = string.Empty;
             bool captureTool = false;
             var id = string.Empty;
-            string currentContent = string.Empty;
             
-            IAsyncEnumerable<string> streamLines;
-            
-            try
+            await foreach (var result in HttpStreamingRequestMessages(Url, HttpMethod.Post, vertexRequest, ctx).ConfigureAwait(false))
             {
-                streamLines = HttpStreamingRequest(Url, HttpMethod.Post, vertexRequest, ctx);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"ERROR - Failed to initialize stream: {ex.Message}");
-                throw;
-            }
-            
-            // Process SSE events
-            SseEvent currentEvent = new SseEvent();
-            
-            await foreach (var line in streamLines.ConfigureAwait(false))
-            {
-                if (string.IsNullOrEmpty(line))
+                // Handle tool calls if present
+                if (result.ContentBlock != null && result.ContentBlock.Type == "tool_use")
                 {
-                    // Empty line indicates the end of an event
-                    if (!string.IsNullOrEmpty(currentEvent.Data))
-                    {
-                        if (currentEvent.Data == "[DONE]")
-                            break;
-                        
-                        System.Diagnostics.Debug.WriteLine($"DEBUG - SSE event data: {currentEvent.Data}");
-                        
-                        // Process the event data
-                        MessageResponse result = null;
-                        
-                        // First try to parse as a standard MessageResponse
-                        try
-                        {
-                            using var ms = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(currentEvent.Data));
-                            result = await JsonSerializer.DeserializeAsync<MessageResponse>(ms, cancellationToken: ctx).ConfigureAwait(false);
-                        }
-                        catch (JsonException ex)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"ERROR - Failed to parse as MessageResponse: {ex.Message}");
-                            
-                            // Try to parse as a Vertex AI response
-                            try
-                            {
-                                var vertexResponse = JsonSerializer.Deserialize<JsonElement>(currentEvent.Data);
-                                
-                                // Check if it has predictions
-                                if (vertexResponse.TryGetProperty("predictions", out var predictions) &&
-                                    predictions.ValueKind == JsonValueKind.Array &&
-                                    predictions.GetArrayLength() > 0)
-                                {
-                                    var prediction = predictions[0];
-                                    string content = string.Empty;
-                                    
-                                    // Try to get content as string
-                                    if (prediction.ValueKind == JsonValueKind.String)
-                                    {
-                                        content = prediction.GetString();
-                                    }
-                                    else if (prediction.TryGetProperty("content", out var contentElement))
-                                    {
-                                        content = contentElement.GetString();
-                                    }
-                                    
-                                    if (!string.IsNullOrEmpty(content))
-                                    {
-                                        // Create a simple message response
-                                        result = new MessageResponse
-                                        {
-                                            Content = new List<ContentBase> { new TextContent { Text = content } },
-                                            Model = Model,
-                                            Id = Guid.NewGuid().ToString(),
-                                            Type = "message",
-                                            Delta = new Delta { Text = content } // Set Delta.Text so it can be printed in the demo
-                                        };
-                                    }
-                                }
-                            }
-                            catch (JsonException innerEx)
-                            {
-                                System.Diagnostics.Debug.WriteLine($"ERROR - Failed to parse as Vertex AI response: {innerEx.Message}");
-                                // If we can't parse as JSON at all, just continue
-                            }
-                        }
-                        
-                        // Process the result if we have one
-                        if (result != null)
-                        {
-                            // Set model if not already set
-                            if (string.IsNullOrEmpty(result.Model))
-                            {
-                                result.Model = Model;
-                            }
-                            
-                            // Handle tool calls if present
-                            if (result.ContentBlock != null && result.ContentBlock.Type == "tool_use")
-                            {
-                                arguments = string.Empty;
-                                captureTool = true;
-                                name = result.ContentBlock.Name;
-                                id = result.ContentBlock.Id;
-                            }
-                            
-                            if (!string.IsNullOrWhiteSpace(result.Delta?.PartialJson))
-                            {
-                                arguments += result.Delta.PartialJson;
-                            }
-                            
-                            if (captureTool && result.Delta?.StopReason == "tool_use")
-                            {
-                                var tool = parameters.Tools?.FirstOrDefault(t => t.Function.Name == name);
-                                
-                                if (tool != null)
-                                {
-                                    tool.Function.Arguments = arguments;
-                                    tool.Function.Id = id;
-                                    toolCalls.Add(tool.Function);
-                                }
-                                captureTool = false;
-                                result.ToolCalls = toolCalls;
-                            }
-                            
-                            // If we have delta text, update the content
-                            if (!string.IsNullOrEmpty(result.Delta?.Text))
-                            {
-                                currentContent += result.Delta.Text;
-                                
-                                // Make sure we have a content list
-                                if (result.Content == null)
-                                {
-                                    result.Content = new List<ContentBase>();
-                                }
-                                
-                                // Update or add the text content
-                                bool foundTextContent = false;
-                                foreach (var content in result.Content)
-                                {
-                                    if (content is TextContent textContent)
-                                    {
-                                        textContent.Text = currentContent;
-                                        foundTextContent = true;
-                                        break;
-                                    }
-                                }
-                                
-                                if (!foundTextContent)
-                                {
-                                    result.Content.Add(new TextContent { Text = currentContent });
-                                }
-                            }
-                            
-                            yield return result;
-                        }
-                    }
+                    arguments = string.Empty;
+                    captureTool = true;
+                    name = result.ContentBlock.Name;
+                    id = result.ContentBlock.Id;
+                }
+                
+                if (!string.IsNullOrWhiteSpace(result.Delta?.PartialJson))
+                {
+                    arguments += result.Delta.PartialJson;
+                }
+                
+                if (captureTool && result.Delta?.StopReason == "tool_use")
+                {
+                    var tool = parameters.Tools?.FirstOrDefault(t => t.Function.Name == name);
                     
-                    // Reset the event
-                    currentEvent = new SseEvent();
+                    if (tool != null)
+                    {
+                        tool.Function.Arguments = arguments;
+                        tool.Function.Id = id;
+                        toolCalls.Add(tool.Function);
+                    }
+                    captureTool = false;
+                    result.ToolCalls = toolCalls;
                 }
-                else if (line.StartsWith("event:"))
+                
+                yield return result;
+            }
+        }
+        
+        private static void SetCacheControls(MessageParameters parameters)
+        {
+            if (parameters.PromptCaching == PromptCacheType.FineGrained)
+            {
+                // just use each one's cache control, assume they are already set
+            }
+            else if (parameters.PromptCaching == PromptCacheType.AutomaticToolsAndSystem)
+            {
+                if (parameters.System != null && parameters.System.Any())
                 {
-                    currentEvent.EventType = line.Substring("event:".Length).Trim();
+                    parameters.System.Last().CacheControl = new CacheControl()
+                    {
+                        Type = CacheControlType.ephemeral
+                    };
                 }
-                else if (line.StartsWith("data:"))
+                
+                if (parameters.Tools != null && parameters.Tools.Any())
                 {
-                    currentEvent.Data = line.Substring("data:".Length).Trim();
+                    parameters.Tools.Last().Function.CacheControl = new CacheControl()
+                    {
+                        Type = CacheControlType.ephemeral
+                    };
                 }
             }
         }
@@ -424,28 +202,6 @@ namespace Anthropic.SDK.Messaging
                 {
                     deltaText = textEl.GetString();
                     return true;
-                }
-                else if (deltaElement.ValueKind == JsonValueKind.Object &&
-                         deltaElement.TryGetProperty("content", out var deltaContent))
-                {
-                    if (deltaContent.ValueKind == JsonValueKind.String)
-                    {
-                        deltaText = deltaContent.GetString();
-                        return true;
-                    }
-                    else if (deltaContent.ValueKind == JsonValueKind.Array)
-                    {
-                        foreach (var contentBlock in deltaContent.EnumerateArray())
-                        {
-                            if (contentBlock.TryGetProperty("type", out var typeEl2) &&
-                                contentBlock.TryGetProperty("text", out var textEl2) &&
-                                typeEl2.GetString() == "text")
-                            {
-                                deltaText += textEl2.GetString();
-                            }
-                        }
-                        return !string.IsNullOrEmpty(deltaText);
-                    }
                 }
             }
             
@@ -571,72 +327,10 @@ namespace Anthropic.SDK.Messaging
                     budget_tokens = parameters.Thinking.BudgetTokens
                 } : null
             };
-
-            // For debugging
-            System.Diagnostics.Debug.WriteLine($"DEBUG - Request structure: {JsonSerializer.Serialize(anthropicPayload)}");
             
             return anthropicPayload;
         }
 
-        /// <summary>
-        /// Makes a streaming HTTP request and returns the response as a stream of SSE events
-        /// </summary>
-        private async IAsyncEnumerable<string> HttpStreamingRequest(string url, HttpMethod method, object data, [EnumeratorCancellation] CancellationToken ctx)
-        {
-            var request = new HttpRequestMessage(method, url);
-            var jsonContent = JsonSerializer.Serialize(data, new JsonSerializerOptions
-            {
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-            });
-            request.Content = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
-            
-            // Add specific headers for streaming
-            request.Headers.Add("Accept", "text/event-stream");
-            
-            HttpResponseMessage response = null;
-            Stream stream = null;
-            StreamReader reader = null;
-            
-            try
-            {
-                response = await GetClient().SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ctx);
-                response.EnsureSuccessStatusCode();
-                
-                stream = await response.Content.ReadAsStreamAsync();
-                reader = new StreamReader(stream);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"ERROR - Streaming request failed: {ex.Message}");
-                if (response != null)
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    System.Diagnostics.Debug.WriteLine($"ERROR - Response content: {errorContent}");
-                }
-                throw;
-            }
-            
-            try
-            {
-                string line;
-                while ((line = await reader.ReadLineAsync()) != null)
-                {
-                    // Debug the raw response line
-                    System.Diagnostics.Debug.WriteLine($"DEBUG - Raw stream line: {line}");
-                    
-                    if (string.IsNullOrEmpty(line))
-                        continue;
-                    
-                    // Pass through the SSE line directly
-                    yield return line;
-                }
-            }
-            finally
-            {
-                reader?.Dispose();
-                stream?.Dispose();
-            }
-        }
     }
 
     /// <summary>

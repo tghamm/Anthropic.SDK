@@ -192,6 +192,7 @@ namespace Anthropic.SDK
 #endif
             using var reader = new StreamReader(stream);
             string line;
+            SseEvent currentEvent = new SseEvent();
 #if NET8_0_OR_GREATER
             while ((line = await reader.ReadLineAsync(ctx).ConfigureAwait(false)) != null)
 #else
@@ -200,9 +201,84 @@ namespace Anthropic.SDK
             {
                 if (!string.IsNullOrEmpty(line))
                 {
-                    using var ms = new MemoryStream(Encoding.UTF8.GetBytes(line));
-                    var res = await JsonSerializer.DeserializeAsync<MessageResponse>(ms, cancellationToken: ctx).ConfigureAwait(false);
-                    yield return res;
+                    if (line.StartsWith("event:"))
+                    {
+                        currentEvent.EventType = line.Substring("event:".Length).Trim();
+                    }
+                    else if (line.StartsWith("data:"))
+                    {
+                        currentEvent.Data = line.Substring("data:".Length).Trim();
+                    }
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(currentEvent.Data))
+                    {
+                        if (currentEvent.Data == "[DONE]")
+                            break;
+                        
+                        MessageResponse result = null;
+                        
+                        // First try to parse as a standard MessageResponse
+                        try
+                        {
+                            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(currentEvent.Data));
+                            result = await JsonSerializer.DeserializeAsync<MessageResponse>(ms, cancellationToken: ctx).ConfigureAwait(false);
+                        }
+                        catch (JsonException)
+                        {
+                            // Try to parse as a Vertex AI response
+                            try
+                            {
+                                var vertexResponse = JsonSerializer.Deserialize<JsonElement>(currentEvent.Data);
+                                
+                                // Check if it has predictions
+                                if (vertexResponse.TryGetProperty("predictions", out var predictions) &&
+                                    predictions.ValueKind == JsonValueKind.Array &&
+                                    predictions.GetArrayLength() > 0)
+                                {
+                                    var prediction = predictions[0];
+                                    string content = string.Empty;
+                                    
+                                    // Try to get content as string
+                                    if (prediction.ValueKind == JsonValueKind.String)
+                                    {
+                                        content = prediction.GetString();
+                                    }
+                                    else if (prediction.TryGetProperty("content", out var contentElement))
+                                    {
+                                        content = contentElement.GetString();
+                                    }
+                                    
+                                    if (!string.IsNullOrEmpty(content))
+                                    {
+                                        // Create a simple message response
+                                        result = new MessageResponse
+                                        {
+                                            Content = new List<ContentBase> { new TextContent { Text = content } },
+                                            Model = Model,
+                                            Id = Guid.NewGuid().ToString(),
+                                            Type = "message",
+                                            Delta = new Delta { Text = content }
+                                        };
+                                    }
+                                }
+                            }
+                            catch (JsonException)
+                            {
+                                // If we can't parse as JSON at all, just continue
+                            }
+                        }
+                        
+                        // If we have a result, yield it
+                        if (result != null)
+                        {
+                            yield return result;
+                        }
+                    }
+                    
+                    // Reset the event
+                    currentEvent = new SseEvent();
                 }
             }
         }
