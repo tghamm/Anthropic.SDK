@@ -1,21 +1,14 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Diagnostics;
-using System.Linq;
-using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using Anthropic.SDK.Common;
 using Microsoft.Extensions.AI;
 
 namespace Anthropic.SDK.Messaging;
 
-public partial class MessagesEndpoint : IChatClient
+public partial class VertexAIMessagesEndpoint : IChatClient
 {
     private ChatClientMetadata _metadata;
 
@@ -30,47 +23,6 @@ public partial class MessagesEndpoint : IChatClient
         if (response.StopSequence is not null)
         {
             (message.AdditionalProperties ??= [])[nameof(response.StopSequence)] = response.StopSequence;
-        }
-
-        if (response.RateLimits is { } rateLimits)
-        {
-            Dictionary<string, object> d = new();
-            (message.AdditionalProperties ??= [])[nameof(response.RateLimits)] = d;
-
-            if (rateLimits.RequestsLimit is { } requestLimit)
-            {
-                d[nameof(rateLimits.RequestsLimit)] = requestLimit;
-            }
-
-            if (rateLimits.RequestsRemaining is { } requestsRemaining)
-            {
-                d[nameof(rateLimits.RequestsRemaining)] = requestsRemaining;
-            }
-
-            if (rateLimits.RequestsReset is { } requestsReset)
-            {
-                d[nameof(rateLimits.RequestsReset)] = requestsReset;
-            }
-
-            if (rateLimits.RetryAfter is { } retryAfter)
-            {
-                d[nameof(rateLimits.RetryAfter)] = retryAfter;
-            }
-
-            if (rateLimits.TokensLimit is { } tokensLimit)
-            {
-                d[nameof(rateLimits.TokensLimit)] = tokensLimit;
-            }
-
-            if (rateLimits.TokensRemaining is { } tokensRemaining)
-            {
-                d[nameof(rateLimits.TokensRemaining)] = tokensRemaining;
-            }
-
-            if (rateLimits.TokensReset is { } tokensReset)
-            {
-                d[nameof(rateLimits.TokensReset)] = tokensReset;
-            }
         }
 
         return new(message)
@@ -164,7 +116,7 @@ public partial class MessagesEndpoint : IChatClient
     /// <inheritdoc />
     object IChatClient.GetService(Type serviceType, object serviceKey) =>
         serviceKey is not null ? null :
-        serviceType == typeof(ChatClientMetadata) ? (_metadata ??= new(nameof(AnthropicClient), new Uri(Url))) :
+        serviceType == typeof(ChatClientMetadata) ? (_metadata ??= new(nameof(VertexAIClient), new Uri(Url))) :
         serviceType?.IsInstanceOfType(this) is true ? this :
         null;
 }

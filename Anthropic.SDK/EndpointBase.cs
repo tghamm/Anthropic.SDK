@@ -18,7 +18,7 @@ using Anthropic.SDK.Messaging;
 
 namespace Anthropic.SDK
 {
-    public abstract class EndpointBase
+    public abstract class EndpointBase : BaseEndpoint
     {
         private const string UserAgent = "tghamm/anthropic_sdk";
 
@@ -47,7 +47,7 @@ namespace Anthropic.SDK
         /// <summary>
         /// Gets the URL of the endpoint.
         /// </summary>
-        protected string Url => string.Format(Client.ApiUrlFormat, Client.ApiVersion, Endpoint);
+        protected override string Url => string.Format(Client.ApiUrlFormat, Client.ApiVersion, Endpoint);
 
         private HttpClient InnerClient => _client.Value;
 
@@ -56,7 +56,7 @@ namespace Anthropic.SDK
         /// </summary>
         /// <returns>The fully initialized HttpClient</returns>
         /// <exception cref="AuthenticationException">Thrown if there is no valid authentication.</exception>
-        protected HttpClient GetClient()
+        protected override HttpClient GetClient()
         {
             if (Client.Auth?.ApiKey is null)
             {
@@ -97,47 +97,20 @@ namespace Anthropic.SDK
             return $"{resultAsString ?? "<no content>"}";
         }
 
-        // Helper method to read the response content as a string.
-        private async Task<string> ReadResponseContentAsync(HttpResponseMessage response, CancellationToken ct)
-        {
-#if NET6_0_OR_GREATER
-            return await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
-#else
-            return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-#endif
-        }
-
-        protected async Task<TResponse> HttpRequestMessages<TResponse>(string url = null, HttpMethod verb = null,
+        /// <summary>
+        /// Override the base HttpRequestMessages to add rate limits
+        /// </summary>
+        protected new async Task<TResponse> HttpRequestMessages<TResponse>(string url = null, HttpMethod verb = null,
             object postData = null, CancellationToken ctx = default)
         {
-            var response = await HttpRequestRaw(url, verb, postData, false, ctx).ConfigureAwait(false);
-            string resultAsString = await ReadResponseContentAsync(response, ctx).ConfigureAwait(false);
+            var response = await base.HttpRequestMessages<TResponse>(url, verb, postData, ctx).ConfigureAwait(false);
 
-            var options = new JsonSerializerOptions
+            if (response is MessageResponse messageResponse)
             {
-                Converters = { ContentConverter.Instance }
-            };
-
-            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(resultAsString));
-            var res = await JsonSerializer.DeserializeAsync<TResponse>(ms, options, cancellationToken: ctx).ConfigureAwait(false);
-
-            if (res is MessageResponse messageResponse)
-            {
-                messageResponse.RateLimits = GetRateLimits(response);
+                messageResponse.RateLimits = GetRateLimits(await HttpRequestRaw(url, verb, postData, false, ctx));
             }
 
-            return res;
-        }
-
-        protected async Task<T> HttpRequestSimple<T>(string url = null, HttpMethod verb = null,
-            object postData = null, CancellationToken ctx = default)
-        {
-            var response = await HttpRequestRaw(url, verb, postData, false, ctx).ConfigureAwait(false);
-            string resultAsString = await ReadResponseContentAsync(response, ctx).ConfigureAwait(false);
-
-            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(resultAsString));
-            var res = await JsonSerializer.DeserializeAsync<T>(ms, cancellationToken: ctx).ConfigureAwait(false);
-            return res;
+            return response;
         }
 
         protected async IAsyncEnumerable<BatchLine> HttpStreamingRequestBatches(string url = null,
@@ -214,85 +187,36 @@ namespace Anthropic.SDK
             }
         }
 
-        private async Task<HttpResponseMessage> HttpRequestRaw(string url = null, HttpMethod verb = null,
-            object postData = null, bool streaming = false, CancellationToken ctx = default)
+        /// <summary>
+        /// Handle error responses from the API
+        /// </summary>
+        protected override async Task<Exception> HandleErrorResponseAsync(HttpResponseMessage response, string resultAsString, string url)
         {
-            if (string.IsNullOrEmpty(url))
-                url = this.Url;
-
-            HttpResponseMessage response;
-            string resultAsString = null;
-            var req = new HttpRequestMessage(verb, url);
-
-            if (postData != null)
+#if NET6_0_OR_GREATER
+            if (response.StatusCode == HttpStatusCode.TooManyRequests)
+#else
+            if(response.StatusCode == ((HttpStatusCode)429))
+#endif
             {
-                if (postData is HttpContent content)
-                {
-                    req.Content = content;
-                }
-                else
-                {
-                    var options = new JsonSerializerOptions
-                    {
-                        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                        Converters = { ContentConverter.Instance }
-                    };
-                    string jsonContent = JsonSerializer.Serialize(postData, options);
-                    req.Content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-                }
+                return new RateLimitsExceeded(
+                    "Anthropic has rate limited your request. Please wait and retry your request. " +
+                    GetErrorMessage(resultAsString, response, url, url), GetRateLimits(response), response.StatusCode);
             }
-
-            response = await InnerClient.SendAsync(req,
-                    streaming ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead,
-                    ctx)
-                .ConfigureAwait(false);
-
-            if (response.IsSuccessStatusCode)
+            else if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
-                return response;
+                return new AuthenticationException(
+                    "Anthropic rejected your authorization, most likely due to an invalid API Key. Full API response follows: " +
+                    resultAsString);
+            }
+            else if (response.StatusCode == HttpStatusCode.InternalServerError)
+            {
+                return GetHttpRequestException(
+                    "Anthropic had an internal server error, which can happen occasionally. Please retry your request. " +
+                    GetErrorMessage(resultAsString, response, url, url));
             }
             else
             {
-                try
-                {
-#if NET6_0_OR_GREATER
-                    resultAsString = await response.Content.ReadAsStringAsync(ctx).ConfigureAwait(false);
-#else
-                    resultAsString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-#endif
-                }
-                catch (Exception e)
-                {
-                    resultAsString =
-                        "Additionally, the following error was thrown when attempting to read the response content: " +
-                        e.ToString();
-                }
-#if NET6_0_OR_GREATER
-                if (response.StatusCode == HttpStatusCode.TooManyRequests)
-#else
-                if(response.StatusCode == ((HttpStatusCode)429))
-#endif
-                {
-                    throw new RateLimitsExceeded(
-                        "Anthropic has rate limited your request. Please wait and retry your request. " +
-                        GetErrorMessage(resultAsString, response, url, url), GetRateLimits(response), response.StatusCode);
-                }
-                else if (response.StatusCode == HttpStatusCode.Unauthorized)
-                {
-                    throw new AuthenticationException(
-                        "Anthropic rejected your authorization, most likely due to an invalid API Key. Full API response follows: " +
-                        resultAsString);
-                }
-                else if (response.StatusCode == HttpStatusCode.InternalServerError)
-                {
-                    throw GetHttpRequestException(
-                        "Anthropic had an internal server error, which can happen occasionally. Please retry your request. " +
-                        GetErrorMessage(resultAsString, response, url, url));
-                }
-                else
-                {
-                    throw GetHttpRequestException(GetErrorMessage(resultAsString, response, url, url));
-                }
+                return GetHttpRequestException(GetErrorMessage(resultAsString, response, url, url));
             }
 
             HttpRequestException GetHttpRequestException(string message)
@@ -305,7 +229,10 @@ namespace Anthropic.SDK
             }
         }
 
-        protected async IAsyncEnumerable<MessageResponse> HttpStreamingRequestMessages(string url = null,
+        /// <summary>
+        /// Makes a streaming HTTP request and returns the response as an async enumerable of MessageResponse.
+        /// </summary>
+        protected override async IAsyncEnumerable<MessageResponse> HttpStreamingRequestMessages(string url = null,
             HttpMethod verb = null,
             object postData = null, [EnumeratorCancellation] CancellationToken ctx = default)
         {
