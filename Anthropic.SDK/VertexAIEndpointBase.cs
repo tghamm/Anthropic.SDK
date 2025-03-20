@@ -54,7 +54,7 @@ namespace Anthropic.SDK
         /// <summary>
         /// Gets the URL of the endpoint.
         /// </summary>
-        protected string Url => string.Format(Client.ApiUrlFormat, Client.Auth.Region, Client.Auth.ProjectId, Model);
+        protected string Url => string.Format(Client.ApiUrlFormat, Client.Auth.Region, Client.Auth.ProjectId, Model) + ":" + Endpoint;
 
         private HttpClient InnerClient => _client.Value;
 
@@ -231,6 +231,7 @@ namespace Anthropic.SDK
                         Converters = { ContentConverter.Instance }
                     };
                     string jsonContent = JsonSerializer.Serialize(postData, options);
+                    Console.WriteLine($"DEBUG - Request body: {jsonContent}");
                     req.Content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
                 }
             }
