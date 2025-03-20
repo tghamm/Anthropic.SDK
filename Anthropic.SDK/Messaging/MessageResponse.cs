@@ -117,6 +117,8 @@ namespace Anthropic.SDK.Messaging
         
         [JsonPropertyName("partial_json")]
         public string? PartialJson { get; set; }
+        [JsonPropertyName("citation")]
+        public CitationResult Citation { get; set; }
     }
 
     public class ContentBlock
