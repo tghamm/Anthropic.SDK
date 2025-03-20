@@ -129,7 +129,7 @@ namespace Anthropic.SDK.Tests
                 Stream = false,
                 Temperature = 1.0m,
                 System = systemMessages,
-                PromptCaching = PromptCacheType.Messages,
+                PromptCaching = PromptCacheType.AutomaticToolsAndSystem,
                 Tools = tools
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
@@ -223,7 +223,7 @@ namespace Anthropic.SDK.Tests
                 Stream = true,
                 Temperature = 1.0m,
                 System = systemMessages,
-                PromptCaching = PromptCacheType.Messages
+                PromptCaching = PromptCacheType.AutomaticToolsAndSystem
             };
             var messageResponses = new List<MessageResponse>();
             await foreach (var message in client.Messages.StreamClaudeMessageAsync(parameters))

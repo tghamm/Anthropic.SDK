@@ -33,8 +33,9 @@ namespace Anthropic.SDK.Tests
             {
                 new Message(RoleType.User, new DocumentContent()
                 {
-                    Source = new ImageSource()
+                    Source = new DocumentSource()
                     {
+                        Type = SourceType.base64,
                         Data = base64String,
                         MediaType = "application/pdf"
                     },
@@ -56,11 +57,52 @@ namespace Anthropic.SDK.Tests
                 PromptCaching = PromptCacheType.FineGrained
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
-
-            Debug.WriteLine(res.Message);
+            
+            Assert.IsNotNull(res.FirstMessage.ToString());
             Assert.IsTrue(res.Usage.CacheCreationInputTokens > 0 || res.Usage.CacheReadInputTokens > 0);
 
             
         }
+
+        [TestMethod]
+        public async Task TestPDFCitations()
+        {
+            var client = new AnthropicClient();
+            var messages = new List<Message>()
+            {
+                new Message(RoleType.User, new DocumentContent()
+                {
+                    Source = new DocumentSource()
+                    {
+                        Type = SourceType.url,
+                        Url = "https://assets.anthropic.com/m/1cd9d098ac3e6467/original/Claude-3-Model-Card-October-Addendum.pdf"
+                    },
+                    CacheControl = new CacheControl()
+                    {
+                        Type = CacheControlType.ephemeral
+                    },
+                    Citations = new Citations() { Enabled = true }
+                }),
+                new Message(RoleType.User, "What are the key findings in this document? Use citations to back up your answer."),
+            };
+
+            var parameters = new MessageParameters()
+            {
+                Messages = messages,
+                MaxTokens = 1024,
+                Model = AnthropicModels.Claude35Sonnet,
+                Stream = false,
+                Temperature = 0m,
+                PromptCaching = PromptCacheType.FineGrained
+            };
+            var res = await client.Messages.GetClaudeMessageAsync(parameters);
+
+            Assert.IsNotNull(res.FirstMessage.ToString());
+            Assert.IsTrue(res.Usage.CacheCreationInputTokens > 0 || res.Usage.CacheReadInputTokens > 0);
+
+
+        }
     }
+
+
 }
