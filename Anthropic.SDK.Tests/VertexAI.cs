@@ -55,12 +55,12 @@ namespace Anthropic.SDK.Tests
                 MaxTokens = 512,
                 Stream = false,
                 Temperature = 1.0m,
+                Model = Constants.VertexAIModels.Claude3Haiku
             };
             
             try
             {
                 var res = await client.Messages
-                    .WithModel(Constants.VertexAIModels.Claude3Haiku)
                     .GetClaudeMessageAsync(parameters);
                 // If we get here in a real test with mocks, we'd assert on the response
                 Assert.IsTrue(true);

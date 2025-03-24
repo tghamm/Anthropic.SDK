@@ -3,7 +3,6 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Anthropic.SDK.Messaging;
-using Anthropic.SDK.Models;
 
 namespace Anthropic.SDK
 {
@@ -47,7 +46,6 @@ namespace Anthropic.SDK
             HttpClient = SetupClient(client);
             this.Auth = auth.ThisOrDefault();
             Messages = new VertexAIMessagesEndpoint(this);
-            Models = new VertexAIModelsEndpoint(this);
         }
 
         internal static JsonSerializerOptions JsonSerializationOptions { get; } = new()
@@ -83,11 +81,6 @@ namespace Anthropic.SDK
         /// Text generation is the core function of the API. You give the API a prompt, and it generates a completion.
         /// </summary>
         public VertexAIMessagesEndpoint Messages { get; }
-
-        /// <summary>
-        /// Models are a way to manage the models that the API uses to generate completions. You can list models, as well as get information about a specific model.
-        /// </summary>
-        public VertexAIModelsEndpoint Models { get; }
 
         #region IDisposable
 

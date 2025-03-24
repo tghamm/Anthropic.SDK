@@ -12,9 +12,8 @@ namespace Anthropic.SDK.Tests
     [TestClass]
     public class VertexAIChatClient
     {
-        // Mock credentials for testing - these won't actually be used in tests
         private const string TestProjectId = "test-project-id";
-        private const string TestRegion = "us-central1";
+        private const string TestRegion = "us-east5";
 
         [TestMethod]
         public async Task TestNonStreamingMessage()
@@ -23,22 +22,14 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = Constants.VertexAIModels.Claude3Sonnet,
+                ModelId = Constants.VertexAIModels.Claude37Sonnet,
                 MaxOutputTokens = 512,
                 Temperature = 1.0f,
             };
 
-            try
-            {
-                var res = await client.GetResponseAsync("Write a sonnet about the Statue of Liberty. The response must include the word green.", options);
-                // If we get here in a real test with mocks, we'd assert on the response
-                Assert.IsTrue(true);
-            }
-            catch (Exception ex)
-            {
-                // In a test environment without actual credentials, we expect an authentication error
-                Assert.IsTrue(ex.Message.Contains("authentication") || ex.Message.Contains("credentials") || ex.Message.Contains("project"));
-            }
+            var res = await client.GetResponseAsync("Write a sonnet about the Statue of Liberty. The response must include the word green.", options);
+            // If we get here in a real test with mocks, we'd assert on the response
+            Assert.IsTrue(res.Text.Contains("green") is true, res.Text);
         }
 
         [TestMethod]
@@ -53,28 +44,18 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = Constants.VertexAIModels.Claude3Sonnet,
+                ModelId = Constants.VertexAIModels.Claude37Sonnet,
                 MaxOutputTokens = 20000,
                 Temperature = 1.0f,
             };
 
-            try
-            {
-                var res = await client.GetResponseAsync(messages, options);
-                // If we get here in a real test with mocks, we'd assert on the response
-                Assert.IsTrue(true);
-                
-                // In a real test with mocks, we would continue the conversation
-                messages.AddMessages(res);
-                messages.Add(new ChatMessage(ChatRole.User, "and how many letters total?"));
-                res = await client.GetResponseAsync(messages, options);
-                Assert.IsTrue(true);
-            }
-            catch (Exception ex)
-            {
-                // In a test environment without actual credentials, we expect an authentication error
-                Assert.IsTrue(ex.Message.Contains("authentication") || ex.Message.Contains("credentials") || ex.Message.Contains("project"));
-            }
+            var res = await client.GetResponseAsync(messages, options);
+            Assert.IsTrue(res.Text.Contains("3") is true, res.Text);
+            
+            messages.AddMessages(res);
+            messages.Add(new ChatMessage(ChatRole.User, "and how many letters total?"));
+            res = await client.GetResponseAsync(messages, options);
+            Assert.IsTrue(res.Text?.Contains("10") is true, res.Text);
         }
 
         [TestMethod]
@@ -89,41 +70,33 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = Constants.VertexAIModels.Claude3Sonnet,
+                ModelId = Constants.VertexAIModels.Claude37Sonnet,
                 MaxOutputTokens = 20000,
                 Temperature = 1.0f,
             };
 
-            try
+            List<ChatResponseUpdate> updates = new();
+            StringBuilder sb = new();
+            await foreach (var res in client.GetStreamingResponseAsync(messages, options))
             {
-                List<ChatResponseUpdate> updates = new();
-                StringBuilder sb = new();
-                await foreach (var res in client.GetStreamingResponseAsync(messages, options))
-                {
-                    updates.Add(res);
-                    sb.Append(res);
-                }
-                
-                // If we get here in a real test with mocks, we'd assert on the response
-                Assert.IsTrue(true);
-                
-                // In a real test with mocks, we would continue the conversation
-                messages.AddMessages(updates);
-                messages.Add(new ChatMessage(ChatRole.User, "and how many letters total?"));
+                updates.Add(res);
+                sb.Append(res);
+            }
+            
+            Assert.IsTrue(sb.ToString().Contains("3") is true, sb.ToString());
+            
+            messages.AddMessages(updates);
+            messages.Add(new ChatMessage(ChatRole.User, "and how many letters total?"));
 
-                updates.Clear();
-                await foreach (var res in client.GetStreamingResponseAsync(messages, options))
-                {
-                    updates.Add(res);
-                }
-                
-                Assert.IsTrue(true);
-            }
-            catch (Exception ex)
+            updates.Clear();
+            await foreach (var res in client.GetStreamingResponseAsync(messages, options))
             {
-                // In a test environment without actual credentials, we expect an authentication error
-                Assert.IsTrue(ex.Message.Contains("authentication") || ex.Message.Contains("credentials") || ex.Message.Contains("project"));
+                updates.Add(res);
             }
+            
+            var text = string.Join("",
+                updates.SelectMany(p => p.Contents.OfType<TextContent>()).Select(p => p.Text));
+            Assert.IsTrue(text.Contains("10") is true, text);
         }
 
         [TestMethod]
@@ -138,7 +111,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = Constants.VertexAIModels.Claude3Sonnet,
+                ModelId = Constants.VertexAIModels.Claude37Sonnet,
                 MaxOutputTokens = 20000,
                 Temperature = 1.0f,
                 AdditionalProperties = new()
@@ -150,23 +123,13 @@ namespace Anthropic.SDK.Tests
                 }
             };
 
-            try
-            {
-                var res = await client.GetResponseAsync(messages, options);
-                // If we get here in a real test with mocks, we'd assert on the response
-                Assert.IsTrue(true);
-                
-                // In a real test with mocks, we would continue the conversation
-                messages.AddMessages(res);
-                messages.Add(new ChatMessage(ChatRole.User, "and how many letters total?"));
-                res = await client.GetResponseAsync(messages, options);
-                Assert.IsTrue(true);
-            }
-            catch (Exception ex)
-            {
-                // In a test environment without actual credentials, we expect an authentication error
-                Assert.IsTrue(ex.Message.Contains("authentication") || ex.Message.Contains("credentials") || ex.Message.Contains("project"));
-            }
+            var res = await client.GetResponseAsync(messages, options);
+            Assert.IsTrue(res.Text.Contains("3") is true, res.Text);
+            
+            messages.AddMessages(res);
+            messages.Add(new ChatMessage(ChatRole.User, "and how many letters total?"));
+            res = await client.GetResponseAsync(messages, options);
+            Assert.IsTrue(res.Text?.Contains("10") is true, res.Text);
         }
 
         [TestMethod]
@@ -181,7 +144,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = Constants.VertexAIModels.Claude3Sonnet,
+                ModelId = Constants.VertexAIModels.Claude37Sonnet,
                 MaxOutputTokens = 20000,
                 Temperature = 1.0f,
                 AdditionalProperties = new()
@@ -193,36 +156,31 @@ namespace Anthropic.SDK.Tests
                 }
             };
 
-            try
+            List<ChatResponseUpdate> updates = new();
+            StringBuilder sb = new();
+            await foreach (var res in client.GetStreamingResponseAsync(messages, options))
             {
-                List<ChatResponseUpdate> updates = new();
-                StringBuilder sb = new();
-                await foreach (var res in client.GetStreamingResponseAsync(messages, options))
-                {
-                    updates.Add(res);
-                    sb.Append(res);
-                }
-                
-                // If we get here in a real test with mocks, we'd assert on the response
-                Assert.IsTrue(true);
-                
-                // In a real test with mocks, we would continue the conversation
-                messages.AddMessages(updates);
-                messages.Add(new ChatMessage(ChatRole.User, "and how many letters total?"));
+                updates.Add(res);
+                sb.Append(res);
+            }
+            
+            Assert.IsTrue(sb.ToString().Contains("3") is true, sb.ToString());
+            
+            messages.AddMessages(updates);
+            
+            Assert.IsTrue(messages.Last().Contents.OfType<Extensions.MEAI.ThinkingContent>().Any());
+            
+            messages.Add(new ChatMessage(ChatRole.User, "and how many letters total?"));
 
-                updates.Clear();
-                await foreach (var res in client.GetStreamingResponseAsync(messages, options))
-                {
-                    updates.Add(res);
-                }
-                
-                Assert.IsTrue(true);
-            }
-            catch (Exception ex)
+            updates.Clear();
+            await foreach (var res in client.GetStreamingResponseAsync(messages, options))
             {
-                // In a test environment without actual credentials, we expect an authentication error
-                Assert.IsTrue(ex.Message.Contains("authentication") || ex.Message.Contains("credentials") || ex.Message.Contains("project"));
+                updates.Add(res);
             }
+            
+            var text = string.Join("",
+                updates.SelectMany(p => p.Contents.OfType<TextContent>()).Select(p => p.Text));
+            Assert.IsTrue(text.Contains("10") is true, text);
         }
 
         [TestMethod]
@@ -235,7 +193,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = Constants.VertexAIModels.Claude3Sonnet,
+                ModelId = Constants.VertexAIModels.Claude37Sonnet,
                 MaxOutputTokens = 512,
                 Tools = [AIFunctionFactory.Create((string personName) => personName switch {
                     "Alice" => "25",
@@ -243,17 +201,11 @@ namespace Anthropic.SDK.Tests
                 }, "GetPersonAge", "Gets the age of the person whose name is specified.")]
             };
 
-            try
-            {
-                var res = await client.GetResponseAsync("How old is Alice?", options);
-                // If we get here in a real test with mocks, we'd assert on the response
-                Assert.IsTrue(true);
-            }
-            catch (Exception ex)
-            {
-                // In a test environment without actual credentials, we expect an authentication error
-                Assert.IsTrue(ex.Message.Contains("authentication") || ex.Message.Contains("credentials") || ex.Message.Contains("project"));
-            }
+            var res = await client.GetResponseAsync("How old is Alice?", options);
+            
+            Assert.IsTrue(
+                res.Text.Contains("25") is true,
+                res.Text);
         }
 
         [TestMethod]
@@ -266,7 +218,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = Constants.VertexAIModels.Claude3Sonnet,
+                ModelId = Constants.VertexAIModels.Claude37Sonnet,
                 MaxOutputTokens = 512,
                 Tools = [AIFunctionFactory.Create((string personName) => personName switch {
                     "Alice" => "25",
@@ -274,22 +226,15 @@ namespace Anthropic.SDK.Tests
                 }, "GetPersonAge", "Gets the age of the person whose name is specified.")]
             };
 
-            try
+            StringBuilder sb = new();
+            await foreach (var update in client.GetStreamingResponseAsync("How old is Alice?", options))
             {
-                StringBuilder sb = new();
-                await foreach (var update in client.GetStreamingResponseAsync("How old is Alice?", options))
-                {
-                    sb.Append(update);
-                }
-                
-                // If we get here in a real test with mocks, we'd assert on the response
-                Assert.IsTrue(true);
+                sb.Append(update);
             }
-            catch (Exception ex)
-            {
-                // In a test environment without actual credentials, we expect an authentication error
-                Assert.IsTrue(ex.Message.Contains("authentication") || ex.Message.Contains("credentials") || ex.Message.Contains("project"));
-            }
+            
+            Assert.IsTrue(
+                sb.ToString().Contains("25") is true,
+                sb.ToString());
         }
 
         [TestMethod]
@@ -309,30 +254,21 @@ namespace Anthropic.SDK.Tests
 
             IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion)).Messages;
 
-            try
-            {
-                var res = await client.GetResponseAsync(
+            var res = await client.GetResponseAsync(
+            [
+                new ChatMessage(ChatRole.User,
                 [
-                    new ChatMessage(ChatRole.User,
-                    [
-                        new DataContent(imageBytes, "image/jpeg"),
-                        new TextContent("What is this a picture of?"),
-                    ])
-                ], new()
-                {
-                    ModelId = Constants.VertexAIModels.Claude3Opus,
-                    MaxOutputTokens = 512,
-                    Temperature = 0f,
-                });
-                
-                // If we get here in a real test with mocks, we'd assert on the response
-                Assert.IsTrue(true);
-            }
-            catch (Exception ex)
+                    new DataContent(imageBytes, "image/jpeg"),
+                    new TextContent("What is this a picture of?"),
+                ])
+            ], new()
             {
-                // In a test environment without actual credentials, we expect an authentication error
-                Assert.IsTrue(ex.Message.Contains("authentication") || ex.Message.Contains("credentials") || ex.Message.Contains("project"));
-            }
+                ModelId = Constants.VertexAIModels.Claude3Opus,
+                MaxOutputTokens = 512,
+                Temperature = 0f,
+            });
+            
+            Assert.IsTrue(res.Text.Contains("apple", StringComparison.OrdinalIgnoreCase) is true, res.Text);
         }
     }
 }

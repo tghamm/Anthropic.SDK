@@ -23,25 +23,12 @@ namespace Anthropic.SDK.Messaging
         /// <param name="client">The Vertex AI client</param>
         internal VertexAIMessagesEndpoint(VertexAIClient client) : base(client) { }
 
-        /// <summary>
-        /// The current model being used
-        /// </summary>
-        private string _model = Constants.VertexAIModels.Claude3Sonnet;
-
-        /// <summary>
-        /// Sets the model to use for this endpoint
-        /// </summary>
-        /// <param name="model">The model name</param>
-        /// <returns>This endpoint instance for method chaining</returns>
-        public VertexAIMessagesEndpoint WithModel(string model)
-        {
-            _model = model;
-            return this;
-        }
-
         protected override string Endpoint => "streamRawPredict";
         
-        protected override string Model => _model;
+        /// <summary>
+        /// The default model to use when no model is specified in the request parameters
+        /// </summary>
+        protected override string Model => Constants.VertexAIModels.Claude3Sonnet;
 
         /// <summary>
         /// Makes a non-streaming call to the Claude messages API via Vertex AI. Be sure to set stream to false in <param name="parameters"></param>.
@@ -54,11 +41,17 @@ namespace Anthropic.SDK.Messaging
             
             parameters.Stream = false;
             
+            
+            // Get the model from parameters or use default
+            string modelToUse = GetModelForRequest(parameters);
+            
             // Create the Vertex AI request
             var vertexRequest = CreateVertexAIRequest(parameters);
             
-            var response = await HttpRequestMessages<MessageResponse>(Url, HttpMethod.Post, vertexRequest, ctx).ConfigureAwait(false);
+            // Get URL for the specific model
+            string urlForModel = GetUrlForModel(modelToUse);
             
+            var response = await HttpRequestMessages<MessageResponse>(urlForModel, HttpMethod.Post, vertexRequest, ctx).ConfigureAwait(false);
             var toolCalls = new List<Function>();
             foreach (var message in response.Content)
             {
@@ -90,8 +83,14 @@ namespace Anthropic.SDK.Messaging
             
             parameters.Stream = true;
             
+            // Get the model from parameters or use default
+            string modelToUse = GetModelForRequest(parameters);
+            
             // Create the Vertex AI request
             var vertexRequest = CreateVertexAIRequest(parameters);
+            
+            // Get URL for the specific model
+            string urlForModel = GetUrlForModel(modelToUse);
             
             var toolCalls = new List<Function>();
             var arguments = string.Empty;
@@ -99,7 +98,7 @@ namespace Anthropic.SDK.Messaging
             bool captureTool = false;
             var id = string.Empty;
             
-            await foreach (var result in HttpStreamingRequestMessages(Url, HttpMethod.Post, vertexRequest, ctx).ConfigureAwait(false))
+            await foreach (var result in HttpStreamingRequestMessages(urlForModel, HttpMethod.Post, vertexRequest, ctx).ConfigureAwait(false))
             {
                 // Handle tool calls if present
                 if (result.ContentBlock != null && result.ContentBlock.Type == "tool_use")
@@ -326,6 +325,7 @@ namespace Anthropic.SDK.Messaging
                     type = parameters.Thinking.Type.ToString().ToLower(),
                     budget_tokens = parameters.Thinking.BudgetTokens
                 } : null
+                // Note: We don't need to include model here as it's part of the URL for Vertex AI
             };
             
             return anthropicPayload;

@@ -52,7 +52,7 @@ namespace Anthropic.SDK.VertexAIDemo
                 ?? GetInput("Enter your Google Cloud Project ID: ");
             
             string region = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_REGION")
-                ?? GetInput("Enter your Google Cloud Region (e.g., us-central1): ");
+                ?? GetInput("Enter your Google Cloud Region (e.g., us-east5): ");
             
             // Create a Vertex AI client
             VertexAIClient client;
@@ -74,22 +74,6 @@ namespace Anthropic.SDK.VertexAIDemo
                 Console.WriteLine("Using default authentication mechanism.");
             }
             
-            // List available models
-            Console.WriteLine("\nListing available Claude models on Vertex AI...");
-            try
-            {
-                var models = await client.Models.ListModelsAsync();
-                Console.WriteLine("Available models:");
-                foreach (var model in models.Models)
-                {
-                    Console.WriteLine($"- {model.DisplayName} ({model.Id})");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error listing models: {ex.Message}");
-            }
-            
             // Get user input for a message to Claude
             Console.WriteLine("\nSend a message to Claude via Vertex AI");
             string userMessage = GetInput("Enter your message: ");
@@ -104,7 +88,8 @@ namespace Anthropic.SDK.VertexAIDemo
             {
                 Messages = messages,
                 MaxTokens = 1000,
-                Temperature = 0.7m
+                Temperature = 0.7m,
+                Model = VertexAIModels.Claude37Sonnet
             };
             
             // Ask if user wants streaming or non-streaming
@@ -124,10 +109,8 @@ namespace Anthropic.SDK.VertexAIDemo
                     
                     // Add a console trace listener to capture debug output
                     System.Diagnostics.Trace.Listeners.Add(new System.Diagnostics.ConsoleTraceListener());
-                    
                     string fullResponse = "";
                     await foreach (var chunk in client.Messages
-                        .WithModel(VertexAIModels.Claude37Sonnet)
                         .StreamClaudeMessageAsync(parameters))
                     {
                         if (chunk.Delta?.Text != null)
@@ -145,9 +128,7 @@ namespace Anthropic.SDK.VertexAIDemo
                 {
                     // Get a non-streaming response
                     Console.WriteLine("\nGetting response from Claude via Vertex AI...\n");
-                    
                     var response = await client.Messages
-                        .WithModel(VertexAIModels.Claude37Sonnet)
                         .GetClaudeMessageAsync(parameters);
                     
                     Console.WriteLine($"Response: {response.Content[0]}");

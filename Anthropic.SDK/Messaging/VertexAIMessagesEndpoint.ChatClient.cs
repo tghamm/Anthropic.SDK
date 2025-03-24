@@ -114,9 +114,21 @@ public partial class VertexAIMessagesEndpoint : IChatClient
     void IDisposable.Dispose() { }
 
     /// <inheritdoc />
-    object IChatClient.GetService(Type serviceType, object serviceKey) =>
-        serviceKey is not null ? null :
-        serviceType == typeof(ChatClientMetadata) ? (_metadata ??= new(nameof(VertexAIClient), new Uri(Url))) :
-        serviceType?.IsInstanceOfType(this) is true ? this :
-        null;
+    object IChatClient.GetService(Type serviceType, object serviceKey)
+    {
+        if (serviceKey is not null)
+            return null;
+            
+        if (serviceType == typeof(ChatClientMetadata))
+        {
+            // Use base URL without a specific model for the metadata
+            var baseUrl = string.Format(Client.ApiUrlFormat, Client.Auth.Region, Client.Auth.ProjectId, Model) + ":" + Endpoint;
+            return (_metadata ??= new(nameof(VertexAIClient), new Uri(baseUrl)));
+        }
+            
+        if (serviceType?.IsInstanceOfType(this) is true)
+            return this;
+            
+        return null;
+    }
 }

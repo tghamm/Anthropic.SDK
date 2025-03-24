@@ -47,14 +47,39 @@ namespace Anthropic.SDK
         protected abstract string Endpoint { get; }
 
         /// <summary>
-        /// The Anthropic model to use with Vertex AI
+        /// The default Anthropic model to use with Vertex AI.
+        /// Can be overridden in derived classes or through method parameters.
         /// </summary>
-        protected abstract string Model { get; }
+        protected virtual string Model { get; }
+
+        /// <summary>
+        /// Gets the model to use for the request, either from parameters or falling back to the default model.
+        /// </summary>
+        /// <param name="parameters">Optional message parameters that may contain a model override</param>
+        /// <returns>The model to use for the request</returns>
+        protected string GetModelForRequest(MessageParameters parameters = null)
+        {
+            // If parameters contains a non-null, non-empty model, use that
+            if (parameters?.Model != null && !string.IsNullOrWhiteSpace(parameters.Model))
+            {
+                return parameters.Model;
+            }
+            
+            // Otherwise fall back to the class-level model
+            return Model;
+        }
 
         /// <summary>
         /// Gets the URL of the endpoint.
         /// </summary>
         protected override string Url => string.Format(Client.ApiUrlFormat, Client.Auth.Region, Client.Auth.ProjectId, Model) + ":" + Endpoint;
+
+        /// <summary>
+        /// Gets the URL of the endpoint for a specific model.
+        /// </summary>
+        /// <param name="model">The model to use in the URL</param>
+        protected string GetUrlForModel(string model) =>
+            string.Format(Client.ApiUrlFormat, Client.Auth.Region, Client.Auth.ProjectId, model) + ":" + Endpoint;
 
         private HttpClient InnerClient => _client.Value;
 
