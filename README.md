@@ -98,7 +98,7 @@ You can provide your Google Cloud Project ID and Region explicitly:
 var client = new VertexAIClient(
     new VertexAIAuthentication(
         projectId: "your-google-cloud-project-id",
-        region: "us-central1"
+        region: "us-east5"
     )
 );
 ```
@@ -107,7 +107,7 @@ var client = new VertexAIClient(
 
 You can load authentication values from environment variables:
 - `GOOGLE_CLOUD_PROJECT`: Your Google Cloud Project ID
-- `GOOGLE_CLOUD_REGION`: Your Google Cloud Region (e.g., "us-central1")
+- `GOOGLE_CLOUD_REGION`: Your Google Cloud Region (e.g., "us-east5")
 - `GOOGLE_API_KEY`: (Optional) Your Google Cloud API Key
 - `GOOGLE_ACCESS_TOKEN`: (Optional) Your OAuth2 Access Token
 
@@ -129,7 +129,7 @@ Then in your code:
 var client = new VertexAIClient(
     new VertexAIAuthentication(
         projectId: "your-google-cloud-project-id",
-        region: "us-central1"
+        region: "us-east5"
     )
 );
 ```

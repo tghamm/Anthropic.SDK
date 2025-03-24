@@ -15,7 +15,7 @@ namespace Anthropic.SDK
         public string ProjectId { get; set; }
 
         /// <summary>
-        /// The Google Cloud Region (e.g., "us-central1")
+        /// The Google Cloud Region (e.g., "us-east5")
         /// </summary>
         public string Region { get; set; }
 
@@ -33,7 +33,7 @@ namespace Anthropic.SDK
         /// Instantiates a new Vertex AI Authentication object with the given parameters
         /// </summary>
         /// <param name="projectId">The Google Cloud Project ID</param>
-        /// <param name="region">The Google Cloud Region (e.g., "us-central1")</param>
+        /// <param name="region">The Google Cloud Region (e.g., "us-east5")</param>
         /// <param name="apiKey">The Google Cloud API Key (optional)</param>
         /// <param name="accessToken">The OAuth2 Access Token (optional)</param>
         public VertexAIAuthentication(string projectId, string region, string apiKey = null, string accessToken = null)

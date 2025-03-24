@@ -10,7 +10,7 @@ namespace Anthropic.SDK.Tests
     {
         // Mock credentials for testing - these won't actually be used in tests
         private const string TestProjectId = "test-project-id";
-        private const string TestRegion = "us-central1";
+        private const string TestRegion = "us-east5";
 
         [TestMethod]
         public async Task TestBasicVertexAIMessage()
