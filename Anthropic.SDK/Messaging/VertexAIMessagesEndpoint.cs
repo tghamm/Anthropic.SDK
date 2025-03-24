@@ -311,42 +311,17 @@ namespace Anthropic.SDK.Messaging
             var anthropicPayload = new
             {
                 anthropic_version = "vertex-2023-10-16",
-                messages = parameters.Messages?.Select(m => new
-                {
-                    role = m.Role.ToString().ToLower(),
-                    content = ConvertMessageContent(m.Content)
-                }).ToArray(),
-                system = parameters.System?.Select(s => new
-                {
-                    type = s.Type,
-                    text = s.Text,
-                    cache_control = s.CacheControl != null ? new { type = s.CacheControl.Type.ToString().ToLower() } : null
-                }).ToArray(),
+                messages = parameters.Messages?.ToList(),
+                system = parameters.System?.ToList(),
                 max_tokens = parameters.MaxTokens,
                 temperature = parameters.Temperature,
                 top_p = parameters.TopP,
                 top_k = parameters.TopK,
                 stop_sequences = parameters.StopSequences,
                 stream = parameters.Stream,
-                tools = parameters.Tools?.Select(t => new
-                {
-                    function = new
-                    {
-                        name = t.Function.Name,
-                        description = t.Function.Description,
-                        parameters = t.Function.Parameters
-                    }
-                }).ToArray(),
-                tool_choice = parameters.ToolChoice != null ? new
-                {
-                    type = parameters.ToolChoice.Type.ToString().ToLower(),
-                    name = parameters.ToolChoice.Name
-                } : null,
-                thinking = parameters.Thinking != null ? new
-                {
-                    type = parameters.Thinking.Type.ToString().ToLower(),
-                    budget_tokens = parameters.Thinking.BudgetTokens
-                } : null
+                tools = parameters.Tools?.Select(t => t.Function).ToList(),
+                tool_choice = parameters.ToolChoice,
+                thinking = parameters.Thinking
                 // Note: We don't need to include model here as it's part of the URL for Vertex AI
             };
             
