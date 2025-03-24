@@ -263,7 +263,7 @@ namespace Anthropic.SDK.Tests
                 ])
             ], new()
             {
-                ModelId = Constants.VertexAIModels.Claude3Opus,
+                ModelId = Constants.VertexAIModels.Claude37Sonnet,
                 MaxOutputTokens = 512,
                 Temperature = 0f,
             });
