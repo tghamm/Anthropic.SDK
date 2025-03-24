@@ -349,3 +349,6 @@ healthchecksdb
 MigrationBackup/
 
 .idea/
+
+# Test Configuration Files
+Anthropic.SDK.Tests/appsettings.json

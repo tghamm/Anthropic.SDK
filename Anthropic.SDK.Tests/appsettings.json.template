@@ -1,0 +1,6 @@
+{
+  "TestSettings": {
+    "VertexAIProjectId": "your-vertex-ai-project-id",
+    "VertexAIRegion": "your-vertex-ai-region"
+  }
+}

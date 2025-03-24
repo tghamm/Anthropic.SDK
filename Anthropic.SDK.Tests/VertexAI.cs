@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
-using Anthropic.SDK.Constants;
 using Anthropic.SDK.Messaging;
 
 namespace Anthropic.SDK.Tests
@@ -9,8 +8,10 @@ namespace Anthropic.SDK.Tests
     [TestClass]
     public class VertexAI
     {
-        private const string TestProjectId = "test-project-id";
-        private const string TestRegion = "us-east5";
+        // Load settings from appsettings.json
+        private static readonly TestSettings Settings = TestSettings.LoadSettings();
+        private static readonly string TestProjectId = Settings.VertexAIProjectId;
+        private static readonly string TestRegion = Settings.VertexAIRegion;
 
         [TestMethod]
         public async Task TestBasicVertexAIMessage()
