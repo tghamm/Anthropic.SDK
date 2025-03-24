@@ -237,6 +237,148 @@ namespace Anthropic.SDK.Tests
         }
 
         [TestMethod]
+        public async Task TestThinkingStreamingRedactedConversation()
+        {
+            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion)).Messages;
+
+            List<ChatMessage> messages = new()
+            {
+                new ChatMessage(ChatRole.User, "ANTHROPIC_MAGIC_STRING_TRIGGER_REDACTED_THINKING_46C9A13E193C177646C7398A98432ECCCE4C1253D5E2D82641AC0E52CC2876CB")
+            };
+
+            ChatOptions options = new()
+            {
+                ModelId = Constants.VertexAIModels.Claude37Sonnet,
+                MaxOutputTokens = 20000,
+                Temperature = 1.0f,
+                AdditionalProperties = new()
+                {
+                    {nameof(MessageParameters.Thinking), new ThinkingParameters()
+                    {
+                        BudgetTokens = 16000
+                    }}
+                }
+            };
+
+            List<ChatResponseUpdate> updates = new();
+            await foreach (var res in client.GetStreamingResponseAsync(messages, options))
+            {
+                updates.Add(res);
+            }
+            
+
+            messages.AddMessages(updates);
+
+            Assert.IsTrue(messages.Last().Contents.OfType<Extensions.MEAI.RedactedThinkingContent>().Any());
+
+            messages.Add(new ChatMessage(ChatRole.User, "how many letters are in the word strawberry?"));
+
+            updates.Clear();
+            await foreach (var res in client.GetStreamingResponseAsync(messages, options))
+            {
+                updates.Add(res);
+            }
+
+            var text = string.Concat(updates.ToChatResponse().Text);
+
+            Assert.IsTrue(text.Contains("10") is true, text);
+        }
+
+        [TestMethod]
+        public async Task TestStreamingMessage()
+        {
+            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion)).Messages;
+
+            ChatOptions options = new()
+            {
+                ModelId = Constants.VertexAIModels.Claude37Sonnet,
+                MaxOutputTokens = 512,
+                Temperature = 1.0f,
+            };
+
+            List<ChatResponseUpdate> updates = new();
+            await foreach (var res in client.GetStreamingResponseAsync("Write a sonnet about the Statue of Liberty. The response must include the word green.", options))
+            {
+                updates.Add(res);
+            }
+
+            var chatResponse = updates.ToChatResponse();
+
+            Assert.IsTrue(chatResponse.Text.Contains("green"));
+
+            Assert.IsNotNull(chatResponse.Usage);
+
+            Assert.IsTrue(chatResponse.Usage.InputTokenCount > 0);
+        }
+
+        [TestMethod]
+        public async Task TestNonStreamingThinkingFunctionCalls()
+        {
+            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion)).Messages
+                .AsBuilder()
+                .UseFunctionInvocation()
+                .Build();
+
+            ChatOptions options = new()
+            {
+                ModelId = Constants.VertexAIModels.Claude37Sonnet,
+                MaxOutputTokens = 20000,
+                Tools = [AIFunctionFactory.Create((string personName) => personName switch {
+                    "Alice" => "25",
+                    _ => "40"
+                }, "GetPersonAge", "Gets the age of the person whose name is specified.")],
+                AdditionalProperties = new()
+                {
+                    {nameof(MessageParameters.Thinking), new ThinkingParameters()
+                    {
+                        BudgetTokens = 16000
+                    }}
+                }
+            };
+
+            var res = await client.GetResponseAsync("How old is Alice?", options);
+
+            Assert.IsTrue(
+                res.Text.Contains("25") is true,
+                res.Text);
+        }
+
+        [TestMethod]
+        public async Task TestStreamingThinkingFunctionCalls()
+        {
+            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion)).Messages
+                .AsBuilder()
+                .UseFunctionInvocation()
+                .Build();
+
+            ChatOptions options = new()
+            {
+                ModelId = Constants.VertexAIModels.Claude37Sonnet,
+                MaxOutputTokens = 20000,
+                Tools = [AIFunctionFactory.Create((string personName) => personName switch {
+                    "Alice" => "25",
+                    _ => "40"
+                }, "GetPersonAge", "Gets the age of the person whose name is specified.")],
+                AdditionalProperties = new()
+                {
+                    {nameof(MessageParameters.Thinking), new ThinkingParameters()
+                    {
+                        BudgetTokens = 16000
+                    }}
+                }
+            };
+            StringBuilder sb = new();
+            await foreach (var update in client.GetStreamingResponseAsync("How old is Alice?", options))
+            {
+                sb.Append(update);
+            }
+
+            Assert.IsTrue(
+                sb.ToString().Contains("25") is true,
+                sb.ToString());
+        }
+
+        [TestMethod]
         public async Task TestVertexAIImageMessage()
         {
             string resourceName = "Anthropic.SDK.Tests.Red_Apple.jpg";
