@@ -12,11 +12,12 @@ namespace Anthropic.SDK.Tests
         private static readonly TestSettings Settings = TestSettings.LoadSettings();
         private static readonly string TestProjectId = Settings.VertexAIProjectId;
         private static readonly string TestRegion = Settings.VertexAIRegion;
+        private static readonly string TestAccessToken = Settings.VertexAIAccessToken;
 
         [TestMethod]
         public async Task TestBasicVertexAIMessage()
         {
-            var client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion));
+            var client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken));
             var messages = new List<Message>();
             messages.Add(new Message(RoleType.User, "Write me a sonnet about the Statue of Liberty. The response must include the word green."));
             var parameters = new MessageParameters()
@@ -41,7 +42,7 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestVertexAIWithModelSelection()
         {
-            var client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion));
+            var client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken));
             var messages = new List<Message>();
             messages.Add(new Message(RoleType.User, "How many r's are in the word strawberry?"));
             var parameters = new MessageParameters()
@@ -66,7 +67,7 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestStreamingVertexAIMessage()
         {
-            var client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion));
+            var client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken));
             var messages = new List<Message>();
             messages.Add(new Message(RoleType.User, "How many r's are in the word strawberry?"));
             var parameters = new MessageParameters()
@@ -115,7 +116,7 @@ namespace Anthropic.SDK.Tests
             
             string base64String = Convert.ToBase64String(imageBytes);
 
-            var client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion));
+            var client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken));
             
             var messages = new List<Message>();
             messages.Add(new Message()
@@ -173,7 +174,7 @@ namespace Anthropic.SDK.Tests
 
             string base64String = Convert.ToBase64String(imageBytes);
 
-            var client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion));
+            var client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken));
             var messages = new List<Message>();
             messages.Add(new Message()
             {
@@ -226,7 +227,7 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestVertexAIWithSingleSystemPrompt()
         {
-            var client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion));
+            var client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken));
             var messages = new List<Message>();
             messages.Add(new Message(RoleType.User, "What color is an apple?"));
             
@@ -263,7 +264,7 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestVertexAIWithMultipleSystemPrompts()
         {
-            var client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion));
+            var client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken));
             var messages = new List<Message>();
             messages.Add(new Message(RoleType.User, "Describe a beach scene."));
             
@@ -305,7 +306,7 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestVertexAIWithSystemPromptCacheControl()
         {
-            var client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion));
+            var client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken));
             var messages = new List<Message>();
             messages.Add(new Message(RoleType.User, "Summarize the main character's traits."));
             

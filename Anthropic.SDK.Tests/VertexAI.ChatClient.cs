@@ -13,11 +13,12 @@ namespace Anthropic.SDK.Tests
         private static readonly TestSettings Settings = TestSettings.LoadSettings();
         private static readonly string TestProjectId = Settings.VertexAIProjectId;
         private static readonly string TestRegion = Settings.VertexAIRegion;
+        private static readonly string TestAccessToken = Settings.VertexAIAccessToken;
 
         [TestMethod]
         public async Task TestNonStreamingMessage()
         {
-            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion)).Messages;
+            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken)).Messages;
 
             ChatOptions options = new()
             {
@@ -34,7 +35,7 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestNonStreamingConversation()
         {
-            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion)).Messages;
+            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken)).Messages;
 
             List<ChatMessage> messages = new()
             {
@@ -60,7 +61,7 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestStreamingConversation()
         {
-            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion)).Messages;
+            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken)).Messages;
 
             List<ChatMessage> messages = new()
             {
@@ -101,7 +102,7 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestNonStreamingThinkingConversation()
         {
-            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion)).Messages;
+            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken)).Messages;
 
             List<ChatMessage> messages = new()
             {
@@ -134,7 +135,7 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestThinkingStreamingConversation()
         {
-            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion)).Messages;
+            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken)).Messages;
 
             List<ChatMessage> messages = new()
             {
@@ -185,7 +186,7 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestNonStreamingFunctionCalls()
         {
-            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion)).Messages
+            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken)).Messages
                 .AsBuilder()
                 .UseFunctionInvocation()
                 .Build();
@@ -210,7 +211,7 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestStreamingFunctionCalls()
         {
-            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion)).Messages
+            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken)).Messages
                 .AsBuilder()
                 .UseFunctionInvocation()
                 .Build();
@@ -239,7 +240,7 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestThinkingStreamingRedactedConversation()
         {
-            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion)).Messages;
+            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken)).Messages;
 
             List<ChatMessage> messages = new()
             {
@@ -287,7 +288,7 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestStreamingMessage()
         {
-            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion)).Messages;
+            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken)).Messages;
 
             ChatOptions options = new()
             {
@@ -314,7 +315,7 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestNonStreamingThinkingFunctionCalls()
         {
-            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion)).Messages
+            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken)).Messages
                 .AsBuilder()
                 .UseFunctionInvocation()
                 .Build();
@@ -346,7 +347,7 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestStreamingThinkingFunctionCalls()
         {
-            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion)).Messages
+            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken)).Messages
                 .AsBuilder()
                 .UseFunctionInvocation()
                 .Build();
@@ -393,7 +394,7 @@ namespace Anthropic.SDK.Tests
                 imageBytes = memoryStream.ToArray();
             }
 
-            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion)).Messages;
+            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken)).Messages;
 
             var res = await client.GetResponseAsync(
             [

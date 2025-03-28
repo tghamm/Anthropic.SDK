@@ -37,7 +37,7 @@ namespace Anthropic.SDK
 #if NET6_0_OR_GREATER
             return await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
 #else
-            return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 #endif
         }
 
@@ -122,7 +122,7 @@ namespace Anthropic.SDK
 #if NET6_0_OR_GREATER
                     resultAsString = await response.Content.ReadAsStringAsync(ctx).ConfigureAwait(false);
 #else
-                    resultAsString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        resultAsString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 #endif
                 }
                 catch (Exception e)

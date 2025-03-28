@@ -21,7 +21,8 @@ namespace Anthropic.SDK
     public abstract class EndpointBase : BaseEndpoint
     {
         private const string UserAgent = "tghamm/anthropic_sdk";
-
+        // Add a lock object for thread safety
+        private static readonly object _headerLock = new object();
         /// <summary>
         /// The internal reference to the Client, mostly used for authentication
         /// </summary>
@@ -66,19 +67,23 @@ namespace Anthropic.SDK
             var customClient = Client.HttpClient;
             var client = customClient ?? new HttpClient();
 
-            AddHeaderIfNotPresent(client.DefaultRequestHeaders, "x-api-key", Client.Auth.ApiKey);
-            AddHeaderIfNotPresent(client.DefaultRequestHeaders, "anthropic-version", Client.AnthropicVersion);
-
-            if (!string.IsNullOrWhiteSpace(Client.AnthropicBetaVersion))
+            // Acquire a lock before modifying headers to prevent race conditions
+            lock (_headerLock)
             {
-                AddHeaderIfNotPresent(client.DefaultRequestHeaders, "anthropic-beta", Client.AnthropicBetaVersion);
-            }
+                AddHeaderIfNotPresent(client.DefaultRequestHeaders, "x-api-key", Client.Auth.ApiKey);
+                AddHeaderIfNotPresent(client.DefaultRequestHeaders, "anthropic-version", Client.AnthropicVersion);
 
-            AddHeaderIfNotPresent(client.DefaultRequestHeaders, "User-Agent", UserAgent);
+                if (!string.IsNullOrWhiteSpace(Client.AnthropicBetaVersion))
+                {
+                    AddHeaderIfNotPresent(client.DefaultRequestHeaders, "anthropic-beta", Client.AnthropicBetaVersion);
+                }
 
-            if (!client.DefaultRequestHeaders.Accept.Contains(new MediaTypeWithQualityHeaderValue("application/json")))
-            {
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                AddHeaderIfNotPresent(client.DefaultRequestHeaders, "User-Agent", UserAgent);
+
+                if (!client.DefaultRequestHeaders.Accept.Contains(new MediaTypeWithQualityHeaderValue("application/json")))
+                {
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                }
             }
 
             return client;

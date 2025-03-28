@@ -23,7 +23,8 @@ namespace Anthropic.SDK
     public abstract class VertexAIEndpointBase : BaseEndpoint
     {
         private const string UserAgent = "tghamm/anthropic_sdk_vertexai";
-
+        // Add a lock object for thread safety
+        private static readonly object _headerLock = new object();
         /// <summary>
         /// The internal reference to the Client, mostly used for authentication
         /// </summary>
@@ -98,57 +99,29 @@ namespace Anthropic.SDK
             var customClient = Client.HttpClient;
             var client = customClient ?? new HttpClient();
 
-            // Set up authentication
-            if (!string.IsNullOrEmpty(Client.Auth.AccessToken))
+            // Acquire a lock before modifying headers to prevent race conditions
+            lock (_headerLock)
             {
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Client.Auth.AccessToken);
-            }
-            else if (!string.IsNullOrEmpty(Client.Auth.ApiKey))
-            {
-                // For API key authentication
-                AddHeaderIfNotPresent(client.DefaultRequestHeaders, "x-goog-api-key", Client.Auth.ApiKey);
-            }
-            else
-            {
-                // Use default Google Cloud credentials from gcloud CLI
-                try
+                // Set up authentication
+                if (!string.IsNullOrEmpty(Client.Auth.AccessToken))
                 {
-                    // Try to get access token from gcloud CLI
-                    var process = new System.Diagnostics.Process
-                    {
-                        StartInfo = new System.Diagnostics.ProcessStartInfo
-                        {
-                            FileName = "gcloud",
-                            Arguments = "auth print-access-token",
-                            UseShellExecute = false,
-                            RedirectStandardOutput = true,
-                            CreateNoWindow = true
-                        }
-                    };
-                    
-                    process.Start();
-                    string accessToken = process.StandardOutput.ReadToEnd().Trim();
-                    process.WaitForExit();
-                    
-                    if (!string.IsNullOrEmpty(accessToken))
-                    {
-                        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-                    }
+                    client.DefaultRequestHeaders.Authorization =
+                        new AuthenticationHeaderValue("Bearer", Client.Auth.AccessToken);
                 }
-                catch (Exception ex)
+                else if (!string.IsNullOrEmpty(Client.Auth.ApiKey))
                 {
-                    // If gcloud CLI is not available or fails, continue without authentication
-                    // The request will likely fail, but we'll let the API return the appropriate error
-                    Console.WriteLine($"Warning: Failed to get access token from gcloud CLI: {ex.Message}");
-                    Console.WriteLine("Please ensure you are authenticated with 'gcloud auth login' or provide explicit credentials.");
+                    // For API key authentication
+                    AddHeaderIfNotPresent(client.DefaultRequestHeaders, "x-goog-api-key", Client.Auth.ApiKey);
                 }
-            }
 
-            AddHeaderIfNotPresent(client.DefaultRequestHeaders, "User-Agent", UserAgent);
 
-            if (!client.DefaultRequestHeaders.Accept.Contains(new MediaTypeWithQualityHeaderValue("application/json")))
-            {
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                AddHeaderIfNotPresent(client.DefaultRequestHeaders, "User-Agent", UserAgent);
+
+                if (!client.DefaultRequestHeaders.Accept.Contains(
+                        new MediaTypeWithQualityHeaderValue("application/json")))
+                {
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                }
             }
 
             return client;

@@ -1,3 +1,4 @@
+using Google.Apis.Auth.OAuth2;
 using Microsoft.Extensions.Configuration;
 
 namespace Anthropic.SDK.Tests
@@ -17,6 +18,8 @@ namespace Anthropic.SDK.Tests
         /// </summary>
         public string VertexAIRegion { get; set; } = string.Empty;
 
+        public string VertexAIAccessToken { get; set; } = string.Empty;
+
         /// <summary>
         /// Loads test settings from appsettings.json
         /// </summary>
@@ -31,15 +34,12 @@ namespace Anthropic.SDK.Tests
             var settings = new TestSettings();
             configuration.GetSection("TestSettings").Bind(settings);
 
-            // If settings aren't found, provide fallback values for local development
-            if (string.IsNullOrEmpty(settings.VertexAIProjectId))
+            if (string.IsNullOrEmpty(settings.VertexAIAccessToken))
             {
-                settings.VertexAIProjectId = "crv-engineering-ai-prd-8058"; // Default for local tests
-            }
+                var credential = GoogleCredential.GetApplicationDefault()
+                    .CreateScoped("https://www.googleapis.com/auth/cloud-platform");
 
-            if (string.IsNullOrEmpty(settings.VertexAIRegion))
-            {
-                settings.VertexAIRegion = "europe-west1"; // Default for local tests
+                settings.VertexAIAccessToken = credential.UnderlyingCredential.GetAccessTokenForRequestAsync().Result;
             }
 
             return settings;
