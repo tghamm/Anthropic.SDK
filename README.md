@@ -14,9 +14,8 @@ Anthropic.SDK is an unofficial C# client designed for interacting with the Claud
   - [Usage](#usage)
   - [Vertex AI Support](#vertex-ai-support)
     - [Authentication](#authentication)
-      - [1. Explicit Authentication](#1-explicit-authentication)
-      - [2. Environment Variables](#2-environment-variables)
-      - [3. gcloud CLI Authentication (Recommended)](#3-gcloud-cli-authentication-recommended)
+      - [1. Environment Variables](#1-environment-variables)
+      - [2. gcloud CLI or Service Account Authentication (Recommended)](#2-gcloud-cli-or-service-account-authentication-recommended)
     - [Basic Usage](#basic-usage)
     - [Available Models](#available-models)
     - [Streaming Support](#streaming-support)
@@ -89,21 +88,7 @@ Anthropic.SDK now supports accessing Claude models through Google Cloud's Vertex
 
 The SDK supports multiple authentication methods for Vertex AI:
 
-#### 1. Explicit Authentication
-
-You can provide your Google Cloud Project ID and Region explicitly:
-
-```csharp
-// Create a Vertex AI client with project ID and region
-var client = new VertexAIClient(
-    new VertexAIAuthentication(
-        projectId: "your-google-cloud-project-id",
-        region: "us-east5"
-    )
-);
-```
-
-#### 2. Environment Variables
+#### 1. Environment Variables
 
 You can load authentication values from environment variables:
 - `GOOGLE_CLOUD_PROJECT`: Your Google Cloud Project ID
@@ -111,9 +96,9 @@ You can load authentication values from environment variables:
 - `GOOGLE_API_KEY`: (Optional) Your Google Cloud API Key
 - `GOOGLE_ACCESS_TOKEN`: (Optional) Your OAuth2 Access Token
 
-#### 3. gcloud CLI Authentication (Recommended)
+#### 2. gcloud CLI or Service Account Authentication (Recommended)
 
-If you're already authenticated with the gcloud CLI, the SDK will automatically use your existing credentials:
+If you're already authenticated with the gcloud CLI or have a service account JSON file, the SDK can be combined with the `Google.Cloud.AIPlatform.V1` nuget package to authenticate:
 
 ```bash
 # Authenticate with gcloud CLI (do this once)
@@ -125,11 +110,18 @@ gcloud auth print-access-token
 
 Then in your code:
 ```csharp
-// The SDK will automatically use your gcloud CLI credentials
+using Google.Apis.Auth.OAuth2;
+
+var credential = (await GoogleCredential.GetApplicationDefaultAsync())
+    .CreateScoped("https://www.googleapis.com/auth/cloud-platform");
+
+var accessToken = await credential.UnderlyingCredential.GetAccessTokenForRequestAsync();
+
 var client = new VertexAIClient(
     new VertexAIAuthentication(
         projectId: "your-google-cloud-project-id",
-        region: "us-east5"
+        region: "us-east5",
+        accessToken: accessToken
     )
 );
 ```
@@ -150,12 +142,12 @@ var parameters = new MessageParameters
 {
     Messages = messages,
     MaxTokens = 1000,
-    Temperature = 0.7m
+    Temperature = 0.7m,
+    Model = Constants.VertexAIModels.Claude37Sonnet
 };
 
 // Get a response from Claude via Vertex AI
 var response = await client.Messages
-    .WithModel(VertexAIModels.Claude3Sonnet)
     .GetClaudeMessageAsync(parameters);
 
 // Print the response
@@ -181,7 +173,6 @@ Streaming responses is also supported:
 ```csharp
 // Stream a response from Claude via Vertex AI
 await foreach (var chunk in client.Messages
-    .WithModel(VertexAIModels.Claude3Haiku)
     .StreamClaudeMessageAsync(parameters))
 {
     if (chunk.Delta?.Text != null)
@@ -191,7 +182,7 @@ await foreach (var chunk in client.Messages
 }
 ```
 
-See the `Anthropic.SDK.VertexAIDemo` project for a complete example application.
+See the `Anthropic.SDK.Tests` project for more examples including an `IChatClient` implementation for `VertexAI`.
 
 ## Examples
 
