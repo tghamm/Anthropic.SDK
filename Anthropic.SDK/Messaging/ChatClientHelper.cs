@@ -134,6 +134,17 @@ namespace Anthropic.SDK.Messaging
                                 });
                                 break;
 
+                            case Microsoft.Extensions.AI.DataContent documentContent when documentContent.HasTopLevelMediaType("application"):
+                                m.Content.Add(new DocumentContent()
+                                {
+                                    Source = new()
+                                    {
+                                        Data = Convert.ToBase64String(documentContent.Data.ToArray()),
+                                        MediaType = documentContent.MediaType,
+                                    }
+                                });
+                                break;
+
                             case Microsoft.Extensions.AI.FunctionCallContent fcc:
                                 m.Content.Add(new ToolUseContent()
                                 {

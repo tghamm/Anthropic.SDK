@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Anthropic.SDK.Constants;
@@ -9,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
+using static Google.Rpc.Context.AttributeContext.Types;
 #pragma warning disable SKEXP0001
 
 namespace Anthropic.SDK.Tests
@@ -53,7 +55,61 @@ namespace Anthropic.SDK.Tests
             Assert.IsTrue(result.Content.Contains("72"));
         }
 
+        [TestMethod]
+        public async Task TestSKPDF()
+        {
+            string resourceName = "Anthropic.SDK.Tests.Claude3ModelCard.pdf";
 
+            Assembly assembly = Assembly.GetExecutingAssembly();
+
+            await using Stream stream = assembly.GetManifestResourceStream(resourceName);
+            //read stream into byte array
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            byte[] pdfBytes = ms.ToArray();
+            string base64String = Convert.ToBase64String(pdfBytes);
+
+            var file = new File()
+            {
+                Name = "Claude3ModelCard.pdf",
+                DataUri = "data:application/pdf;base64," + base64String
+            };
+
+            AnthropicClient client = new AnthropicClient();
+            IChatCompletionService skChatService = new ChatClientBuilder(client.Messages)
+                .ConfigureOptions(opt =>
+                {
+                    opt.ModelId = AnthropicModels.Claude37Sonnet;
+                    opt.MaxOutputTokens = 1024;
+                })
+                .UseFunctionInvocation()
+                .Build()
+                .AsChatCompletionService();
+
+            IKernelBuilder kernelBuilder = Kernel.CreateBuilder();
+            kernelBuilder.Services.AddKeyedSingleton("test", skChatService);
+
+            Kernel kernel = kernelBuilder.Build();
+
+            // Add plugins from the `SkPlugins` folder
+            string pluginDirectoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SummarizePlugin");
+            kernel.ImportPluginFromPromptDirectory(pluginDirectoryPath);
+
+            string? filesSummary = await kernel.InvokeAsync<string>(
+                "SummarizePlugin",
+                "SummarizeDocuments",
+                new() { { "fileName", file.Name }, { "fileDataUri", file.DataUri } }
+            );
+
+        }
+
+
+    }
+
+    public class File
+    {
+        public string Name { get; set; }
+        public string DataUri { get; set; }
     }
 
     public class SkPlugins

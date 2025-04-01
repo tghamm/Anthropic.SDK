@@ -27,6 +27,9 @@
     <Content Include="appsettings.json.template">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  <Content Include="SummarizePlugin\SummarizeDocuments\skprompt.txt">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </Content>
   </ItemGroup>
 
   <ItemGroup>
