@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace Anthropic.SDK.Messaging
 {
@@ -15,6 +12,7 @@ namespace Anthropic.SDK.Messaging
     {
         [JsonPropertyName("error")]
         public string Type { get; set; }
+
         [JsonPropertyName("message")]
         public string Message { get; set; }
     }

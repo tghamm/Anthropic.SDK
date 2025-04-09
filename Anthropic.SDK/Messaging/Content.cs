@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using Anthropic.SDK.Common;
 
 namespace Anthropic.SDK.Messaging
 {
@@ -21,18 +18,17 @@ namespace Anthropic.SDK.Messaging
         [JsonInclude]
         [JsonPropertyName("cache_control")]
         public CacheControl CacheControl { get; set; }
-
     }
-    
+
     /// <summary>
     /// Helper Class for Text Content to Send to Claude
     /// </summary>
-    public class TextContent: ContentBase
+    public class TextContent : ContentBase
     {
         /// <summary>
         /// Type of Content (Text, pre-set)
         /// </summary>
-        [JsonPropertyName("type")] 
+        [JsonPropertyName("type")]
         public override ContentType Type => ContentType.text;
 
         /// <summary>
@@ -56,26 +52,33 @@ namespace Anthropic.SDK.Messaging
     {
         [JsonPropertyName("type")]
         public string Type { get; set; }
+
         [JsonPropertyName("cited_text")]
         public string CitedText { get; set; }
+
         [JsonPropertyName("document_index")]
         public int DocumentIndex { get; set; }
+
         [JsonPropertyName("document_title")]
         public string DocumentTitle { get; set; }
+
         [JsonPropertyName("start_char_index")]
         public long? StartCharIndex { get; set; }
+
         [JsonPropertyName("end_char_index")]
         public long? EndCharIndex { get; set; }
+
         [JsonPropertyName("start_page_number")]
         public long? StartPageNumber { get; set; }
+
         [JsonPropertyName("end_page_number")]
         public long? EndPageNumber { get; set; }
+
         [JsonPropertyName("start_block_index")]
         public long? StartBlockIndex { get; set; }
+
         [JsonPropertyName("end_block_index")]
         public long? EndBlockIndex { get; set; }
-
-
     }
 
     /// <summary>
@@ -123,7 +126,7 @@ namespace Anthropic.SDK.Messaging
     /// <summary>
     /// Helper Class for Image Content to Send to Claude
     /// </summary>
-    public class ImageContent: ContentBase
+    public class ImageContent : ContentBase
     {
         /// <summary>
         /// Type of Content (Image, pre-set)
@@ -228,8 +231,6 @@ namespace Anthropic.SDK.Messaging
         public string Url { get; set; }
     }
 
-
-
     /// <summary>
     /// Definition of image to be sent to Claude
     /// </summary>
@@ -289,9 +290,6 @@ namespace Anthropic.SDK.Messaging
         /// </summary>
         [JsonPropertyName("input")]
         public JsonNode Input { get; set; }
-
-
-
     }
 
     /// <summary>

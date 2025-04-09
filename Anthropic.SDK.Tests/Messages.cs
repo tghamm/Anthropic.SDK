@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
+
 using Anthropic.SDK.Constants;
 using Anthropic.SDK.Messaging;
 
@@ -157,22 +158,22 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestBasicClaude3ImageMessage()
         {
-            string resourceName = "Anthropic.SDK.Tests.Red_Apple.jpg";
+            var resourceName = "Anthropic.SDK.Tests.Red_Apple.jpg";
 
-            Assembly assembly = Assembly.GetExecutingAssembly();
+            var assembly = Assembly.GetExecutingAssembly();
 
-            await using Stream stream = assembly.GetManifestResourceStream(resourceName);
+            await using var stream = assembly.GetManifestResourceStream(resourceName);
             byte[] imageBytes;
             using (var memoryStream = new MemoryStream())
             {
                 await stream.CopyToAsync(memoryStream);
                 imageBytes = memoryStream.ToArray();
             }
-            
-            string base64String = Convert.ToBase64String(imageBytes);
+
+            var base64String = Convert.ToBase64String(imageBytes);
 
             var client = new AnthropicClient();
-            
+
             var messages = new List<Message>();
             messages.Add(new Message()
             {
@@ -208,13 +209,13 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestStreamingClaude3ImageMessage()
         {
-            string resourceName = "Anthropic.SDK.Tests.Red_Apple.jpg";
+            var resourceName = "Anthropic.SDK.Tests.Red_Apple.jpg";
 
             // Get the current assembly
-            Assembly assembly = Assembly.GetExecutingAssembly();
+            var assembly = Assembly.GetExecutingAssembly();
 
             // Get a stream to the embedded resource
-            await using Stream stream = assembly.GetManifestResourceStream(resourceName);
+            await using var stream = assembly.GetManifestResourceStream(resourceName);
             // Read the stream into a byte array
             byte[] imageBytes;
             using (var memoryStream = new MemoryStream())
@@ -224,7 +225,7 @@ namespace Anthropic.SDK.Tests
             }
 
             // Convert the byte array to a base64 string
-            string base64String = Convert.ToBase64String(imageBytes);
+            var base64String = Convert.ToBase64String(imageBytes);
 
             var client = new AnthropicClient();
             var messages = new List<Message>();

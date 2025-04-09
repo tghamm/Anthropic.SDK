@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Anthropic.SDK.Common;
 
 namespace Anthropic.SDK.Messaging
@@ -12,9 +12,11 @@ namespace Anthropic.SDK.Messaging
     public partial class MessagesEndpoint : EndpointBase
     {
         /// <summary>
-        /// Constructor of the api endpoint.  Rather than instantiating this yourself, access it through an instance of <see cref="AnthropicClient"/> as <see cref="AnthropicClient.Messages"/>.
+        /// Constructor of the api endpoint. Rather than instantiating this yourself, access it
+        /// through an instance of <see cref="AnthropicClient" /> as <see cref="AnthropicClient.Messages" />.
         /// </summary>
-        /// <param name="client"></param>
+        /// <param name="client">
+        /// </param>
         internal MessagesEndpoint(AnthropicClient client) : base(client) { }
 
         protected override string Endpoint => "messages";
@@ -22,8 +24,10 @@ namespace Anthropic.SDK.Messaging
         /// <summary>
         /// Makes a non-streaming call to the Claude messages API. Be sure to set stream to false in <param name="parameters"></param>.
         /// </summary>
-        /// <param name="parameters"></param>
-        /// <param name="ctx"></param>
+        /// <param name="parameters">
+        /// </param>
+        /// <param name="ctx">
+        /// </param>
         public async Task<MessageResponse> GetClaudeMessageAsync(MessageParameters parameters, CancellationToken ctx = default)
         {
             SetCacheControls(parameters);
@@ -34,11 +38,10 @@ namespace Anthropic.SDK.Messaging
             var toolCalls = new List<Function>();
             foreach (var message in response.Content)
             {
-                
                 if (message.Type == ContentType.tool_use)
                 {
                     var tool = parameters.Tools?.FirstOrDefault(t => t.Function.Name == (message as ToolUseContent).Name);
-                    
+
                     if (tool != null)
                     {
                         tool.Function.Arguments = (message as ToolUseContent).Input;
@@ -60,7 +63,6 @@ namespace Anthropic.SDK.Messaging
             }
             else if (parameters.PromptCaching == PromptCacheType.AutomaticToolsAndSystem)
             {
-
                 if (parameters.System != null && parameters.System.Any())
                 {
                     parameters.System.Last().CacheControl = new CacheControl()
@@ -68,7 +70,7 @@ namespace Anthropic.SDK.Messaging
                         Type = CacheControlType.ephemeral
                     };
                 }
-                
+
                 if (parameters.Tools != null && parameters.Tools.Any())
                 {
                     parameters.Tools.Last().Function.CacheControl = new CacheControl()
@@ -76,17 +78,17 @@ namespace Anthropic.SDK.Messaging
                         Type = CacheControlType.ephemeral
                     };
                 }
-                
-
             }
-            
         }
 
         /// <summary>
-        /// Makes a streaming call to the Claude completion API using an IAsyncEnumerable. Be sure to set stream to true in <param name="parameters"></param>.
+        /// Makes a streaming call to the Claude completion API using an IAsyncEnumerable. Be sure
+        /// to set stream to true in <param name="parameters"></param>.
         /// </summary>
-        /// <param name="parameters"></param>
-        /// <param name="ctx"></param>
+        /// <param name="parameters">
+        /// </param>
+        /// <param name="ctx">
+        /// </param>
         public async IAsyncEnumerable<MessageResponse> StreamClaudeMessageAsync(MessageParameters parameters, [EnumeratorCancellation] CancellationToken ctx = default)
         {
             SetCacheControls(parameters);
@@ -95,7 +97,7 @@ namespace Anthropic.SDK.Messaging
             var toolCalls = new List<Function>();
             var arguments = string.Empty;
             var name = string.Empty;
-            bool captureTool = false;
+            var captureTool = false;
             var id = string.Empty;
             await foreach (var result in HttpStreamingRequestMessages(Url, HttpMethod.Post, parameters, ctx).ConfigureAwait(false))
             {
@@ -124,16 +126,20 @@ namespace Anthropic.SDK.Messaging
                     captureTool = false;
                     result.ToolCalls = toolCalls;
                 }
-                
+
                 yield return result;
             }
         }
+
         /// <summary>
         /// Makes a call to count the number of tokens in a request.
         /// </summary>
-        /// <param name="parameters"></param>
-        /// <param name="ctx"></param>
-        /// <returns></returns>
+        /// <param name="parameters">
+        /// </param>
+        /// <param name="ctx">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public async Task<MessageCountTokenResponse> CountMessageTokensAsync(MessageCountTokenParameters parameters, CancellationToken ctx = default)
         {
             return await HttpRequestMessages<MessageCountTokenResponse>($"{Url}/count_tokens", HttpMethod.Post, parameters, ctx).ConfigureAwait(false);

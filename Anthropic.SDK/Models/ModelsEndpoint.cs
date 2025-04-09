@@ -1,22 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Anthropic.SDK.Models
 {
     /// <summary>
     /// Endpoint for interacting with the Models API.
     /// </summary>
-    public class ModelsEndpoint: EndpointBase
+    public class ModelsEndpoint : EndpointBase
     {
-
         /// <summary>
-        /// Constructor of the api endpoint.  Rather than instantiating this yourself, access it through an instance of <see cref="AnthropicClient"/> as <see cref="AnthropicClient.Models"/>.
+        /// Constructor of the api endpoint. Rather than instantiating this yourself, access it
+        /// through an instance of <see cref="AnthropicClient" /> as <see cref="AnthropicClient.Models" />.
         /// </summary>
-        /// <param name="client"></param>
+        /// <param name="client">
+        /// </param>
         internal ModelsEndpoint(AnthropicClient client) : base(client) { }
 
         protected override string Endpoint => "models";
@@ -24,10 +22,14 @@ namespace Anthropic.SDK.Models
         /// <summary>
         /// Retrieves a paginated list of Models from the Claude AI API.
         /// </summary>
-        /// <param name="beforeId"></param>
-        /// <param name="afterId"></param>
-        /// <param name="limit"></param>
-        /// <param name="ctx"></param>
+        /// <param name="beforeId">
+        /// </param>
+        /// <param name="afterId">
+        /// </param>
+        /// <param name="limit">
+        /// </param>
+        /// <param name="ctx">
+        /// </param>
         public async Task<ModelList> ListModelsAsync(string beforeId = null, string afterId = null, int limit = 20, CancellationToken ctx = default)
         {
             var url = Url + $"?limit={limit}";

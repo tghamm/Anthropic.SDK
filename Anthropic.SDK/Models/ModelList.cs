@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace Anthropic.SDK.Models
@@ -19,6 +17,4 @@ namespace Anthropic.SDK.Models
         [JsonPropertyName("last_id")]
         public string LastId { get; set; }
     }
-
-
 }

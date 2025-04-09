@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Reflection;
+
 using Anthropic.SDK.Constants;
 using Anthropic.SDK.Messaging;
 
@@ -16,22 +11,21 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestPDF()
         {
-            string resourceName = "Anthropic.SDK.Tests.Claude3ModelCard.pdf";
+            var resourceName = "Anthropic.SDK.Tests.Claude3ModelCard.pdf";
 
-            Assembly assembly = Assembly.GetExecutingAssembly();
+            var assembly = Assembly.GetExecutingAssembly();
 
-            await using Stream stream = assembly.GetManifestResourceStream(resourceName);
+            await using var stream = assembly.GetManifestResourceStream(resourceName);
             //read stream into byte array
             using var ms = new MemoryStream();
             await stream.CopyToAsync(ms);
-            byte[] pdfBytes = ms.ToArray();
-            string base64String = Convert.ToBase64String(pdfBytes);
+            var pdfBytes = ms.ToArray();
+            var base64String = Convert.ToBase64String(pdfBytes);
 
-            
             var client = new AnthropicClient();
             var messages = new List<Message>()
             {
-                new Message(RoleType.User, new DocumentContent()
+                new(RoleType.User, new DocumentContent()
                 {
                     Source = new DocumentSource()
                     {
@@ -44,9 +38,9 @@ namespace Anthropic.SDK.Tests
                         Type = CacheControlType.ephemeral
                     }
                 }),
-                new Message(RoleType.User, "Which model has the highest human preference win rates across each use-case?"),
+                new(RoleType.User, "Which model has the highest human preference win rates across each use-case?"),
             };
-            
+
             var parameters = new MessageParameters()
             {
                 Messages = messages,
@@ -57,11 +51,9 @@ namespace Anthropic.SDK.Tests
                 PromptCaching = PromptCacheType.FineGrained
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
-            
+
             Assert.IsNotNull(res.FirstMessage.ToString());
             Assert.IsTrue(res.Usage.CacheCreationInputTokens > 0 || res.Usage.CacheReadInputTokens > 0);
-
-            
         }
 
         [TestMethod]
@@ -70,7 +62,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>()
             {
-                new Message(RoleType.User, new DocumentContent()
+                new(RoleType.User, new DocumentContent()
                 {
                     Source = new DocumentSource()
                     {
@@ -83,7 +75,7 @@ namespace Anthropic.SDK.Tests
                     },
                     Citations = new Citations() { Enabled = true }
                 }),
-                new Message(RoleType.User, "What are the key findings in this document? Use citations to back up your answer."),
+                new(RoleType.User, "What are the key findings in this document? Use citations to back up your answer."),
             };
 
             var parameters = new MessageParameters()
@@ -98,8 +90,6 @@ namespace Anthropic.SDK.Tests
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
 
             Assert.IsTrue(res.Content.SelectMany(p => (p as TextContent).Citations ?? new List<CitationResult>()).Any());
-            
-
         }
 
         [TestMethod]
@@ -108,7 +98,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>()
             {
-                new Message(RoleType.User, new DocumentContent()
+                new(RoleType.User, new DocumentContent()
                 {
                     Source = new DocumentSource()
                     {
@@ -121,7 +111,7 @@ namespace Anthropic.SDK.Tests
                     },
                     Citations = new Citations() { Enabled = true }
                 }),
-                new Message(RoleType.User, "What are the key findings in this document? Use citations to back up your answer."),
+                new(RoleType.User, "What are the key findings in this document? Use citations to back up your answer."),
             };
 
             var parameters = new MessageParameters()
@@ -141,25 +131,23 @@ namespace Anthropic.SDK.Tests
 
             var message = new Message(responses);
             Assert.IsTrue(message.Content.SelectMany(p => (p as TextContent).Citations ?? new List<CitationResult>()).Any());
-
         }
 
         [TestMethod]
         public async Task TestDocumentCitations()
         {
-            string resourceName = "Anthropic.SDK.Tests.BillyBudd.txt";
+            var resourceName = "Anthropic.SDK.Tests.BillyBudd.txt";
 
-            Assembly assembly = Assembly.GetExecutingAssembly();
+            var assembly = Assembly.GetExecutingAssembly();
 
-            await using Stream stream = assembly.GetManifestResourceStream(resourceName);
-            using StreamReader reader = new StreamReader(stream);
-            string content = await reader.ReadToEndAsync();
-
+            await using var stream = assembly.GetManifestResourceStream(resourceName);
+            using var reader = new StreamReader(stream);
+            var content = await reader.ReadToEndAsync();
 
             var client = new AnthropicClient();
             var messages = new List<Message>()
             {
-                new Message(RoleType.User, new DocumentContent()
+                new(RoleType.User, new DocumentContent()
                 {
                     Source = new DocumentSource()
                     {
@@ -171,7 +159,7 @@ namespace Anthropic.SDK.Tests
                     },
                     Citations = new Citations() { Enabled = true }
                 }),
-                new Message(RoleType.User, "Who is the protagonist in this text? Use citations to back up your answer."),
+                new(RoleType.User, "Who is the protagonist in this text? Use citations to back up your answer."),
             };
 
             var parameters = new MessageParameters()
@@ -185,12 +173,6 @@ namespace Anthropic.SDK.Tests
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
 
             Assert.IsTrue(res.Content.SelectMany(p => (p as TextContent).Citations ?? new List<CitationResult>()).Any());
-
-
         }
-
-
     }
-
-
 }

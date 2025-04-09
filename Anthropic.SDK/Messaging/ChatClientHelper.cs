@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+
 using Anthropic.SDK.Common;
+
 using Microsoft.Extensions.AI;
 
 namespace Anthropic.SDK.Messaging
@@ -92,7 +94,7 @@ namespace Anthropic.SDK.Messaging
                 }
             }
 
-            foreach (ChatMessage message in messages)
+            foreach (var message in messages)
             {
                 if (message.Role == ChatRole.System)
                 {
@@ -107,7 +109,7 @@ namespace Anthropic.SDK.Messaging
                     };
                     (parameters.Messages ??= []).Add(m);
 
-                    foreach (AIContent content in message.Contents)
+                    foreach (var content in message.Contents)
                     {
                         switch (content)
                         {
@@ -158,7 +160,7 @@ namespace Anthropic.SDK.Messaging
                                 m.Content.Add(new ToolResultContent()
                                 {
                                     ToolUseId = frc.CallId,
-                                    Content = new List<ContentBase>() { new TextContent () { Text = frc.Result?.ToString() ?? string.Empty } },
+                                    Content = new List<ContentBase>() { new TextContent() { Text = frc.Result?.ToString() ?? string.Empty } },
                                     IsError = frc.Exception is not null,
                                 });
                                 break;
@@ -177,7 +179,7 @@ namespace Anthropic.SDK.Messaging
         {
             List<AIContent> contents = new();
 
-            foreach (ContentBase content in response.Content)
+            foreach (var content in response.Content)
             {
                 switch (content)
                 {

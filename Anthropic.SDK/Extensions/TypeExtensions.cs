@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using System.Text.Json;
 using System.Threading;
+
 using Anthropic.SDK.Common;
-using Anthropic.SDK.Messaging;
 
 namespace Anthropic.SDK.Extensions
 {
@@ -232,6 +231,7 @@ namespace Anthropic.SDK.Extensions
                             case JsonIgnoreCondition.WhenWritingDefault:
                                 memberProperties.Add(propertyName);
                                 break;
+
                             case JsonIgnoreCondition.Always:
                             case JsonIgnoreCondition.WhenWritingNull:
                             default:
@@ -269,8 +269,5 @@ namespace Anthropic.SDK.Extensions
                 PropertyInfo propertyInfo => propertyInfo.PropertyType,
                 _ => throw new ArgumentException($"{nameof(MemberInfo)} must be of type {nameof(FieldInfo)}, {nameof(PropertyInfo)}", nameof(member))
             };
-    
-
-    
     }
 }

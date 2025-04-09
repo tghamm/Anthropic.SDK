@@ -34,10 +34,10 @@ namespace Anthropic.SDK.Tests
         public async Task TestBasicHttpClientFailure()
         {
             var client = new AnthropicClient(client: CustomHttpClientFail());
-            
+
             var messages = new List<Message>();
             messages.Add(new Message(RoleType.User, "Write me a sonnet about the Statue of Liberty"));
-            
+
             var parameters = new MessageParameters()
             {
                 Messages = messages,
@@ -50,7 +50,6 @@ namespace Anthropic.SDK.Tests
             {
                 var res = await client.Messages.GetClaudeMessageAsync(parameters);
             });
-
         }
 
         [TestMethod]
@@ -59,7 +58,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient(client: CustomHttpClientPass());
             var messages = new List<Message>
             {
-                new Message(RoleType.User, "Write me a sonnet about the Statue of Liberty")
+                new(RoleType.User, "Write me a sonnet about the Statue of Liberty")
             };
             var parameters = new MessageParameters()
             {
@@ -80,7 +79,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient(client: new HttpClient());
             var messages = new List<Message>
             {
-                new Message(RoleType.User, "Write me a sonnet about the Statue of Liberty")
+                new(RoleType.User, "Write me a sonnet about the Statue of Liberty")
             };
             var parameters = new MessageParameters()
             {
@@ -91,11 +90,10 @@ namespace Anthropic.SDK.Tests
                 Temperature = 1.0m,
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
-            
+
             res = await client.Messages.GetClaudeMessageAsync(parameters);
 
             Assert.IsNotNull(res.Message.ToString());
         }
-
     }
 }

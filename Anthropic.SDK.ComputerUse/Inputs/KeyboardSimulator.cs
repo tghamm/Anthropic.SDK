@@ -1,10 +1,5 @@
-﻿using SharpHook.Native;
-using SharpHook;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using SharpHook;
+using SharpHook.Native;
 
 namespace Anthropic.SDK.ComputerUse.Inputs
 {
@@ -13,16 +8,21 @@ namespace Anthropic.SDK.ComputerUse.Inputs
         public static void SimulateTextInput(string text)
         {
             if (string.IsNullOrWhiteSpace(text))
+            {
                 throw new ArgumentException("Text cannot be null or empty.");
+            }
 
             IEventSimulator simulator = new EventSimulator();
 
             simulator.SimulateTextEntry(text);
         }
+
         public static void SimulateKeyCombination(string keyCombination)
         {
             if (string.IsNullOrWhiteSpace(keyCombination))
+            {
                 throw new ArgumentException("Key combination cannot be null or empty.");
+            }
 
             // Split the key combination into individual keys
             var keys = keyCombination.Split(new[] { '+', ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -30,8 +30,8 @@ namespace Anthropic.SDK.ComputerUse.Inputs
             IEventSimulator simulator = new EventSimulator();
 
             // Stack to keep track of keys pressed
-            Stack<KeyCode> keysDown = new Stack<KeyCode>();
-            ModifierMask currentMask = ModifierMask.None;
+            var keysDown = new Stack<KeyCode>();
+            var currentMask = ModifierMask.None;
 
             // Map key names to KeyCode enums
             var keyMap = new Dictionary<string, KeyCode>(StringComparer.OrdinalIgnoreCase)
@@ -70,7 +70,7 @@ namespace Anthropic.SDK.ComputerUse.Inputs
                     simulator.SimulateKeyPress(keyCode);
 
                     // Update the modifier mask if it's a modifier key
-                    if (modifierMap.TryGetValue(keyCode, out ModifierMask modifier))
+                    if (modifierMap.TryGetValue(keyCode, out var modifier))
                     {
                         currentMask |= modifier;
                     }
@@ -80,8 +80,8 @@ namespace Anthropic.SDK.ComputerUse.Inputs
                 else if (key.Length == 1)
                 {
                     // Handle single character keys
-                    char c = key.ToUpper()[0];
-                    KeyCode charKeyCode = (KeyCode)Enum.Parse(typeof(KeyCode), $"Vc{c}", true);
+                    var c = key.ToUpper()[0];
+                    var charKeyCode = (KeyCode)Enum.Parse(typeof(KeyCode), $"Vc{c}", true);
 
                     simulator.SimulateKeyPress(charKeyCode);
 
@@ -96,7 +96,7 @@ namespace Anthropic.SDK.ComputerUse.Inputs
             // Release keys in reverse order
             while (keysDown.Count > 0)
             {
-                KeyCode keyCode = keysDown.Pop();
+                var keyCode = keysDown.Pop();
 
                 // Update the modifier mask if it's a modifier key
                 if (modifierMap.ContainsKey(keyCode))

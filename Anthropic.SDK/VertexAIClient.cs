@@ -2,12 +2,14 @@ using System;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+
 using Anthropic.SDK.Messaging;
 
 namespace Anthropic.SDK
 {
     /// <summary>
-    /// Entry point to the Anthropic API via Google Cloud Vertex AI, handling auth and allowing access to the API endpoints
+    /// Entry point to the Anthropic API via Google Cloud Vertex AI, handling auth and allowing
+    /// access to the API endpoints
     /// </summary>
     public class VertexAIClient : IDisposable
     {
@@ -30,16 +32,20 @@ namespace Anthropic.SDK
         /// Creates a new entry point to the Anthropic API via Google Cloud Vertex AI
         /// </summary>
         /// <param name="auth">
-        /// The Vertex AI authentication information to use for API calls,
-        /// or <see langword="null"/> to attempt to use the <see cref="VertexAIAuthentication.Default"/>,
-        /// potentially loading from environment vars.
+        /// The Vertex AI authentication information to use for API calls, or
+        /// <see langword="null" /> to attempt to use the
+        /// <see cref="VertexAIAuthentication.Default" />, potentially loading from environment vars.
         /// </param>
-        /// <param name="client">A <see cref="HttpClient"/>.</param>
+        /// <param name="client">
+        /// A <see cref="HttpClient" />.
+        /// </param>
         /// <remarks>
-        /// <see cref="VertexAIClient"/> implements <see cref="IDisposable"/> to manage the lifecycle of the resources it uses, including <see cref="HttpClient"/>.
-        /// When you initialize <see cref="VertexAIClient"/>, it will create an internal <see cref="HttpClient"/> instance if one is not provided.
-        /// This internal HttpClient is disposed of when VertexAIClient is disposed of.
-        /// If you provide an external HttpClient instance to VertexAIClient, you are responsible for managing its disposal.
+        /// <see cref="VertexAIClient" /> implements <see cref="IDisposable" /> to manage the
+        /// lifecycle of the resources it uses, including <see cref="HttpClient" />. When you
+        /// initialize <see cref="VertexAIClient" />, it will create an internal
+        /// <see cref="HttpClient" /> instance if one is not provided. This internal HttpClient is
+        /// disposed of when VertexAIClient is disposed of. If you provide an external HttpClient
+        /// instance to VertexAIClient, you are responsible for managing its disposal.
         /// </remarks>
         public VertexAIClient(VertexAIAuthentication auth = null, HttpClient client = null)
         {
@@ -78,7 +84,8 @@ namespace Anthropic.SDK
         }
 
         /// <summary>
-        /// Text generation is the core function of the API. You give the API a prompt, and it generates a completion.
+        /// Text generation is the core function of the API. You give the API a prompt, and it
+        /// generates a completion.
         /// </summary>
         public VertexAIMessagesEndpoint Messages { get; }
 
@@ -87,7 +94,7 @@ namespace Anthropic.SDK
         private bool isDisposed;
 
         /// <summary>
-        /// Disposes of the resources used by the <see cref="VertexAIClient"/>.
+        /// Disposes of the resources used by the <see cref="VertexAIClient" />.
         /// </summary>
         public void Dispose()
         {

@@ -1,4 +1,5 @@
 using Google.Apis.Auth.OAuth2;
+
 using Microsoft.Extensions.Configuration;
 
 namespace Anthropic.SDK.Tests
@@ -23,7 +24,9 @@ namespace Anthropic.SDK.Tests
         /// <summary>
         /// Loads test settings from appsettings.json
         /// </summary>
-        /// <returns>The test settings</returns>
+        /// <returns>
+        /// The test settings
+        /// </returns>
         public static TestSettings LoadSettings()
         {
             var configuration = new ConfigurationBuilder()

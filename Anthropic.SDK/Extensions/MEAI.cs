@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Anthropic.SDK.Extensions.MEAI
+﻿namespace Anthropic.SDK.Extensions.MEAI
 {
     public sealed class ThinkingContent : Microsoft.Extensions.AI.AIContent
     {
@@ -11,9 +7,11 @@ namespace Anthropic.SDK.Extensions.MEAI
             Thinking = thinking;
             Signature = signature;
         }
+
         public string Thinking { get; set; }
 
         public string Signature { get; set; }
+
         public override string ToString() => Thinking;
     }
 
@@ -23,6 +21,7 @@ namespace Anthropic.SDK.Extensions.MEAI
         {
             Data = data;
         }
+
         public string Data { get; set; }
     }
 }

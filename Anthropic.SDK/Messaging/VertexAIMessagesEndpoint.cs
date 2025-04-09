@@ -1,13 +1,11 @@
-using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Anthropic.SDK.Common;
 
 namespace Anthropic.SDK.Messaging
@@ -18,39 +16,46 @@ namespace Anthropic.SDK.Messaging
     public partial class VertexAIMessagesEndpoint : VertexAIEndpointBase
     {
         /// <summary>
-        /// Constructor of the api endpoint. Rather than instantiating this yourself, access it through an instance of <see cref="VertexAIClient"/> as <see cref="VertexAIClient.Messages"/>.
+        /// Constructor of the api endpoint. Rather than instantiating this yourself, access it
+        /// through an instance of <see cref="VertexAIClient" /> as <see cref="VertexAIClient.Messages" />.
         /// </summary>
-        /// <param name="client">The Vertex AI client</param>
+        /// <param name="client">
+        /// The Vertex AI client
+        /// </param>
         internal VertexAIMessagesEndpoint(VertexAIClient client) : base(client) { }
 
         protected override string Endpoint => "streamRawPredict";
-        
+
         /// <summary>
         /// The default model to use when no model is specified in the request parameters
         /// </summary>
         protected override string Model => Constants.VertexAIModels.Claude3Sonnet;
 
         /// <summary>
-        /// Makes a non-streaming call to the Claude messages API via Vertex AI. Be sure to set stream to false in <param name="parameters"></param>.
+        /// Makes a non-streaming call to the Claude messages API via Vertex AI. Be sure to set
+        /// stream to false in <param name="parameters"></param>.
         /// </summary>
-        /// <param name="parameters">The message parameters</param>
-        /// <param name="ctx">Cancellation token</param>
+        /// <param name="parameters">
+        /// The message parameters
+        /// </param>
+        /// <param name="ctx">
+        /// Cancellation token
+        /// </param>
         public async Task<MessageResponse> GetClaudeMessageAsync(MessageParameters parameters, CancellationToken ctx = default)
         {
             SetCacheControls(parameters);
-            
+
             parameters.Stream = false;
-            
-            
+
             // Get the model from parameters or use default
-            string modelToUse = GetModelForRequest(parameters);
-            
+            var modelToUse = GetModelForRequest(parameters);
+
             // Create the Vertex AI request
             var vertexRequest = CreateVertexAIRequest(parameters);
-            
+
             // Get URL for the specific model
-            string urlForModel = GetUrlForModel(modelToUse);
-            
+            var urlForModel = GetUrlForModel(modelToUse);
+
             var response = await HttpRequestMessages<MessageResponse>(urlForModel, HttpMethod.Post, vertexRequest, ctx).ConfigureAwait(false);
             var toolCalls = new List<Function>();
             foreach (var message in response.Content)
@@ -58,7 +63,7 @@ namespace Anthropic.SDK.Messaging
                 if (message.Type == ContentType.tool_use)
                 {
                     var tool = parameters.Tools?.FirstOrDefault(t => t.Function.Name == (message as ToolUseContent).Name);
-                    
+
                     if (tool != null)
                     {
                         tool.Function.Arguments = (message as ToolUseContent).Input;
@@ -68,36 +73,41 @@ namespace Anthropic.SDK.Messaging
                 }
             }
             response.ToolCalls = toolCalls;
-            
+
             return response;
         }
 
         /// <summary>
-        /// Makes a streaming call to the Claude completion API via Vertex AI using an IAsyncEnumerable. Be sure to set stream to true in <param name="parameters"></param>.
+        /// Makes a streaming call to the Claude completion API via Vertex AI using an
+        /// IAsyncEnumerable. Be sure to set stream to true in <param name="parameters"></param>.
         /// </summary>
-        /// <param name="parameters">The message parameters</param>
-        /// <param name="ctx">Cancellation token</param>
+        /// <param name="parameters">
+        /// The message parameters
+        /// </param>
+        /// <param name="ctx">
+        /// Cancellation token
+        /// </param>
         public async IAsyncEnumerable<MessageResponse> StreamClaudeMessageAsync(MessageParameters parameters, [EnumeratorCancellation] CancellationToken ctx = default)
         {
             SetCacheControls(parameters);
-            
+
             parameters.Stream = true;
-            
+
             // Get the model from parameters or use default
-            string modelToUse = GetModelForRequest(parameters);
-            
+            var modelToUse = GetModelForRequest(parameters);
+
             // Create the Vertex AI request
             var vertexRequest = CreateVertexAIRequest(parameters);
-            
+
             // Get URL for the specific model
-            string urlForModel = GetUrlForModel(modelToUse);
-            
+            var urlForModel = GetUrlForModel(modelToUse);
+
             var toolCalls = new List<Function>();
             var arguments = string.Empty;
             var name = string.Empty;
-            bool captureTool = false;
+            var captureTool = false;
             var id = string.Empty;
-            
+
             await foreach (var result in HttpStreamingRequestMessages(urlForModel, HttpMethod.Post, vertexRequest, ctx).ConfigureAwait(false))
             {
                 // Handle tool calls if present
@@ -108,16 +118,16 @@ namespace Anthropic.SDK.Messaging
                     name = result.ContentBlock.Name;
                     id = result.ContentBlock.Id;
                 }
-                
+
                 if (!string.IsNullOrWhiteSpace(result.Delta?.PartialJson))
                 {
                     arguments += result.Delta.PartialJson;
                 }
-                
+
                 if (captureTool && result.Delta?.StopReason == "tool_use")
                 {
                     var tool = parameters.Tools?.FirstOrDefault(t => t.Function.Name == name);
-                    
+
                     if (tool != null)
                     {
                         tool.Function.Arguments = arguments;
@@ -127,11 +137,11 @@ namespace Anthropic.SDK.Messaging
                     captureTool = false;
                     result.ToolCalls = toolCalls;
                 }
-                
+
                 yield return result;
             }
         }
-        
+
         /// <summary>
         /// Sets the cache control properties based on the prompt caching type
         /// </summary>
@@ -147,7 +157,7 @@ namespace Anthropic.SDK.Messaging
                 if (parameters.System != null && parameters.System.Any())
                 {
                     var lastSystemMessage = parameters.System.Last();
-                    
+
                     // Only set cache control if not already set
                     if (lastSystemMessage.CacheControl == null)
                     {
@@ -157,12 +167,12 @@ namespace Anthropic.SDK.Messaging
                         };
                     }
                 }
-                
+
                 // Set ephemeral cache control on the last tool if any exist
                 if (parameters.Tools != null && parameters.Tools.Any())
                 {
                     var lastTool = parameters.Tools.Last();
-                    
+
                     // Only set cache control if not already set
                     if (lastTool.Function.CacheControl == null)
                     {
@@ -174,14 +184,14 @@ namespace Anthropic.SDK.Messaging
                 }
             }
         }
-        
+
         /// <summary>
         /// Helper method to extract content from various possible response formats
         /// </summary>
         private bool TryExtractContent(JsonElement responseElement, out string deltaText)
         {
             deltaText = string.Empty;
-            
+
             // Try to extract from direct content property
             if (responseElement.TryGetProperty("content", out var contentElement))
             {
@@ -205,7 +215,7 @@ namespace Anthropic.SDK.Messaging
                     return !string.IsNullOrEmpty(deltaText);
                 }
             }
-            
+
             // Try to extract from delta property
             if (responseElement.TryGetProperty("delta", out var deltaElement))
             {
@@ -220,7 +230,7 @@ namespace Anthropic.SDK.Messaging
                     return true;
                 }
             }
-            
+
             // Try to extract from candidates property (Vertex AI format)
             if (responseElement.TryGetProperty("candidates", out var candidatesElement) &&
                 candidatesElement.ValueKind == JsonValueKind.Array &&
@@ -249,7 +259,7 @@ namespace Anthropic.SDK.Messaging
                     }
                 }
             }
-            
+
             return false;
         }
 
@@ -263,10 +273,10 @@ namespace Anthropic.SDK.Messaging
             {
                 return textContent.Text;
             }
-            
+
             // For more complex content, convert to appropriate format
             var result = new List<object>();
-            
+
             foreach (var c in content)
             {
                 if (c is TextContent tc)
@@ -298,7 +308,7 @@ namespace Anthropic.SDK.Messaging
                     result.Add(new { type = "text", text = c.ToString() });
                 }
             }
-            
+
             return result.ToArray();
         }
 
@@ -324,9 +334,8 @@ namespace Anthropic.SDK.Messaging
                 thinking = parameters.Thinking
                 // Note: We don't need to include model here as it's part of the URL for Vertex AI
             };
-            
+
             return anthropicPayload;
         }
-
     }
 }

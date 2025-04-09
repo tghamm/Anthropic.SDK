@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace Anthropic.SDK.Messaging
@@ -15,13 +13,13 @@ namespace Anthropic.SDK.Messaging
         /// </summary>
         [JsonPropertyName("type")]
         public string Type { get; set; } = "object";
-        
+
         /// <summary>
         /// Properties of the Schema
         /// </summary>
         [JsonPropertyName("properties")]
         public Dictionary<string, Property> Properties { get; set; }
-        
+
         /// <summary>
         /// Required Properties
         /// </summary>
@@ -39,12 +37,13 @@ namespace Anthropic.SDK.Messaging
         /// </summary>
         [JsonPropertyName("name")]
         public string Name { get; set; }
+
         /// <summary>
         /// Tool Description
         /// </summary>
         [JsonPropertyName("description")]
         public string Description { get; set; }
-        
+
         /// <summary>
         /// Tool Input Schema
         /// </summary>
@@ -62,13 +61,13 @@ namespace Anthropic.SDK.Messaging
         /// </summary>
         [JsonPropertyName("type")]
         public string Type { get; set; }
-        
+
         /// <summary>
         /// Enum Values as Strings (if applicable)
         /// </summary>
         [JsonPropertyName("enum")]
         public string[] Enum { get; set; }
-        
+
         /// <summary>
         /// Description of the Property
         /// </summary>

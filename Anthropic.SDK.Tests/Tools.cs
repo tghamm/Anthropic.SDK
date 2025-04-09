@@ -3,9 +3,12 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+
 using Anthropic.SDK.Common;
 using Anthropic.SDK.Constants;
 using Anthropic.SDK.Messaging;
+
+#pragma warning disable IDE0060
 
 namespace Anthropic.SDK.Tests
 {
@@ -19,7 +22,8 @@ namespace Anthropic.SDK.Tests
         }
 
         [Function("This function returns the weather for a given location")]
-        public static async Task<string> GetWeather([FunctionParameter("Location of the weather", true)]string location,
+        public static async Task<string> GetWeather(
+            [FunctionParameter("Location of the weather", true)] string location,
             [FunctionParameter("Unit of temperature, celsius or fahrenheit", true)] TempType tempType)
         {
             await Task.Yield();
@@ -58,9 +62,9 @@ namespace Anthropic.SDK.Tests
         public static async Task<string> GetNumberOfDaysInTheMonthRemaining()
         {
             await Task.Yield();
-            DateTime today = DateTime.Today;
-            int daysInMonth = DateTime.DaysInMonth(today.Year, today.Month);
-            int daysRemaining = daysInMonth - today.Day;
+            var today = DateTime.Today;
+            var daysInMonth = DateTime.DaysInMonth(today.Year, today.Month);
+            var daysRemaining = daysInMonth - today.Day;
             return daysRemaining.ToString();
         }
 
@@ -84,7 +88,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message(RoleType.User, "What is the weather in San Francisco, CA in fahrenheit?")
+                new(RoleType.User, "What is the weather in San Francisco, CA in fahrenheit?")
             };
             var tools = Common.Tool.GetAllAvailableTools(includeDefaults: false, forceUpdate: true, clearCache: true);
 
@@ -92,19 +96,19 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 2048,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude37Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools.ToList()
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
-            
+
             messages.Add(res.Message);
 
             foreach (var toolCall in res.ToolCalls)
             {
                 var response = await toolCall.InvokeAsync<string>();
-                
+
                 messages.Add(new Message(toolCall, response));
             }
 
@@ -119,7 +123,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message(RoleType.User, "What is the current user's name?")
+                new(RoleType.User, "What is the current user's name?")
             };
             var tools = Common.Tool.GetAllAvailableTools(includeDefaults: false, forceUpdate: true, clearCache: true);
 
@@ -127,7 +131,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 2048,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude37Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools.ToList()
@@ -154,11 +158,11 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message(RoleType.User, "Use the `Get_Dance_Definition` tool to better understand the ChaCha")
+                new(RoleType.User, "Use the `Get_Dance_Definition` tool to better understand the ChaCha")
             };
             var tools = new List<Common.Tool>
             {
-                Common.Tool.FromFunc("Get_Dance_Definition", 
+                Common.Tool.FromFunc("Get_Dance_Definition",
                     ([FunctionParameter("The type of dance", true)]DanceType danceType)=> "The ChaCha is a lively, playful, and flirtatious Latin ballroom dance with compact steps, hip and pelvic movements, and lots of energy.")
             };
 
@@ -166,7 +170,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 2048,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude37Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools
@@ -183,8 +187,6 @@ namespace Anthropic.SDK.Tests
             }
 
             var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
-
-            
         }
 
         [TestMethod]
@@ -193,7 +195,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message(RoleType.User, "What is the weather in San Francisco, CA?")
+                new(RoleType.User, "What is the weather in San Francisco, CA?")
             };
             var tools = new List<Common.Tool>
             {
@@ -205,7 +207,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 2048,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude37Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools
@@ -220,19 +222,15 @@ namespace Anthropic.SDK.Tests
             }
 
             var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
-
-            
         }
 
         public static class StaticObjectTool
         {
-            
             public static string GetWeather(string location)
             {
                 return "72 degrees and sunny";
             }
         }
-
 
         [TestMethod]
         public async Task TestStaticObjectTool()
@@ -240,7 +238,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message(RoleType.User, "What is the weather in San Francisco, CA?")
+                new(RoleType.User, "What is the weather in San Francisco, CA?")
             };
 
             //var objectInstance = new ObjectTool();
@@ -253,7 +251,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 2048,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude37Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools
@@ -276,7 +274,6 @@ namespace Anthropic.SDK.Tests
 
         public class InstanceObjectTool
         {
-
             public string GetWeather(string location)
             {
                 return "72 degrees and sunny";
@@ -289,7 +286,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message(RoleType.User, "What is the weather in San Francisco, CA?")
+                new(RoleType.User, "What is the weather in San Francisco, CA?")
             };
 
             var objectInstance = new InstanceObjectTool();
@@ -302,7 +299,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 2048,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude37Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools
@@ -323,26 +320,25 @@ namespace Anthropic.SDK.Tests
             Assert.IsTrue(finalResult.Message.ToString().Contains("72 degrees"));
         }
 
-
         [TestMethod]
         public async Task TestMathFuncTool()
         {
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message(RoleType.User, "How many characters are in the word Christmas, multiply by 5, add 6, subtract 2, then divide by 2.1?")
+                new(RoleType.User, "How many characters are in the word Christmas, multiply by 5, add 6, subtract 2, then divide by 2.1?")
             };
 
             var tools = new List<Common.Tool>
             {
                 Common.Tool.FromFunc("ChristmasMathFunction",
-                    ([FunctionParameter("word to start with", true)]string word, 
+                    ([FunctionParameter("word to start with", true)]string word,
                         [FunctionParameter("number to multiply word count by", true)]int multiplier,
                         [FunctionParameter("amount to add to word count", true)]int addition,
                         [FunctionParameter("amount to subtract from word count", true)]int subtraction,
                         [FunctionParameter("amount to divide word count by", true)]double divisor) =>
                     {
-                        return ((word.Length * multiplier + addition - subtraction) / divisor).ToString(CultureInfo.InvariantCulture);
+                        return (((word.Length * multiplier) + addition - subtraction) / divisor).ToString(CultureInfo.InvariantCulture);
                     }, "Function that can be used to determine the number of characters in a word combined with a mathematical formula")
             };
 
@@ -350,7 +346,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 2048,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude37Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools
@@ -377,7 +373,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message(RoleType.User, "What is the weather in San Francisco, CA in fahrenheit?")
+                new(RoleType.User, "What is the weather in San Francisco, CA in fahrenheit?")
             };
             var inputschema = new InputSchema()
             {
@@ -395,15 +391,15 @@ namespace Anthropic.SDK.Tests
                 },
                 Required = new List<string>() { "location", "tempType" }
             };
-            JsonSerializerOptions jsonSerializationOptions  = new()
+            JsonSerializerOptions jsonSerializationOptions = new()
             {
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                 Converters = { new JsonStringEnumConverter() },
                 ReferenceHandler = ReferenceHandler.IgnoreCycles,
             };
-            string jsonString = JsonSerializer.Serialize(inputschema, jsonSerializationOptions);
+            var jsonString = JsonSerializer.Serialize(inputschema, jsonSerializationOptions);
             var tools = new List<Common.Tool>()
-            { 
+            {
                 new Function("GetWeather", "This function returns the weather for a given location",
                     JsonNode.Parse(jsonString))
             };
@@ -411,7 +407,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 2048,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude37Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools
@@ -435,13 +431,13 @@ namespace Anthropic.SDK.Tests
                     ToolUseId = id,
                     Content = new List<ContentBase>() { new TextContent() { Text = weather } }
                 }
-            }});
+            }
+            });
 
             var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
 
             Assert.IsTrue(finalResult.Message.ToString().Contains("72 degrees"));
         }
-
 
         [TestMethod]
         public async Task TestFuncBoolTool()
@@ -449,7 +445,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message(RoleType.User, "Should I roll the dice?")
+                new(RoleType.User, "Should I roll the dice?")
             };
             var tools = new List<Common.Tool>
             {
@@ -464,7 +460,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 2048,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude37Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools
@@ -491,7 +487,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message(RoleType.User, "What 5 numbers should I add together?")
+                new(RoleType.User, "What 5 numbers should I add together?")
             };
             var tools = new List<Common.Tool>
             {
@@ -506,7 +502,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 2048,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude37Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools
@@ -533,7 +529,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message(RoleType.User, "What 5 numbers should I add together?")
+                new(RoleType.User, "What 5 numbers should I add together?")
             };
             var tools = new List<Common.Tool>
             {
@@ -553,7 +549,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 2048,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude37Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools,
@@ -574,7 +570,6 @@ namespace Anthropic.SDK.Tests
             }
 
             parameters.ToolChoice = null;
-            
 
             var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
 
@@ -587,7 +582,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var messages = new List<Message>
             {
-                new Message(RoleType.User, "Should I roll the dice?")
+                new(RoleType.User, "Should I roll the dice?")
             };
             var tools = new List<Common.Tool>
             {
@@ -604,7 +599,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 2048,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude37Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools
@@ -625,36 +620,38 @@ namespace Anthropic.SDK.Tests
             Assert.IsTrue(finalResult.Message.ToString().Contains("no"));
         }
 
-
-
-
-
         public class ImageSchema
         {
             [JsonPropertyName("type")]
             public string Type { get; set; } = "object";
-            
+
             [JsonPropertyName("required")]
-            public string[] Required { get; set; }
+            public string[]? Required { get; set; }
+
             [JsonPropertyName("properties")]
-            public Properties Properties { get; set; }
+            public Properties? Properties { get; set; }
         }
 
         public class Properties
         {
             [JsonPropertyName("key_colors")]
-            public KeyColorsProperty KeyColors { get; set; }
+            public KeyColorsProperty? KeyColors { get; set; }
+
             [JsonPropertyName("description")]
-            public DescriptionDetail Description { get; set; }
+            public DescriptionDetail? Description { get; set; }
+
             [JsonPropertyName("estimated_year")]
-            public EstimatedYear EstimatedYear { get; set; }
+            public EstimatedYear? EstimatedYear { get; set; }
         }
+
         public class KeyColorsProperty
         {
             [JsonPropertyName("type")]
             public string Type { get; set; } = "array";
+
             [JsonPropertyName("items")]
             public ItemProperty Items { get; set; }
+
             [JsonPropertyName("description")]
             public string Description { get; set; } = "Key colors in the image. Limit to less than four.";
         }
@@ -663,6 +660,7 @@ namespace Anthropic.SDK.Tests
         {
             [JsonPropertyName("type")]
             public string Type { get; set; } = "string";
+
             [JsonPropertyName("description")]
             public string Description { get; set; } = "Key colors in the image. Limit to less than four.";
         }
@@ -671,6 +669,7 @@ namespace Anthropic.SDK.Tests
         {
             [JsonPropertyName("type")]
             public string Type { get; set; } = "string";
+
             [JsonPropertyName("description")]
             public string Description { get; set; } = "Estimated year that the images was taken, if is it a photo. Only set this if the image appears to be non-fictional. Rough estimates are okay!";
         }
@@ -678,31 +677,27 @@ namespace Anthropic.SDK.Tests
         public class ItemProperty
         {
             public string Type { get; set; } = "object";
-            public Dictionary<string, ColorProperty> Properties { get; set; }
+            public Dictionary<string, ColorProperty>? Properties { get; set; }
             public List<string> Required { get; set; } = new List<string> { "r", "g", "b", "name" };
         }
 
         public class ColorProperty
         {
             [JsonPropertyName("type")]
-            public string Type { get; set; }
+            public string? Type { get; set; }
+
             [JsonPropertyName("description")]
-            public string Description { get; set; }
+            public string? Description { get; set; }
         }
-
-
-
-
-
 
         [TestMethod]
         public async Task TestClaude3ImageJsonModeMessage()
         {
-            string resourceName = "Anthropic.SDK.Tests.Red_Apple.jpg";
+            var resourceName = "Anthropic.SDK.Tests.Red_Apple.jpg";
 
-            Assembly assembly = Assembly.GetExecutingAssembly();
+            var assembly = Assembly.GetExecutingAssembly();
 
-            await using Stream stream = assembly.GetManifestResourceStream(resourceName);
+            await using var stream = assembly.GetManifestResourceStream(resourceName);
             byte[] imageBytes;
             using (var memoryStream = new MemoryStream())
             {
@@ -710,7 +705,7 @@ namespace Anthropic.SDK.Tests
                 imageBytes = memoryStream.ToArray();
             }
 
-            string base64String = Convert.ToBase64String(imageBytes);
+            var base64String = Convert.ToBase64String(imageBytes);
 
             var client = new AnthropicClient();
 
@@ -739,26 +734,25 @@ namespace Anthropic.SDK.Tests
             var imageSchema = new ImageSchema
             {
                 Type = "object",
-                Required = new string[] { "key_colors", "description"},
+                Required = new string[] { "key_colors", "description" },
                 Properties = new Properties()
                 {
                     KeyColors = new KeyColorsProperty
                     {
-                    Items = new ItemProperty
-                    {
-                        Properties = new Dictionary<string, ColorProperty>
+                        Items = new ItemProperty
+                        {
+                            Properties = new Dictionary<string, ColorProperty>
                         {
                             { "r", new ColorProperty { Type = "number", Description = "red value [0.0, 1.0]" } },
                             { "g", new ColorProperty { Type = "number", Description = "green value [0.0, 1.0]" } },
                             { "b", new ColorProperty { Type = "number", Description = "blue value [0.0, 1.0]" } },
                             { "name", new ColorProperty { Type = "string", Description = "Human-readable color name in snake_case, e.g. 'olive_green' or 'turquoise'" } }
                         }
-                    }
-                },
+                        }
+                    },
                     Description = new DescriptionDetail { Type = "string", Description = "Image description. One to two sentences max." },
                     EstimatedYear = new EstimatedYear { Type = "number", Description = "Estimated year that the images was taken, if is it a photo. Only set this if the image appears to be non-fictional. Rough estimates are okay!" }
                 }
-                
             };
 
             JsonSerializerOptions jsonSerializationOptions = new()
@@ -767,21 +761,18 @@ namespace Anthropic.SDK.Tests
                 Converters = { new JsonStringEnumConverter() },
                 ReferenceHandler = ReferenceHandler.IgnoreCycles,
             };
-            string jsonString = JsonSerializer.Serialize(imageSchema, jsonSerializationOptions);
+            var jsonString = JsonSerializer.Serialize(imageSchema, jsonSerializationOptions);
             var tools = new List<Common.Tool>()
             {
                 new Function("record_summary", "Record summary of an image into well-structured JSON.",
                     JsonNode.Parse(jsonString))
             };
 
-
-
-
             var parameters = new MessageParameters()
             {
                 Messages = messages,
                 MaxTokens = 1024,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude37Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools
@@ -791,9 +782,6 @@ namespace Anthropic.SDK.Tests
             var toolResult = res.Content.OfType<ToolUseContent>().First();
 
             var json = toolResult.Input.ToJsonString();
-
-
         }
-
     }
 }

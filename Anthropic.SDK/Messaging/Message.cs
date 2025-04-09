@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using System.Xml.Linq;
+
 using Anthropic.SDK.Common;
 using Anthropic.SDK.Extensions;
 
@@ -12,7 +10,8 @@ namespace Anthropic.SDK.Messaging
 {
     public class Message
     {
-        public Message(){}
+        public Message()
+        { }
 
         public Message(RoleType role, string text, CacheControl cacheControl = null)
         {
@@ -29,7 +28,6 @@ namespace Anthropic.SDK.Messaging
             Role = role;
             Content = new List<ContentBase>() { content };
         }
-
 
         public Message(Function toolCall, string functionResult, bool isError = false, CacheControl cacheControl = null)
         {
@@ -74,7 +72,7 @@ namespace Anthropic.SDK.Messaging
             var signature = string.Empty;
             var data = string.Empty;
             var name = string.Empty;
-            bool captureTool = false;
+            var captureTool = false;
             var id = string.Empty;
 
             foreach (var result in asyncResponses)
@@ -113,10 +111,10 @@ namespace Anthropic.SDK.Messaging
             }
 
             var innerText = string.Empty;
-            CitationResult citation = null; 
+            CitationResult citation = null;
             foreach (var result in asyncResponses)
             {
-                if ((result.Type != "content_block_stop"))
+                if (result.Type != "content_block_stop")
                 {
                     if (result.Delta?.Type == "text_delta")
                     {
@@ -139,7 +137,6 @@ namespace Anthropic.SDK.Messaging
                     innerText = string.Empty;
                     citation = null;
                 }
-
             }
 
             //if (!string.IsNullOrEmpty(innerText))
@@ -149,9 +146,6 @@ namespace Anthropic.SDK.Messaging
             //        Text = innerText
             //    });
             //}
-
-            
-
 
             foreach (var result in asyncResponses)
             {
@@ -181,18 +175,17 @@ namespace Anthropic.SDK.Messaging
             }
 
             Role = RoleType.Assistant;
-
         }
 
         /// <summary>
-        /// Accepts <see cref="RoleType.User"/> or <see cref="RoleType.Assistant"/>
+        /// Accepts <see cref="RoleType.User" /> or <see cref="RoleType.Assistant" />
         /// </summary>
         [JsonPropertyName("role")]
         [JsonConverter(typeof(RoleTypeConverter))]
         public RoleType Role { get; set; }
 
         /// <summary>
-        /// Accepts text, or an array of <see cref="ImageContent"/> and/or <see cref="TextContent"/>
+        /// Accepts text, or an array of <see cref="ImageContent" /> and/or <see cref="TextContent" />
         /// </summary>
         [JsonPropertyName("content")]
         public List<ContentBase> Content { get; set; }
@@ -206,6 +199,5 @@ namespace Anthropic.SDK.Messaging
         public override string ToString() => Content.OfType<TextContent>().FirstOrDefault()?.Text ?? string.Empty;
 
         public static implicit operator string(Message textContent) => textContent?.ToString();
-
     }
 }

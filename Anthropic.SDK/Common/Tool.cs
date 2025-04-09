@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Anthropic.SDK.Common
 {
     public sealed class Tool
     {
-        public Tool() { }
+        public Tool()
+        { }
 
         public Tool(Tool other) => CopyFrom(other);
 
@@ -78,30 +78,46 @@ namespace Anthropic.SDK.Common
         /// <summary>
         /// Invokes the function and returns the result as json.
         /// </summary>
-        /// <returns>The result of the function as json.</returns>
+        /// <returns>
+        /// The result of the function as json.
+        /// </returns>
         public string InvokeFunction() => Function.Invoke();
 
         /// <summary>
         /// Invokes the function and returns the result.
         /// </summary>
-        /// <typeparam name="T">The type to deserialize the result to.</typeparam>
-        /// <returns>The result of the function.</returns>
+        /// <typeparam name="T">
+        /// The type to deserialize the result to.
+        /// </typeparam>
+        /// <returns>
+        /// The result of the function.
+        /// </returns>
         public T InvokeFunction<T>() => Function.Invoke<T>();
 
         /// <summary>
         /// Invokes the function and returns the result as json.
         /// </summary>
-        /// <param name="cancellationToken">Optional, A token to cancel the request.</param>
-        /// <returns>The result of the function as json.</returns>
+        /// <param name="cancellationToken">
+        /// Optional, A token to cancel the request.
+        /// </param>
+        /// <returns>
+        /// The result of the function as json.
+        /// </returns>
         public async Task<string> InvokeFunctionAsync(CancellationToken cancellationToken = default)
             => await Function.InvokeAsync(cancellationToken).ConfigureAwait(false);
 
         /// <summary>
         /// Invokes the function and returns the result.
         /// </summary>
-        /// <typeparam name="T">The type to deserialize the result to.</typeparam>
-        /// <param name="cancellationToken">Optional, A token to cancel the request.</param>
-        /// <returns>The result of the function.</returns>
+        /// <typeparam name="T">
+        /// The type to deserialize the result to.
+        /// </typeparam>
+        /// <param name="cancellationToken">
+        /// Optional, A token to cancel the request.
+        /// </param>
+        /// <returns>
+        /// The result of the function.
+        /// </returns>
         public async Task<T> InvokeFunctionAsync<T>(CancellationToken cancellationToken = default)
             => await Function.InvokeAsync<T>(cancellationToken).ConfigureAwait(false);
 
@@ -124,8 +140,12 @@ namespace Anthropic.SDK.Common
         /// <summary>
         /// Checks if tool exists in cache.
         /// </summary>
-        /// <param name="tool">The tool to check.</param>
-        /// <returns>True, if the tool is already registered in the tool cache.</returns>
+        /// <param name="tool">
+        /// The tool to check.
+        /// </param>
+        /// <returns>
+        /// True, if the tool is already registered in the tool cache.
+        /// </returns>
         public static bool IsToolRegistered(Tool tool)
             => toolCache.Any(knownTool =>
                 knownTool.Type == "function" &&
@@ -135,8 +155,12 @@ namespace Anthropic.SDK.Common
         /// <summary>
         /// Tries to register a tool into the Tool cache.
         /// </summary>
-        /// <param name="tool">The tool to register.</param>
-        /// <returns>True, if the tool was added to the cache.</returns>
+        /// <param name="tool">
+        /// The tool to register.
+        /// </param>
+        /// <returns>
+        /// True, if the tool was added to the cache.
+        /// </returns>
         public static bool TryRegisterTool(Tool tool)
         {
             if (IsToolRegistered(tool))
@@ -151,7 +175,6 @@ namespace Anthropic.SDK.Common
 
             toolCache.Add(tool);
             return true;
-
         }
 
         private static bool TryGetTool(string name, object instance, out Tool tool)
@@ -191,12 +214,20 @@ namespace Anthropic.SDK.Common
         /// Gets a list of all available tools.
         /// </summary>
         /// <remarks>
-        /// This method will scan all assemblies for static methods decorated with the <see cref="FunctionAttribute"/>.
+        /// This method will scan all assemblies for static methods decorated with the <see cref="FunctionAttribute" />.
         /// </remarks>
-        /// <param name="includeDefaults">Optional, Whether to include the default tools (Retrieval and CodeInterpreter).</param>
-        /// <param name="forceUpdate">Optional, Whether to force an update of the tool cache.</param>
-        /// <param name="clearCache">Optional, whether to force the tool cache to be cleared before updating.</param>
-        /// <returns>A list of all available tools.</returns>
+        /// <param name="includeDefaults">
+        /// Optional, Whether to include the default tools (Retrieval and CodeInterpreter).
+        /// </param>
+        /// <param name="forceUpdate">
+        /// Optional, Whether to force an update of the tool cache.
+        /// </param>
+        /// <param name="clearCache">
+        /// Optional, whether to force the tool cache to be cleared before updating.
+        /// </param>
+        /// <returns>
+        /// A list of all available tools.
+        /// </returns>
         public static IReadOnlyList<Tool> GetAllAvailableTools(bool includeDefaults = true, bool forceUpdate = false, bool clearCache = false)
         {
             if (clearCache)
@@ -237,13 +268,22 @@ namespace Anthropic.SDK.Common
         /// Get or create a tool from a static method.
         /// </summary>
         /// <remarks>
-        /// If the tool already exists, it will be returned. Otherwise, a new tool will be created.<br/>
-        /// The method doesn't need to be decorated with the <see cref="FunctionAttribute"/>.<br/>
+        /// If the tool already exists, it will be returned. Otherwise, a new tool will be created.
+        /// <br /> The method doesn't need to be decorated with the
+        /// <see cref="FunctionAttribute" />. <br />
         /// </remarks>
-        /// <param name="type">The type containing the static method.</param>
-        /// <param name="methodName">The name of the method.</param>
-        /// <param name="description">Optional, The description of the method.</param>
-        /// <returns>The tool for the method.</returns>
+        /// <param name="type">
+        /// The type containing the static method.
+        /// </param>
+        /// <param name="methodName">
+        /// The name of the method.
+        /// </param>
+        /// <param name="description">
+        /// Optional, The description of the method.
+        /// </param>
+        /// <returns>
+        /// The tool for the method.
+        /// </returns>
         public static Tool GetOrCreateTool(Type type, string methodName, string description = null)
         {
             var method = type.GetMethod(methodName) ??
@@ -270,13 +310,22 @@ namespace Anthropic.SDK.Common
         /// Get or create a tool from a method of an instance of an object.
         /// </summary>
         /// <remarks>
-        /// If the tool already exists, it will be returned. Otherwise, a new tool will be created.<br/>
-        /// The method doesn't need to be decorated with the <see cref="FunctionAttribute"/>.<br/>
+        /// If the tool already exists, it will be returned. Otherwise, a new tool will be created.
+        /// <br /> The method doesn't need to be decorated with the
+        /// <see cref="FunctionAttribute" />. <br />
         /// </remarks>
-        /// <param name="instance">The instance of the object containing the method.</param>
-        /// <param name="methodName">The name of the method.</param>
-        /// <param name="description">Optional, The description of the method.</param>
-        /// <returns>The tool for the method.</returns>
+        /// <param name="instance">
+        /// The instance of the object containing the method.
+        /// </param>
+        /// <param name="methodName">
+        /// The name of the method.
+        /// </param>
+        /// <param name="description">
+        /// Optional, The description of the method.
+        /// </param>
+        /// <returns>
+        /// The tool for the method.
+        /// </returns>
         public static Tool GetOrCreateTool(object instance, string methodName, string description = null)
         {
             var type = instance.GetType();
@@ -430,7 +479,6 @@ namespace Anthropic.SDK.Common
             toolCache.Add(tool);
             return tool;
         }
-
 
         public static Tool FromFunc<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult>(string name, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult> function, string description = null)
         {

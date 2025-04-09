@@ -105,15 +105,15 @@ namespace Anthropic.SDK.ComputerUse.ScreenCapture
         // Method to capture a specific monitor
         public static Bitmap CaptureMonitor(MonitorInfo monitor)
         {
-            int width = monitor.MonitorArea.Right - monitor.MonitorArea.Left;
-            int height = monitor.MonitorArea.Bottom - monitor.MonitorArea.Top;
+            var width = monitor.MonitorArea.Right - monitor.MonitorArea.Left;
+            var height = monitor.MonitorArea.Bottom - monitor.MonitorArea.Top;
 
-            IntPtr hdcSrc = CreateDC("DISPLAY", null, null, IntPtr.Zero);
-            IntPtr hdcDest = CreateCompatibleDC(hdcSrc);
-            IntPtr hBitmap = CreateCompatibleBitmap(hdcSrc, width, height);
-            IntPtr hOld = SelectObject(hdcDest, hBitmap);
+            var hdcSrc = CreateDC("DISPLAY", null, null, IntPtr.Zero);
+            var hdcDest = CreateCompatibleDC(hdcSrc);
+            var hBitmap = CreateCompatibleBitmap(hdcSrc, width, height);
+            var hOld = SelectObject(hdcDest, hBitmap);
 
-            bool success = BitBlt(hdcDest, 0, 0, width, height, hdcSrc,
+            var success = BitBlt(hdcDest, 0, 0, width, height, hdcSrc,
                 monitor.MonitorArea.Left, monitor.MonitorArea.Top, CopyPixelOperation.SourceCopy | CopyPixelOperation.CaptureBlt);
 
             Bitmap bmp = null;
@@ -151,7 +151,5 @@ namespace Anthropic.SDK.ComputerUse.ScreenCapture
 
             return ms.ToArray();
         }
-
-        
     }
 }

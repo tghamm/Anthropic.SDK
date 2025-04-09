@@ -1,13 +1,13 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Net.Http;
+
 using Anthropic.SDK.Messaging;
 
 namespace Anthropic.SDK;
 
 /// <summary>
-/// Thrown when the caller has exhausted current rate limits
-/// The caller should wait until RetryAfter before making another request
+/// Thrown when the caller has exhausted current rate limits The caller should wait until RetryAfter
+/// before making another request
 /// </summary>
 public class RateLimitsExceeded : HttpRequestException
 {

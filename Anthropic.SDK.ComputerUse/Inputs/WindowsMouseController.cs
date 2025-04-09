@@ -1,7 +1,8 @@
-﻿using SharpHook;
-using SharpHook.Native;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Runtime.InteropServices;
+
+using SharpHook;
+using SharpHook.Native;
 
 namespace Anthropic.SDK.ComputerUse.Inputs
 {
@@ -80,7 +81,6 @@ namespace Anthropic.SDK.ComputerUse.Inputs
                 monitor.MonitorArea.Right - monitor.MonitorArea.Left,
                 monitor.MonitorArea.Bottom - monitor.MonitorArea.Top);
 
-
             // Validate coordinates
             if (x < 0 || x >= monitorBounds.Width || y < 0 || y >= monitorBounds.Height)
             {
@@ -88,8 +88,8 @@ namespace Anthropic.SDK.ComputerUse.Inputs
             }
 
             // Convert to virtual screen coordinates
-            int virtualX = (int)(monitorBounds.X + x);
-            int virtualY = (int)(monitorBounds.Y + y);
+            var virtualX = (int)(monitorBounds.X + x);
+            var virtualY = (int)(monitorBounds.Y + y);
 
             return (virtualX, virtualY);
         }
@@ -111,7 +111,6 @@ namespace Anthropic.SDK.ComputerUse.Inputs
             IEventSimulator simulator = new EventSimulator();
             simulator.SimulateMousePress(MouseButton.Button1);
             simulator.SimulateMouseRelease(MouseButton.Button1);
-
         }
 
         public static void RightClick()
@@ -119,9 +118,7 @@ namespace Anthropic.SDK.ComputerUse.Inputs
             IEventSimulator simulator = new EventSimulator();
             simulator.SimulateMousePress(MouseButton.Button2);
             simulator.SimulateMouseRelease(MouseButton.Button2);
-
         }
-
 
         // Method to move the cursor and perform a left-click at specified coordinates on a specific monitor
         public static void ClickAtPositionOnMonitor(int monitorIndex, int x, int y)
@@ -130,7 +127,5 @@ namespace Anthropic.SDK.ComputerUse.Inputs
             System.Threading.Thread.Sleep(50); // Optional delay to ensure the cursor has moved
             LeftClick();
         }
-
-
     }
 }

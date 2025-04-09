@@ -6,8 +6,10 @@ public enum ToolChoiceType
 {
     [EnumMember(Value = "auto")]
     Auto,
+
     [EnumMember(Value = "any")]
     Any,
+
     [EnumMember(Value = "tool")]
     Tool
 }
