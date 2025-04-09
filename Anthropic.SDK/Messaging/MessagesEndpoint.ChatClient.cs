@@ -25,7 +25,10 @@ public partial class MessagesEndpoint : IChatClient
     {
         MessageResponse response = await this.GetClaudeMessageAsync(ChatClientHelper.CreateMessageParameters(messages, options), cancellationToken);
 
-        ChatMessage message = new(ChatRole.Assistant, ChatClientHelper.ProcessResponseContent(response));
+        ChatMessage message = new(ChatRole.Assistant, ChatClientHelper.ProcessResponseContent(response))
+        {
+            MessageId = response.Id
+        };
 
         if (response.StopSequence is not null)
         {
@@ -96,15 +99,16 @@ public partial class MessagesEndpoint : IChatClient
         {
             var update = new ChatResponseUpdate
             {
+                MessageId = response.Id,
                 ResponseId = response.Id,
                 ModelId = response.Model,
                 RawRepresentation = response,
-                Role = ChatRole.Assistant
+                Role = ChatRole.Assistant,
             };
 
-            if (!string.IsNullOrEmpty(response.ContentBlock?.Data))
+            if (!string.IsNullOrEmpty(response.ContentBlock?.Data)) // redacted_thinking
             {
-                update.Contents.Add(new SDK.Extensions.MEAI.RedactedThinkingContent(response.ContentBlock?.Data));
+                update.Contents.Add(new Microsoft.Extensions.AI.TextReasoningContent(response.ContentBlock.Data));
             }
             
             if (response.StreamStartMessage?.Usage is {} startStreamMessageUsage)
@@ -126,7 +130,10 @@ public partial class MessagesEndpoint : IChatClient
 
                 if (!string.IsNullOrEmpty(response.Delta.Signature))
                 {
-                    update.Contents.Add(new Anthropic.SDK.Extensions.MEAI.ThinkingContent(thinking, response.Delta.Signature));
+                    update.Contents.Add(new Microsoft.Extensions.AI.TextReasoningContent(thinking)
+                    {
+                        AdditionalProperties = { { nameof(ThinkingContent.Signature), response.Delta.Signature } }
+                    });
                 }
 
 
