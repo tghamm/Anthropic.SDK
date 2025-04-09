@@ -97,7 +97,9 @@ namespace Anthropic.SDK.Tests
 
             messages.AddMessages(updates);
 
-            Assert.IsTrue(messages.Last().Contents.OfType<Extensions.MEAI.ThinkingContent>().Any());
+            Assert.IsTrue(messages.Last().Contents.OfType<TextReasoningContent>().Any(
+                c => c.AdditionalProperties is { } ap && 
+                ap.ContainsKey(nameof(ThinkingContent.Signature))));
             
             messages.Add(new ChatMessage(ChatRole.User, "and how many letters total?"));
 
@@ -145,7 +147,7 @@ namespace Anthropic.SDK.Tests
 
             messages.AddMessages(updates);
 
-            Assert.IsTrue(messages.Last().Contents.OfType<Extensions.MEAI.RedactedThinkingContent>().Any());
+            Assert.IsTrue(messages.Last().Contents.OfType<TextReasoningContent>().Any(c => c.AdditionalProperties is null));
 
             messages.Add(new ChatMessage(ChatRole.User, "how many letters are in the word strawberry?"));
 
