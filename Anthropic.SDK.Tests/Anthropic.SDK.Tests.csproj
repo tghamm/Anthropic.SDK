@@ -19,7 +19,7 @@
     <EmbeddedResource Include="Claude3ModelCard.pdf" />
     <EmbeddedResource Include="Red_Apple.jpg" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <Content Include="appsettings.json" Condition="Exists('appsettings.json')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

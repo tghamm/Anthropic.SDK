@@ -6,7 +6,7 @@ namespace Anthropic.SDK.BatchTester
 {
     internal class Program
     {
-        static async Task Main(string[] args)
+        private static async Task Main(string[] args)
         {
             Console.WriteLine("Cancel Batch After Creation? (y/n)");
             var cancel = Console.ReadLine() == "y";
@@ -50,9 +50,7 @@ namespace Anthropic.SDK.BatchTester
             }
             else
             {
-
-
-                bool processing = true;
+                var processing = true;
                 while (processing)
                 {
                     var status = await client.Batches.RetrieveBatchStatusAsync(response.Id);
@@ -90,7 +88,6 @@ namespace Anthropic.SDK.BatchTester
                 {
                     Console.WriteLine("Result: " + result);
                 }
-
             }
         }
     }

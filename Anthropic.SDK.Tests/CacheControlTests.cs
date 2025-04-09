@@ -1,18 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Reflection;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+
 using Anthropic.SDK.Common;
 using Anthropic.SDK.Constants;
 using Anthropic.SDK.Messaging;
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
+
 using static Anthropic.SDK.Tests.Tools;
+
 using Message = Anthropic.SDK.Messaging.Message;
 
 namespace Anthropic.SDK.Tests
@@ -23,26 +20,23 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestCacheControl()
         {
-            string resourceName = "Anthropic.SDK.Tests.BillyBudd.txt";
+            var resourceName = "Anthropic.SDK.Tests.BillyBudd.txt";
 
-            Assembly assembly = Assembly.GetExecutingAssembly();
+            var assembly = Assembly.GetExecutingAssembly();
 
-            await using Stream stream = assembly.GetManifestResourceStream(resourceName);
-            using StreamReader reader = new StreamReader(stream);
-            string content = await reader.ReadToEndAsync();
-
-
-
+            await using var stream = assembly.GetManifestResourceStream(resourceName);
+            using var reader = new StreamReader(stream);
+            var content = await reader.ReadToEndAsync();
 
             var client = new AnthropicClient();
             var messages = new List<Message>()
             {
-                new Message(RoleType.User, "What are the key literary themes of this novel?", new CacheControl() { Type = CacheControlType.ephemeral }),
+                new(RoleType.User, "What are the key literary themes of this novel?", new CacheControl() { Type = CacheControlType.ephemeral }),
             };
             var systemMessages = new List<SystemMessage>()
             {
-                new SystemMessage("You are an expert at analyzing literary texts."),
-                new SystemMessage(content, new CacheControl() { Type = CacheControlType.ephemeral })
+                new("You are an expert at analyzing literary texts."),
+                new(content, new CacheControl() { Type = CacheControlType.ephemeral })
             };
             var parameters = new MessageParameters()
             {
@@ -87,32 +81,28 @@ namespace Anthropic.SDK.Tests
             Assert.IsTrue(res4.Usage.CacheReadInputTokens > 0);
 
             Assert.IsNotNull(res4.Message.ToString());
-
         }
 
         [TestMethod]
         public async Task TestSingleToolAllowsCacheIndependentOfToolSize()
         {
-            string resourceName = "Anthropic.SDK.Tests.BillyBudd.txt";
+            var resourceName = "Anthropic.SDK.Tests.BillyBudd.txt";
 
-            Assembly assembly = Assembly.GetExecutingAssembly();
+            var assembly = Assembly.GetExecutingAssembly();
 
-            await using Stream stream = assembly.GetManifestResourceStream(resourceName);
-            using StreamReader reader = new StreamReader(stream);
-            string content = await reader.ReadToEndAsync();
-
-
-
+            await using var stream = assembly.GetManifestResourceStream(resourceName);
+            using var reader = new StreamReader(stream);
+            var content = await reader.ReadToEndAsync();
 
             var client = new AnthropicClient();
             var messages = new List<Message>()
             {
-                new Message(RoleType.User, "What are the key literary themes of this novel?"),
+                new(RoleType.User, "What are the key literary themes of this novel?"),
             };
             var systemMessages = new List<SystemMessage>()
             {
-                new SystemMessage("You are an expert at analyzing literary texts."),
-                new SystemMessage(content)
+                new("You are an expert at analyzing literary texts."),
+                new(content)
             };
 
             var tools = new List<Common.Tool>
@@ -137,37 +127,29 @@ namespace Anthropic.SDK.Tests
             Debug.WriteLine(res.Message);
             Assert.IsTrue(res.Usage.CacheCreationInputTokens > 0 ||
                           res.Usage.CacheReadInputTokens > 0);
-
-            
-
         }
 
         [TestMethod]
         public async Task TestMessageSizeOfCaching()
         {
-            string resourceName = "Anthropic.SDK.Tests.BillyBudd.txt";
+            var resourceName = "Anthropic.SDK.Tests.BillyBudd.txt";
 
-            Assembly assembly = Assembly.GetExecutingAssembly();
+            var assembly = Assembly.GetExecutingAssembly();
 
-            await using Stream stream = assembly.GetManifestResourceStream(resourceName);
-            using StreamReader reader = new StreamReader(stream);
-            string content = await reader.ReadToEndAsync();
-
-
-
+            await using var stream = assembly.GetManifestResourceStream(resourceName);
+            using var reader = new StreamReader(stream);
+            var content = await reader.ReadToEndAsync();
 
             var client = new AnthropicClient();
             var messages = new List<Message>()
             {
-                new Message(RoleType.User, "What are the key literary themes of this novel?"),
+                new(RoleType.User, "What are the key literary themes of this novel?"),
             };
             var systemMessages = new List<SystemMessage>()
             {
-                new SystemMessage("You are an expert at analyzing literary texts."),
-                new SystemMessage(content, new CacheControl() { Type = CacheControlType.ephemeral })
+                new("You are an expert at analyzing literary texts."),
+                new(content, new CacheControl() { Type = CacheControlType.ephemeral })
             };
-
-            
 
             var parameters = new MessageParameters()
             {
@@ -178,42 +160,33 @@ namespace Anthropic.SDK.Tests
                 Temperature = 1.0m,
                 System = systemMessages,
                 PromptCaching = PromptCacheType.FineGrained
-                
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
 
             Debug.WriteLine(res.Message);
             Assert.IsTrue(res.Usage.CacheCreationInputTokens > 0 || res.Usage.CacheReadInputTokens > 0);
-
-
-
         }
-
-
 
         [TestMethod]
         public async Task TestCacheControlStreaming()
         {
-            string resourceName = "Anthropic.SDK.Tests.BillyBudd.txt";
+            var resourceName = "Anthropic.SDK.Tests.BillyBudd.txt";
 
-            Assembly assembly = Assembly.GetExecutingAssembly();
+            var assembly = Assembly.GetExecutingAssembly();
 
-            await using Stream stream = assembly.GetManifestResourceStream(resourceName);
-            using StreamReader reader = new StreamReader(stream);
-            string content = await reader.ReadToEndAsync();
-
-
-
+            await using var stream = assembly.GetManifestResourceStream(resourceName);
+            using var reader = new StreamReader(stream);
+            var content = await reader.ReadToEndAsync();
 
             var client = new AnthropicClient();
             var messages = new List<Message>()
             {
-                new Message(RoleType.User, "What are the key literary themes of this novel?"),
+                new(RoleType.User, "What are the key literary themes of this novel?"),
             };
             var systemMessages = new List<SystemMessage>()
             {
-                new SystemMessage("You are an expert at analyzing literary texts."),
-                new SystemMessage(content)
+                new("You are an expert at analyzing literary texts."),
+                new(content)
             };
             var parameters = new MessageParameters()
             {
@@ -230,7 +203,9 @@ namespace Anthropic.SDK.Tests
             {
                 messageResponses.Add(message);
                 if (message.Delta != null)
+                {
                     Debug.Write(message.Delta.Text);
+                }
             }
 
             Assert.IsTrue(messageResponses.First().StreamStartMessage.Usage.CacheCreationInputTokens > 0 ||
@@ -264,17 +239,16 @@ namespace Anthropic.SDK.Tests
             Assert.IsTrue(res4.Usage.CacheReadInputTokens > 0);
 
             Assert.IsNotNull(res4.Message.ToString());
-
         }
 
         [TestMethod]
         public async Task TestCacheControlWithTools()
         {
-            string resourceName = "Anthropic.SDK.Tests.Red_Apple.jpg";
+            var resourceName = "Anthropic.SDK.Tests.Red_Apple.jpg";
 
-            Assembly assembly = Assembly.GetExecutingAssembly();
+            var assembly = Assembly.GetExecutingAssembly();
 
-            await using Stream stream = assembly.GetManifestResourceStream(resourceName);
+            await using var stream = assembly.GetManifestResourceStream(resourceName);
             byte[] imageBytes;
             using (var memoryStream = new MemoryStream())
             {
@@ -282,9 +256,7 @@ namespace Anthropic.SDK.Tests
                 imageBytes = memoryStream.ToArray();
             }
 
-            string base64String = Convert.ToBase64String(imageBytes);
-
-
+            var base64String = Convert.ToBase64String(imageBytes);
 
             var tools = Common.Tool.GetAllAvailableTools(includeDefaults: false, forceUpdate: true, clearCache: true).ToList();
 
@@ -310,7 +282,6 @@ namespace Anthropic.SDK.Tests
                     Description = new Tools.DescriptionDetail { Type = "string", Description = "Image description. One to two sentences max." },
                     EstimatedYear = new Tools.EstimatedYear { Type = "number", Description = "Estimated year that the images was taken, if is it a photo. Only set this if the image appears to be non-fictional. Rough estimates are okay!" }
                 }
-
             };
 
             JsonSerializerOptions jsonSerializationOptions = new()
@@ -319,7 +290,7 @@ namespace Anthropic.SDK.Tests
                 Converters = { new JsonStringEnumConverter() },
                 ReferenceHandler = ReferenceHandler.IgnoreCycles,
             };
-            string jsonString = JsonSerializer.Serialize(imageSchema, jsonSerializationOptions);
+            var jsonString = JsonSerializer.Serialize(imageSchema, jsonSerializationOptions);
 
             tools.Add(new Function("record_summary", "Record summary of an image into well-structured JSON.",
                 JsonNode.Parse(jsonString)));
@@ -360,37 +331,32 @@ namespace Anthropic.SDK.Tests
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
 
-            
             Assert.IsTrue(res.Usage.CacheCreationInputTokens > 0 || res.Usage.CacheReadInputTokens > 0);
             var toolResult = res.Content.OfType<ToolUseContent>().First();
 
             var json = toolResult.Input.ToJsonString();
             Debug.WriteLine(json);
-
         }
 
         [TestMethod]
         public async Task TestSystemMessageWithNoCaching()
         {
-            string resourceName = "Anthropic.SDK.Tests.BillyBudd.txt";
+            var resourceName = "Anthropic.SDK.Tests.BillyBudd.txt";
 
-            Assembly assembly = Assembly.GetExecutingAssembly();
+            var assembly = Assembly.GetExecutingAssembly();
 
-            await using Stream stream = assembly.GetManifestResourceStream(resourceName);
-            using StreamReader reader = new StreamReader(stream);
-            string content = await reader.ReadToEndAsync();
-
-
-
+            await using var stream = assembly!.GetManifestResourceStream(resourceName);
+            using var reader = new StreamReader(stream);
+            var content = await reader.ReadToEndAsync();
 
             var client = new AnthropicClient();
             var messages = new List<Message>()
             {
-                new Message(RoleType.User, $"What are the key literary themes of the following novel? {content}"),
+                new(RoleType.User, $"What are the key literary themes of the following novel? {content}"),
             };
             var systemMessages = new List<SystemMessage>()
             {
-                new SystemMessage("You are an expert at analyzing literary texts.")
+                new("You are an expert at analyzing literary texts.")
             };
             var parameters = new MessageParameters()
             {
@@ -409,26 +375,23 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestSystemMultipleMessagesWithNoCaching()
         {
-            string resourceName = "Anthropic.SDK.Tests.BillyBudd.txt";
+            var resourceName = "Anthropic.SDK.Tests.BillyBudd.txt";
 
-            Assembly assembly = Assembly.GetExecutingAssembly();
+            var assembly = Assembly.GetExecutingAssembly();
 
-            await using Stream stream = assembly.GetManifestResourceStream(resourceName);
-            using StreamReader reader = new StreamReader(stream);
-            string content = await reader.ReadToEndAsync();
-
-
-
+            await using var stream = assembly.GetManifestResourceStream(resourceName);
+            using var reader = new StreamReader(stream);
+            var content = await reader.ReadToEndAsync();
 
             var client = new AnthropicClient();
             var messages = new List<Message>()
             {
-                new Message(RoleType.User, $"What are the key literary themes of the following novel? {content}"),
+                new(RoleType.User, $"What are the key literary themes of the following novel? {content}"),
             };
             var systemMessages = new List<SystemMessage>()
             {
-                new SystemMessage("You are an expert at analyzing literary texts."),
-                new SystemMessage("You are an expert on the novel Billy Budd.")
+                new("You are an expert at analyzing literary texts."),
+                new("You are an expert on the novel Billy Budd.")
             };
             var parameters = new MessageParameters()
             {
@@ -468,26 +431,23 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestCacheControlOfAssistantMessages()
         {
-            string resourceName = "Anthropic.SDK.Tests.BillyBudd.txt";
+            var resourceName = "Anthropic.SDK.Tests.BillyBudd.txt";
 
-            Assembly assembly = Assembly.GetExecutingAssembly();
+            var assembly = Assembly.GetExecutingAssembly();
 
-            await using Stream stream = assembly.GetManifestResourceStream(resourceName);
-            using StreamReader reader = new StreamReader(stream);
-            string content = await reader.ReadToEndAsync();
-
-
-
+            await using var stream = assembly.GetManifestResourceStream(resourceName);
+            using var reader = new StreamReader(stream);
+            var content = await reader.ReadToEndAsync();
 
             var client = new AnthropicClient();
             var messages = new List<Message>()
             {
-                new Message(RoleType.User, "What are the key literary themes of this novel?"),
+                new(RoleType.User, "What are the key literary themes of this novel?"),
             };
             var systemMessages = new List<SystemMessage>()
             {
-                new SystemMessage("You are an expert at analyzing literary texts."),
-                new SystemMessage(content, new CacheControl() { Type = CacheControlType.ephemeral })
+                new("You are an expert at analyzing literary texts."),
+                new(content, new CacheControl() { Type = CacheControlType.ephemeral })
             };
             var parameters = new MessageParameters()
             {
@@ -535,9 +495,6 @@ namespace Anthropic.SDK.Tests
             Assert.IsTrue(res4.Usage.CacheReadInputTokens > 0);
 
             Assert.IsNotNull(res4.Message.ToString());
-
         }
     }
-
-    
 }

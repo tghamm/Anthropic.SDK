@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace Anthropic.SDK.Messaging
 {
@@ -13,8 +10,10 @@ namespace Anthropic.SDK.Messaging
             Text = text;
             CacheControl = cacheControl;
         }
+
         [JsonPropertyName("type")]
         public string Type { get; set; }
+
         [JsonPropertyName("text")]
         public string Text { get; set; }
 

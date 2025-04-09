@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
+
 using Anthropic.SDK.Extensions;
 
 namespace Anthropic.SDK.Messaging
@@ -11,6 +9,7 @@ namespace Anthropic.SDK.Messaging
         [JsonPropertyName("type")]
         [JsonConverter(typeof(ToolChoiceTypeConverter))]
         public ToolChoiceType Type { get; set; } = ToolChoiceType.Auto;
+
         [JsonPropertyName("name")]
         public string Name { get; set; }
     }

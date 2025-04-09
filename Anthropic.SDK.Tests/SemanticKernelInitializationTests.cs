@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Reflection;
+
 using Anthropic.SDK.Constants;
+
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
-using static Google.Rpc.Context.AttributeContext.Types;
+
 #pragma warning disable SKEXP0001
 
 namespace Anthropic.SDK.Tests
@@ -26,7 +23,6 @@ namespace Anthropic.SDK.Tests
                     .UseFunctionInvocation()
                     .Build()
                     .AsChatCompletionService();
-
 
             var sk = Kernel.CreateBuilder();
             sk.Plugins.AddFromType<SkPlugins>("Weather");
@@ -51,23 +47,22 @@ namespace Anthropic.SDK.Tests
                 kernel: kernel
             ); ;
 
-
             Assert.IsTrue(result.Content.Contains("72"));
         }
 
         [TestMethod]
         public async Task TestSKPDF()
         {
-            string resourceName = "Anthropic.SDK.Tests.Claude3ModelCard.pdf";
+            var resourceName = "Anthropic.SDK.Tests.Claude3ModelCard.pdf";
 
-            Assembly assembly = Assembly.GetExecutingAssembly();
+            var assembly = Assembly.GetExecutingAssembly();
 
-            await using Stream stream = assembly.GetManifestResourceStream(resourceName);
+            await using var stream = assembly.GetManifestResourceStream(resourceName);
             //read stream into byte array
             using var ms = new MemoryStream();
             await stream.CopyToAsync(ms);
-            byte[] pdfBytes = ms.ToArray();
-            string base64String = Convert.ToBase64String(pdfBytes);
+            var pdfBytes = ms.ToArray();
+            var base64String = Convert.ToBase64String(pdfBytes);
 
             var file = new File()
             {
@@ -75,8 +70,8 @@ namespace Anthropic.SDK.Tests
                 DataUri = "data:application/pdf;base64," + base64String
             };
 
-            AnthropicClient client = new AnthropicClient();
-            IChatCompletionService skChatService = new ChatClientBuilder(client.Messages)
+            var client = new AnthropicClient();
+            var skChatService = new ChatClientBuilder(client.Messages)
                 .ConfigureOptions(opt =>
                 {
                     opt.ModelId = AnthropicModels.Claude37Sonnet;
@@ -86,24 +81,21 @@ namespace Anthropic.SDK.Tests
                 .Build()
                 .AsChatCompletionService();
 
-            IKernelBuilder kernelBuilder = Kernel.CreateBuilder();
+            var kernelBuilder = Kernel.CreateBuilder();
             kernelBuilder.Services.AddKeyedSingleton("test", skChatService);
 
-            Kernel kernel = kernelBuilder.Build();
+            var kernel = kernelBuilder.Build();
 
             // Add plugins from the `SkPlugins` folder
-            string pluginDirectoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SummarizePlugin");
+            var pluginDirectoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SummarizePlugin");
             kernel.ImportPluginFromPromptDirectory(pluginDirectoryPath);
 
-            string? filesSummary = await kernel.InvokeAsync<string>(
+            var filesSummary = await kernel.InvokeAsync<string>(
                 "SummarizePlugin",
                 "SummarizeDocuments",
                 new() { { "fileName", file.Name }, { "fileDataUri", file.DataUri } }
             );
-
         }
-
-
     }
 
     public class File

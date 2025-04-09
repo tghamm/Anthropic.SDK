@@ -11,7 +11,7 @@ public class Parallel
     {
         var client = new AnthropicClient();
         var list = new List<int>() { 1, 2, 3, 4, 5, 6, 7, 8 };
-        
+
         await System.Threading.Tasks.Parallel.ForEachAsync(list, async (i, ctx) =>
         {
             var messages = new List<Message>();
@@ -26,9 +26,6 @@ public class Parallel
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
         });
-        
-
-
     }
 
     [TestMethod]
@@ -55,6 +52,5 @@ public class Parallel
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
         });
-
     }
 }

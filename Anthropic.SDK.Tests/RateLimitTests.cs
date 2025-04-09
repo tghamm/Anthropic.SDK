@@ -27,7 +27,5 @@ public class RateLimitTests
         Assert.IsTrue(res.RateLimits.TokensLimit.GetValueOrDefault() > 0);
         Assert.IsTrue(res.RateLimits.TokensRemaining.GetValueOrDefault() > 0);
         Assert.IsTrue(res.RateLimits.RequestsReset.HasValue);
-
     }
-
 }

@@ -1,24 +1,27 @@
 ﻿using System.Text.Json.Nodes;
+
 using Anthropic.SDK.Common;
-using Anthropic.SDK.Constants;
-using Anthropic.SDK.Messaging;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Formats.Jpeg;
-using SixLabors.ImageSharp.Processing;
-using Message = Anthropic.SDK.Messaging.Message;
-using Anthropic.SDK.ComputerUse.ScreenCapture;
 using Anthropic.SDK.ComputerUse.Inputs;
 using Anthropic.SDK.ComputerUse.Scaling;
+using Anthropic.SDK.ComputerUse.ScreenCapture;
+using Anthropic.SDK.Constants;
+using Anthropic.SDK.Messaging;
+
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
+
+using Message = Anthropic.SDK.Messaging.Message;
 
 namespace Anthropic.SDK.ComputerUse
 {
     internal class Program
     {
-        static async Task Main(string[] args)
+        private static async Task Main(string[] args)
         {
             Console.WriteLine("Open Chrome in Incognito Mode in a given window. Then enter which Monitor Number you are using for Chrome:");
             var displayNumber = Convert.ToInt32(Console.ReadLine());
-            
+
             IScreenCapturer capturer = new WindowsScreenCapturer();
 
             var (width, height) = capturer.GetScreenSize(displayNumber - 1);
@@ -41,14 +44,14 @@ namespace Anthropic.SDK.ComputerUse
                     new TextContent()
                     {
                         Text = """
-                               Find Flights between ATL and NYC using a Google Search. 
-                               Once you've searched for the flights and have viewed the initial results, 
+                               Find Flights between ATL and NYC using a Google Search.
+                               Once you've searched for the flights and have viewed the initial results,
                                switch the toggle to first class and take a screenshot of the results and tell me the price of the flights.
                                """
                     }
                 }
             });
-            
+
             var tools = new List<Common.Tool>()
             {
                 new Function("computer", "computer_20241022",new Dictionary<string, object>()
@@ -68,18 +71,18 @@ namespace Anthropic.SDK.ComputerUse
                 Tools = tools,
                 System = new List<SystemMessage>()
                 {
-                    new SystemMessage($""""
-                                      A Google Chrome Incognito window is already open and maximized in the appropriate monitor. Use that instance. Do not open a new instance of Google Chrome. 
+                    new($""""
+                                      A Google Chrome Incognito window is already open and maximized in the appropriate monitor. Use that instance. Do not open a new instance of Google Chrome.
                                       It is not focused, so you'll need to click on it once to focus on it.
                                       Use keyboard shortcuts to access the search bar in Google Chrome and complete your search once you've focused on the window.
-                                      
+
                                       <SYSTEM_CAPABILITY>
                                       * You are utilising a Windows machine with internet access and Google Chrome installed.
                                       * When viewing a page it can be helpful to zoom out so that you can see everything on the page.  Either that, or make sure you scroll down to see everything before deciding something isn't available.
                                       * When using your computer function calls, they take a while to run and send back to you.  Where possible/feasible, try to chain multiple of these calls all into one function calls request.
                                       * The current date is {DateTime.Today.ToShortDateString()}.
                                       </SYSTEM_CAPABILITY>
-                                      
+
                                       """
                                       """")
                 }
@@ -104,7 +107,7 @@ namespace Anthropic.SDK.ComputerUse
                     var action = tool.Input["action"].ToString();
                     var text = tool.Input["text"]?.ToString();
                     var coordinate = tool.Input["coordinate"] as JsonArray;
-                    
+
                     switch (action)
                     {
                         case "screenshot":
@@ -127,6 +130,7 @@ namespace Anthropic.SDK.ComputerUse
                                 }
                             });
                             break;
+
                         default:
                             TakeAction(action, text,
                                 coordinate == null ? null : new Tuple<int, int>(Convert.ToInt32(coordinate[0].ToString()),
@@ -145,7 +149,6 @@ namespace Anthropic.SDK.ComputerUse
                             });
                             break;
                     }
-
                 }
                 messages.Add(new Message()
                 {
@@ -154,10 +157,7 @@ namespace Anthropic.SDK.ComputerUse
                 });
                 res = await client.Messages.GetClaudeMessageAsync(parameters);
                 messages.Add(res.Message);
-
-
             }
-
 
             Console.WriteLine("----------------------------------------------");
             Console.WriteLine("Final Result:");
@@ -172,30 +172,34 @@ namespace Anthropic.SDK.ComputerUse
                 case "left_click":
                     WindowsMouseController.LeftClick();
                     break;
+
                 case "right_click":
                     WindowsMouseController.RightClick();
                     break;
+
                 case "type":
                     KeyboardSimulator.SimulateTextInput(text);
                     break;
+
                 case "key":
                     KeyboardSimulator.SimulateKeyCombination(text);
                     break;
+
                 case "mouse_move":
                     var scaledCoord = coordScaler.ScaleCoordinates(ScalingSource.API, coordinate.Item1, coordinate.Item2);
                     WindowsMouseController.SetCursorPositionOnMonitor(monitorIndex, scaledCoord.Item1, scaledCoord.Item2);
                     break;
+
                 default:
                     throw new ToolError($"Action {action} is not supported");
             }
         }
 
-
         public static string DownscaleScreenshot(byte[] screenshot, int scaledX, int scaledY)
         {
             // Convert Bitmap to MemoryStream
             using var memoryStream = new MemoryStream(screenshot);
-            
+
             memoryStream.Position = 0; // Reset stream position
 
             // Load the image into ImageSharp
@@ -208,22 +212,8 @@ namespace Anthropic.SDK.ComputerUse
             image.Save(ms, new JpegEncoder());
             ms.Position = 0; // Reset stream position
             //convert to byte 64 string
-            byte[] imageBytes = ms.ToArray();
+            var imageBytes = ms.ToArray();
             return Convert.ToBase64String(imageBytes);
         }
     }
-
-
-    
-    
-
-    
-
-
-    
-
-
-    
-
-    
 }

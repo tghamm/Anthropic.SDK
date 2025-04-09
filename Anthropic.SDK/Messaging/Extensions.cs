@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace Anthropic.SDK.Messaging
 {
@@ -12,10 +8,14 @@ namespace Anthropic.SDK.Messaging
     internal static class Extensions
     {
         /// <summary>
-        /// Converts a list of <see cref="ContentBase"/> to a <see cref="Message"/> with the role of <see cref="RoleType.Assistant"/>
+        /// Converts a list of <see cref="ContentBase" /> to a <see cref="Message" /> with the role
+        /// of <see cref="RoleType.Assistant" />
         /// </summary>
-        /// <param name="content"></param>
-        /// <returns><see cref="Message"/></returns>
+        /// <param name="content">
+        /// </param>
+        /// <returns>
+        /// <see cref="Message" />
+        /// </returns>
         internal static Message AsAssistantMessages(this List<ContentBase> content)
         {
             var message = new Message()

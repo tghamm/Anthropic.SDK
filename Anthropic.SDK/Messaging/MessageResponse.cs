@@ -1,7 +1,8 @@
 ﻿using System;
-using Anthropic.SDK.Common;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+
+using Anthropic.SDK.Common;
 using Anthropic.SDK.Extensions;
 
 namespace Anthropic.SDK.Messaging
@@ -35,14 +36,14 @@ namespace Anthropic.SDK.Messaging
 
         [JsonPropertyName("delta")]
         public Delta Delta { get; set; }
-        
+
         [JsonPropertyName("content_block")]
         public ContentBlock? ContentBlock { get; set; }
 
         [JsonPropertyName("message")]
         public StreamMessage StreamStartMessage { get; set; }
 
-        [JsonIgnore] 
+        [JsonIgnore]
         public List<Function> ToolCalls { get; set; } = new List<Function>();
 
         [JsonIgnore]
@@ -94,7 +95,6 @@ namespace Anthropic.SDK.Messaging
         public TimeSpan? RetryAfter { get; set; }
     }
 
-
     public class Delta
     {
         [JsonPropertyName("stop_reason")]
@@ -103,20 +103,24 @@ namespace Anthropic.SDK.Messaging
         [JsonPropertyName("type")]
         public string Type { get; set; }
 
-        [JsonPropertyName("text")] 
+        [JsonPropertyName("text")]
         public string Text { get; set; }
+
         [JsonPropertyName("thinking")]
         public string Thinking { get; set; }
+
         [JsonPropertyName("signature")]
         public string Signature { get; set; }
+
         [JsonPropertyName("usage")]
         public Usage Usage { get; set; }
-        
+
         [JsonPropertyName("name ")]
-        public string Name { get; set; } 
-        
+        public string Name { get; set; }
+
         [JsonPropertyName("partial_json")]
         public string? PartialJson { get; set; }
+
         [JsonPropertyName("citation")]
         public CitationResult Citation { get; set; }
     }

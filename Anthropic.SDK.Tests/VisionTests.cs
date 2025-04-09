@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Anthropic.SDK.Constants;
+﻿using Anthropic.SDK.Constants;
 using Anthropic.SDK.Messaging;
 
 namespace Anthropic.SDK.Tests
@@ -22,7 +17,7 @@ namespace Anthropic.SDK.Tests
                 MaxTokens = 1024,
                 Messages = new List<Message>()
                 {
-                    new Message()
+                    new()
                     {
                         Content = new List<ContentBase>()
                         {
@@ -42,8 +37,6 @@ namespace Anthropic.SDK.Tests
                         }
                     }
                 }
-
-
             };
             var res = await client.Messages.GetClaudeMessageAsync(mp);
             Assert.IsNotNull(res.FirstMessage.ToString());

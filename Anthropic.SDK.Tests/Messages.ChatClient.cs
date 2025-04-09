@@ -1,10 +1,11 @@
-﻿using System.Diagnostics;
-using System.IO;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text;
+
 using Anthropic.SDK.Constants;
 using Anthropic.SDK.Messaging;
+
 using Microsoft.Extensions.AI;
+
 using TextContent = Microsoft.Extensions.AI.TextContent;
 
 namespace Anthropic.SDK.Tests
@@ -44,7 +45,7 @@ namespace Anthropic.SDK.Tests
                 ModelId = AnthropicModels.Claude37Sonnet,
                 MaxOutputTokens = 20000,
                 Temperature = 1.0f,
-                AdditionalProperties = new ()
+                AdditionalProperties = new()
                 {
                     {nameof(MessageParameters.Thinking), new ThinkingParameters()
                     {
@@ -85,7 +86,7 @@ namespace Anthropic.SDK.Tests
                 }
             };
 
-            List<ChatResponseUpdate> updates  = new();
+            List<ChatResponseUpdate> updates = new();
             StringBuilder sb = new();
             await foreach (var res in client.GetStreamingResponseAsync(messages, options))
             {
@@ -98,7 +99,7 @@ namespace Anthropic.SDK.Tests
             messages.AddMessages(updates);
 
             Assert.IsTrue(messages.Last().Contents.OfType<Extensions.MEAI.ThinkingContent>().Any());
-            
+
             messages.Add(new ChatMessage(ChatRole.User, "and how many letters total?"));
 
             updates.Clear();
@@ -141,7 +142,6 @@ namespace Anthropic.SDK.Tests
             {
                 updates.Add(res);
             }
-            
 
             messages.AddMessages(updates);
 
@@ -190,7 +190,7 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestNonStreamingThinkingFunctionCalls()
         {
-            IChatClient client = new AnthropicClient().Messages
+            var client = new AnthropicClient().Messages
                 .AsBuilder()
                 .UseFunctionInvocation()
                 .Build();
@@ -222,7 +222,7 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestNonStreamingFunctionCalls()
         {
-            IChatClient client = new AnthropicClient().Messages
+            var client = new AnthropicClient().Messages
                 .AsBuilder()
                 .UseFunctionInvocation()
                 .Build();
@@ -240,14 +240,14 @@ namespace Anthropic.SDK.Tests
             var res = await client.GetResponseAsync("How old is Alice?", options);
 
             Assert.IsTrue(
-                res.Text.Contains("25") is true, 
+                res.Text.Contains("25") is true,
                 res.Text);
         }
 
         [TestMethod]
         public async Task TestStreamingFunctionCalls()
         {
-            IChatClient client = new AnthropicClient().Messages
+            var client = new AnthropicClient().Messages
                 .AsBuilder()
                 .UseFunctionInvocation()
                 .Build();
@@ -276,7 +276,7 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestStreamingThinkingFunctionCalls()
         {
-            IChatClient client = new AnthropicClient().Messages
+            var client = new AnthropicClient().Messages
                 .AsBuilder()
                 .UseFunctionInvocation()
                 .Build();
@@ -311,11 +311,11 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestBasicClaude3ImageMessage()
         {
-            string resourceName = "Anthropic.SDK.Tests.Red_Apple.jpg";
+            var resourceName = "Anthropic.SDK.Tests.Red_Apple.jpg";
 
-            Assembly assembly = Assembly.GetExecutingAssembly();
+            var assembly = Assembly.GetExecutingAssembly();
 
-            await using Stream stream = assembly.GetManifestResourceStream(resourceName)!;
+            await using var stream = assembly.GetManifestResourceStream(resourceName)!;
             byte[] imageBytes;
             using (var memoryStream = new MemoryStream())
             {

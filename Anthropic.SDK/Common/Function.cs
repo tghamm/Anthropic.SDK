@@ -3,12 +3,12 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using System.Text.Json;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
+
 using Anthropic.SDK.Extensions;
 using Anthropic.SDK.Messaging;
 
@@ -16,21 +16,22 @@ namespace Anthropic.SDK.Common
 {
     public sealed class Function
     {
-        public Function() { }
+        public Function()
+        { }
 
         private const string NameRegex = "^[a-zA-Z0-9_-]{1,64}$";
-
-
 
         /// <summary>
         /// Creates a new function description to insert into a chat conversation.
         /// </summary>
         /// <param name="name">
-        /// Required. The name of the function to generate arguments for based on the context in a message.<br/>
-        /// May contain a-z, A-Z, 0-9, underscores and dashes, with a maximum length of 64 characters. Recommended to not begin with a number or a dash.
+        /// Required. The name of the function to generate arguments for based on the context in a
+        /// message. <br /> May contain a-z, A-Z, 0-9, underscores and dashes, with a maximum length
+        /// of 64 characters. Recommended to not begin with a number or a dash.
         /// </param>
         /// <param name="description">
-        /// An optional description of the function, used by the API to determine if it is useful to include in the response.
+        /// An optional description of the function, used by the API to determine if it is useful to
+        /// include in the response.
         /// </param>
         /// <param name="parameters">
         /// An optional JSON object describing the parameters of the function that the model can generate.
@@ -69,11 +70,13 @@ namespace Anthropic.SDK.Common
         /// Creates a new function description to insert into a chat conversation.
         /// </summary>
         /// <param name="name">
-        /// Required. The name of the function to generate arguments for based on the context in a message.<br/>
-        /// May contain a-z, A-Z, 0-9, underscores and dashes, with a maximum length of 64 characters. Recommended to not begin with a number or a dash.
+        /// Required. The name of the function to generate arguments for based on the context in a
+        /// message. <br /> May contain a-z, A-Z, 0-9, underscores and dashes, with a maximum length
+        /// of 64 characters. Recommended to not begin with a number or a dash.
         /// </param>
         /// <param name="description">
-        /// An optional description of the function, used by the API to determine if it is useful to include in the response.
+        /// An optional description of the function, used by the API to determine if it is useful to
+        /// include in the response.
         /// </param>
         /// <param name="parameters">
         /// An optional JSON describing the parameters of the function that the model can generate.
@@ -90,9 +93,6 @@ namespace Anthropic.SDK.Common
             Parameters = JsonNode.Parse(parameters);
             functionCache[Name] = this;
         }
-
-        
-
 
         internal Function(string name, string description, MethodInfo method, object instance = null)
         {
@@ -152,9 +152,9 @@ namespace Anthropic.SDK.Common
         internal Function(Function other) => CopyFrom(other);
 
         /// <summary>
-        /// The name of the function to generate arguments for.<br/>
-        /// May contain a-z, A-Z, 0-9, and underscores and dashes, with a maximum length of 64 characters.
-        /// Recommended to not begin with a number or a dash.
+        /// The name of the function to generate arguments for. <br /> May contain a-z, A-Z, 0-9,
+        /// and underscores and dashes, with a maximum length of 64 characters. Recommended to not
+        /// begin with a number or a dash.
         /// </summary>
         [JsonInclude]
         [JsonPropertyName("name")]
@@ -170,7 +170,6 @@ namespace Anthropic.SDK.Common
 
         [JsonExtensionData]
         public Dictionary<string, JsonElement> AdditionalData { get; set; } = new Dictionary<string, JsonElement>();
-
 
         /// <summary>
         /// Id to Send to the API.
@@ -191,8 +190,8 @@ namespace Anthropic.SDK.Common
         private JsonNode parameters;
 
         /// <summary>
-        /// The optional parameters of the function.
-        /// Describe the parameters that the model should generate in JSON schema format (json-schema.org).
+        /// The optional parameters of the function. Describe the parameters that the model should
+        /// generate in JSON schema format (json-schema.org).
         /// </summary>
         [JsonInclude]
         [JsonPropertyName("input_schema")]
@@ -240,8 +239,6 @@ namespace Anthropic.SDK.Common
         /// </summary>
         [JsonIgnore]
         internal object Instance { get; }
-
-        
 
         /// <summary>
         /// The method to invoke.
@@ -294,7 +291,9 @@ namespace Anthropic.SDK.Common
         /// <summary>
         /// Invokes the function and returns the result as json.
         /// </summary>
-        /// <returns>The result of the function as json.</returns>
+        /// <returns>
+        /// The result of the function as json.
+        /// </returns>
         public string Invoke()
         {
             try
@@ -320,8 +319,12 @@ namespace Anthropic.SDK.Common
         /// <summary>
         /// Invokes the function and returns the result.
         /// </summary>
-        /// <typeparam name="T">The expected return type.</typeparam>
-        /// <returns>The result of the function.</returns>
+        /// <typeparam name="T">
+        /// The expected return type.
+        /// </typeparam>
+        /// <returns>
+        /// The result of the function.
+        /// </returns>
         public T Invoke<T>()
         {
             try
@@ -340,8 +343,12 @@ namespace Anthropic.SDK.Common
         /// <summary>
         /// Invokes the function and returns the result as json.
         /// </summary>
-        /// <param name="cancellationToken">Optional, <see cref="CancellationToken"/>.</param>
-        /// <returns>The result of the function as json.</returns>
+        /// <param name="cancellationToken">
+        /// Optional, <see cref="CancellationToken" />.
+        /// </param>
+        /// <returns>
+        /// The result of the function as json.
+        /// </returns>
         public async Task<string> InvokeAsync(CancellationToken cancellationToken = default)
         {
             try
@@ -372,9 +379,15 @@ namespace Anthropic.SDK.Common
         /// <summary>
         /// Invokes the function and returns the result.
         /// </summary>
-        /// <typeparam name="T">Expected return type.</typeparam>
-        /// <param name="cancellationToken">Optional, <see cref="CancellationToken"/>.</param>
-        /// <returns>The result of the function.</returns>
+        /// <typeparam name="T">
+        /// Expected return type.
+        /// </typeparam>
+        /// <param name="cancellationToken">
+        /// Optional, <see cref="CancellationToken" />.
+        /// </param>
+        /// <returns>
+        /// The result of the function.
+        /// </returns>
         public async Task<T> InvokeAsync<T>(CancellationToken cancellationToken = default)
         {
             try
@@ -466,4 +479,3 @@ namespace Anthropic.SDK.Common
         #endregion Function Invoking Utilities
     }
 }
-

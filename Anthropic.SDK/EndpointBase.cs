@@ -1,4 +1,3 @@
-using Anthropic.SDK.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,10 +9,11 @@ using System.Runtime.CompilerServices;
 using System.Security.Authentication;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Anthropic.SDK.Batches;
+using Anthropic.SDK.Extensions;
 using Anthropic.SDK.Messaging;
 
 namespace Anthropic.SDK
@@ -21,19 +21,22 @@ namespace Anthropic.SDK
     public abstract class EndpointBase : BaseEndpoint
     {
         private const string UserAgent = "tghamm/anthropic_sdk";
+
         // Add a lock object for thread safety
-        private static readonly object _headerLock = new object();
+        private static readonly object _headerLock = new();
+
         /// <summary>
         /// The internal reference to the Client, mostly used for authentication
         /// </summary>
         protected readonly AnthropicClient Client;
 
-        private Lazy<HttpClient> _client;
+        private readonly Lazy<HttpClient> _client;
 
         /// <summary>
         /// Constructor of the api endpoint base, to be called from the constructor of any derived classes.
         /// </summary>
-        /// <param name="client"></param>
+        /// <param name="client">
+        /// </param>
         internal EndpointBase(AnthropicClient client)
         {
             this.Client = client;
@@ -41,7 +44,8 @@ namespace Anthropic.SDK
         }
 
         /// <summary>
-        /// The name of the endpoint, which is the final path segment in the API URL.  Must be overriden in a derived class.
+        /// The name of the endpoint, which is the final path segment in the API URL. Must be
+        /// overriden in a derived class.
         /// </summary>
         protected abstract string Endpoint { get; }
 
@@ -55,8 +59,12 @@ namespace Anthropic.SDK
         /// <summary>
         /// Gets an HTTPClient with the appropriate authorization and other headers set.
         /// </summary>
-        /// <returns>The fully initialized HttpClient</returns>
-        /// <exception cref="AuthenticationException">Thrown if there is no valid authentication.</exception>
+        /// <returns>
+        /// The fully initialized HttpClient
+        /// </returns>
+        /// <exception cref="AuthenticationException">
+        /// Thrown if there is no valid authentication.
+        /// </exception>
         protected override HttpClient GetClient()
         {
             if (Client.Auth?.ApiKey is null)
@@ -97,10 +105,18 @@ namespace Anthropic.SDK
             }
         }
 
-        private string GetErrorMessage(string resultAsString, HttpResponseMessage response, string name, string description = "")
+#pragma warning disable IDE0060 // Unused parameters
+
+        private string GetErrorMessage(
+            string resultAsString,
+            HttpResponseMessage response,
+            string name,
+            string description = "")
         {
             return $"{resultAsString ?? "<no content>"}";
         }
+
+#pragma warning restore IDE0060
 
         /// <summary>
         /// Override the base HttpRequestMessages to add rate limits
@@ -126,7 +142,7 @@ namespace Anthropic.SDK
 #if NET6_0_OR_GREATER
             await using var stream = await response.Content.ReadAsStreamAsync(ctx).ConfigureAwait(false);
 #else
-                using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+            using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
 #endif
             using var reader = new StreamReader(stream);
             string line;
@@ -200,7 +216,7 @@ namespace Anthropic.SDK
 #if NET6_0_OR_GREATER
             if (response.StatusCode == HttpStatusCode.TooManyRequests)
 #else
-            if(response.StatusCode == ((HttpStatusCode)429))
+            if (response.StatusCode == ((HttpStatusCode)429))
 #endif
             {
                 return new RateLimitsExceeded(
@@ -217,21 +233,19 @@ namespace Anthropic.SDK
             {
                 return GetHttpRequestException(
                     "Anthropic had an internal server error, which can happen occasionally. Please retry your request. " +
-                    GetErrorMessage(resultAsString, response, url, url));
+                    GetErrorMessage(resultAsString, response, url, url), response);
             }
             else
             {
-                return GetHttpRequestException(GetErrorMessage(resultAsString, response, url, url));
+                return GetHttpRequestException(GetErrorMessage(resultAsString, response, url, url), response);
             }
 
-            HttpRequestException GetHttpRequestException(string message)
-            {
+            static HttpRequestException GetHttpRequestException(string message, HttpResponseMessage response) =>
 #if NET6_0_OR_GREATER
-                return new HttpRequestException(message, null, response.StatusCode);
+                new(message, null, response.StatusCode);
 #else
-                return new HttpRequestException(message, null);
+                new HttpRequestException(message, null);
 #endif
-            }
         }
 
         /// <summary>
@@ -249,7 +263,7 @@ namespace Anthropic.SDK
 #endif
             using var reader = new StreamReader(stream);
             string line;
-            SseEvent currentEvent = new SseEvent();
+            var currentEvent = new SseEvent();
 #if NET8_0_OR_GREATER
             while ((line = await reader.ReadLineAsync(ctx).ConfigureAwait(false)) != null)
 #else

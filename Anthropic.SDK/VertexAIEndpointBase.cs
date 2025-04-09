@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -9,10 +8,9 @@ using System.Runtime.CompilerServices;
 using System.Security.Authentication;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using Anthropic.SDK.Extensions;
+
 using Anthropic.SDK.Messaging;
 
 namespace Anthropic.SDK
@@ -23,19 +21,23 @@ namespace Anthropic.SDK
     public abstract class VertexAIEndpointBase : BaseEndpoint
     {
         private const string UserAgent = "tghamm/anthropic_sdk_vertexai";
+
         // Add a lock object for thread safety
-        private static readonly object _headerLock = new object();
+        private static readonly object _headerLock = new();
+
         /// <summary>
         /// The internal reference to the Client, mostly used for authentication
         /// </summary>
         protected readonly VertexAIClient Client;
 
-        private Lazy<HttpClient> _client;
+        private readonly Lazy<HttpClient> _client;
 
         /// <summary>
         /// Constructor of the api endpoint base, to be called from the constructor of any derived classes.
         /// </summary>
-        /// <param name="client">The Vertex AI client</param>
+        /// <param name="client">
+        /// The Vertex AI client
+        /// </param>
         internal VertexAIEndpointBase(VertexAIClient client)
         {
             this.Client = client;
@@ -43,21 +45,27 @@ namespace Anthropic.SDK
         }
 
         /// <summary>
-        /// The name of the endpoint, which is the final path segment in the API URL. Must be overriden in a derived class.
+        /// The name of the endpoint, which is the final path segment in the API URL. Must be
+        /// overriden in a derived class.
         /// </summary>
         protected abstract string Endpoint { get; }
 
         /// <summary>
-        /// The default Anthropic model to use with Vertex AI.
-        /// Can be overridden in derived classes or through method parameters.
+        /// The default Anthropic model to use with Vertex AI. Can be overridden in derived classes
+        /// or through method parameters.
         /// </summary>
         protected virtual string Model { get; }
 
         /// <summary>
-        /// Gets the model to use for the request, either from parameters or falling back to the default model.
+        /// Gets the model to use for the request, either from parameters or falling back to the
+        /// default model.
         /// </summary>
-        /// <param name="parameters">Optional message parameters that may contain a model override</param>
-        /// <returns>The model to use for the request</returns>
+        /// <param name="parameters">
+        /// Optional message parameters that may contain a model override
+        /// </param>
+        /// <returns>
+        /// The model to use for the request
+        /// </returns>
         protected string GetModelForRequest(MessageParameters parameters = null)
         {
             // If parameters contains a non-null, non-empty model, use that
@@ -65,7 +73,7 @@ namespace Anthropic.SDK
             {
                 return parameters.Model;
             }
-            
+
             // Otherwise fall back to the class-level model
             return Model;
         }
@@ -78,7 +86,9 @@ namespace Anthropic.SDK
         /// <summary>
         /// Gets the URL of the endpoint for a specific model.
         /// </summary>
-        /// <param name="model">The model to use in the URL</param>
+        /// <param name="model">
+        /// The model to use in the URL
+        /// </param>
         protected string GetUrlForModel(string model) =>
             string.Format(Client.ApiUrlFormat, Client.Auth.Region, Client.Auth.ProjectId, model) + ":" + Endpoint;
 
@@ -87,8 +97,12 @@ namespace Anthropic.SDK
         /// <summary>
         /// Gets an HTTPClient with the appropriate authorization and other headers set.
         /// </summary>
-        /// <returns>The fully initialized HttpClient</returns>
-        /// <exception cref="AuthenticationException">Thrown if there is no valid authentication.</exception>
+        /// <returns>
+        /// The fully initialized HttpClient
+        /// </returns>
+        /// <exception cref="AuthenticationException">
+        /// Thrown if there is no valid authentication.
+        /// </exception>
         protected override HttpClient GetClient()
         {
             if (Client.Auth?.ProjectId is null || Client.Auth?.Region is null)
@@ -113,7 +127,6 @@ namespace Anthropic.SDK
                     // For API key authentication
                     AddHeaderIfNotPresent(client.DefaultRequestHeaders, "x-goog-api-key", Client.Auth.ApiKey);
                 }
-
 
                 AddHeaderIfNotPresent(client.DefaultRequestHeaders, "User-Agent", UserAgent);
 
@@ -143,7 +156,7 @@ namespace Anthropic.SDK
 #if NET6_0_OR_GREATER
             if (response.StatusCode == HttpStatusCode.TooManyRequests)
 #else
-            if(response.StatusCode == ((HttpStatusCode)429))
+            if (response.StatusCode == ((HttpStatusCode)429))
 #endif
             {
                 return new RateLimitsExceeded(
@@ -192,7 +205,7 @@ namespace Anthropic.SDK
 #endif
             using var reader = new StreamReader(stream);
             string line;
-            SseEvent currentEvent = new SseEvent();
+            var currentEvent = new SseEvent();
 #if NET8_0_OR_GREATER
             while ((line = await reader.ReadLineAsync(ctx).ConfigureAwait(false)) != null)
 #else
@@ -215,10 +228,12 @@ namespace Anthropic.SDK
                     if (!string.IsNullOrEmpty(currentEvent.Data))
                     {
                         if (currentEvent.Data == "[DONE]")
+                        {
                             break;
-                        
+                        }
+
                         MessageResponse result = null;
-                        
+
                         // First try to parse as a standard MessageResponse
                         try
                         {
@@ -231,15 +246,15 @@ namespace Anthropic.SDK
                             try
                             {
                                 var vertexResponse = JsonSerializer.Deserialize<JsonElement>(currentEvent.Data);
-                                
+
                                 // Check if it has predictions
                                 if (vertexResponse.TryGetProperty("predictions", out var predictions) &&
                                     predictions.ValueKind == JsonValueKind.Array &&
                                     predictions.GetArrayLength() > 0)
                                 {
                                     var prediction = predictions[0];
-                                    string content = string.Empty;
-                                    
+                                    var content = string.Empty;
+
                                     // Try to get content as string
                                     if (prediction.ValueKind == JsonValueKind.String)
                                     {
@@ -249,7 +264,7 @@ namespace Anthropic.SDK
                                     {
                                         content = contentElement.GetString();
                                     }
-                                    
+
                                     if (!string.IsNullOrEmpty(content))
                                     {
                                         // Create a simple message response
@@ -269,14 +284,14 @@ namespace Anthropic.SDK
                                 // If we can't parse as JSON at all, just continue
                             }
                         }
-                        
+
                         // If we have a result, yield it
                         if (result != null)
                         {
                             yield return result;
                         }
                     }
-                    
+
                     // Reset the event
                     currentEvent = new SseEvent();
                 }

@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
+
 using Anthropic.SDK.Constants;
 using Anthropic.SDK.Extensions;
 using Anthropic.SDK.Messaging;
@@ -15,9 +16,9 @@ public class SerializationTests
         var client = new AnthropicClient();
         var messages = new List<Message>()
         {
-            new Message(RoleType.User, "Who won the world series in 2020?"),
-            new Message(RoleType.Assistant, "The Los Angeles Dodgers won the World Series in 2020."),
-            new Message(RoleType.User, "Where was it played?"),
+            new(RoleType.User, "Who won the world series in 2020?"),
+            new(RoleType.Assistant, "The Los Angeles Dodgers won the World Series in 2020."),
+            new(RoleType.User, "Where was it played?"),
         };
 
         var parameters = new MessageParameters()
@@ -47,7 +48,7 @@ public class SerializationTests
         };
         // Serialize the messages
         var serializedMessages = JsonSerializer.Serialize(messages, options);
-        
+
         //deserialize the messages
         var deserializedMessages = JsonSerializer.Deserialize<List<Message>>(serializedMessages, options);
 

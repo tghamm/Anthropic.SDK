@@ -1,7 +1,8 @@
-﻿using Anthropic.SDK.Messaging;
-using System;
-using System.Text.Json.Serialization;
+﻿using System;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+
+using Anthropic.SDK.Messaging;
 
 namespace Anthropic.SDK.Extensions
 {
@@ -24,16 +25,22 @@ namespace Anthropic.SDK.Extensions
                 {
                     case "text":
                         return JsonSerializer.Deserialize<TextContent>(root.GetRawText(), options);
+
                     case "tool_use":
                         return JsonSerializer.Deserialize<ToolUseContent>(root.GetRawText(), options);
+
                     case "image":
                         return JsonSerializer.Deserialize<ImageContent>(root.GetRawText(), options);
+
                     case "tool_result":
                         return JsonSerializer.Deserialize<ToolResultContent>(root.GetRawText(), options);
+
                     case "document":
                         return JsonSerializer.Deserialize<DocumentContent>(root.GetRawText(), options);
+
                     case "thinking":
                         return JsonSerializer.Deserialize<ThinkingContent>(root.GetRawText(), options);
+
                     case "redacted_thinking":
                         return JsonSerializer.Deserialize<RedactedThinkingContent>(root.GetRawText(), options);
                     // Add cases for other types as necessary

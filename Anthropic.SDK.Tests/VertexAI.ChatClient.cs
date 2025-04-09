@@ -1,7 +1,10 @@
 using System.Reflection;
 using System.Text;
+
 using Anthropic.SDK.Messaging;
+
 using Microsoft.Extensions.AI;
+
 using TextContent = Microsoft.Extensions.AI.TextContent;
 
 namespace Anthropic.SDK.Tests
@@ -11,6 +14,7 @@ namespace Anthropic.SDK.Tests
     {
         // Load settings from appsettings.json
         private static readonly TestSettings Settings = TestSettings.LoadSettings();
+
         private static readonly string TestProjectId = Settings.VertexAIProjectId;
         private static readonly string TestRegion = Settings.VertexAIRegion;
         private static readonly string TestAccessToken = Settings.VertexAIAccessToken;
@@ -51,7 +55,7 @@ namespace Anthropic.SDK.Tests
 
             var res = await client.GetResponseAsync(messages, options);
             Assert.IsTrue(res.Text.Contains("3") is true, res.Text);
-            
+
             messages.AddMessages(res);
             messages.Add(new ChatMessage(ChatRole.User, "and how many letters total?"));
             res = await client.GetResponseAsync(messages, options);
@@ -82,9 +86,9 @@ namespace Anthropic.SDK.Tests
                 updates.Add(res);
                 sb.Append(res);
             }
-            
+
             Assert.IsTrue(sb.ToString().Contains("3") is true, sb.ToString());
-            
+
             messages.AddMessages(updates);
             messages.Add(new ChatMessage(ChatRole.User, "and how many letters total?"));
 
@@ -93,7 +97,7 @@ namespace Anthropic.SDK.Tests
             {
                 updates.Add(res);
             }
-            
+
             var text = string.Join("",
                 updates.SelectMany(p => p.Contents.OfType<TextContent>()).Select(p => p.Text));
             Assert.IsTrue(text.Contains("10") is true, text);
@@ -125,7 +129,7 @@ namespace Anthropic.SDK.Tests
 
             var res = await client.GetResponseAsync(messages, options);
             Assert.IsTrue(res.Text.Contains("3") is true, res.Text);
-            
+
             messages.AddMessages(res);
             messages.Add(new ChatMessage(ChatRole.User, "and how many letters total?"));
             res = await client.GetResponseAsync(messages, options);
@@ -163,13 +167,13 @@ namespace Anthropic.SDK.Tests
                 updates.Add(res);
                 sb.Append(res);
             }
-            
+
             Assert.IsTrue(sb.ToString().Contains("3") is true, sb.ToString());
-            
+
             messages.AddMessages(updates);
-            
+
             Assert.IsTrue(messages.Last().Contents.OfType<Extensions.MEAI.ThinkingContent>().Any());
-            
+
             messages.Add(new ChatMessage(ChatRole.User, "and how many letters total?"));
 
             updates.Clear();
@@ -177,7 +181,7 @@ namespace Anthropic.SDK.Tests
             {
                 updates.Add(res);
             }
-            
+
             var text = string.Join("",
                 updates.SelectMany(p => p.Contents.OfType<TextContent>()).Select(p => p.Text));
             Assert.IsTrue(text.Contains("10") is true, text);
@@ -186,7 +190,7 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestNonStreamingFunctionCalls()
         {
-            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken)).Messages
+            var client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken)).Messages
                 .AsBuilder()
                 .UseFunctionInvocation()
                 .Build();
@@ -202,7 +206,7 @@ namespace Anthropic.SDK.Tests
             };
 
             var res = await client.GetResponseAsync("How old is Alice?", options);
-            
+
             Assert.IsTrue(
                 res.Text.Contains("25") is true,
                 res.Text);
@@ -211,7 +215,7 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestStreamingFunctionCalls()
         {
-            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken)).Messages
+            var client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken)).Messages
                 .AsBuilder()
                 .UseFunctionInvocation()
                 .Build();
@@ -231,7 +235,7 @@ namespace Anthropic.SDK.Tests
             {
                 sb.Append(update);
             }
-            
+
             Assert.IsTrue(
                 sb.ToString().Contains("25") is true,
                 sb.ToString());
@@ -266,7 +270,6 @@ namespace Anthropic.SDK.Tests
             {
                 updates.Add(res);
             }
-            
 
             messages.AddMessages(updates);
 
@@ -315,7 +318,7 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestNonStreamingThinkingFunctionCalls()
         {
-            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken)).Messages
+            var client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken)).Messages
                 .AsBuilder()
                 .UseFunctionInvocation()
                 .Build();
@@ -347,7 +350,7 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestStreamingThinkingFunctionCalls()
         {
-            IChatClient client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken)).Messages
+            var client = new VertexAIClient(new VertexAIAuthentication(TestProjectId, TestRegion, accessToken: TestAccessToken)).Messages
                 .AsBuilder()
                 .UseFunctionInvocation()
                 .Build();
@@ -382,11 +385,11 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestVertexAIImageMessage()
         {
-            string resourceName = "Anthropic.SDK.Tests.Red_Apple.jpg";
+            var resourceName = "Anthropic.SDK.Tests.Red_Apple.jpg";
 
-            Assembly assembly = Assembly.GetExecutingAssembly();
+            var assembly = Assembly.GetExecutingAssembly();
 
-            await using Stream stream = assembly.GetManifestResourceStream(resourceName)!;
+            await using var stream = assembly.GetManifestResourceStream(resourceName)!;
             byte[] imageBytes;
             using (var memoryStream = new MemoryStream())
             {
@@ -409,7 +412,7 @@ namespace Anthropic.SDK.Tests
                 MaxOutputTokens = 512,
                 Temperature = 0f,
             });
-            
+
             Assert.IsTrue(res.Text.Contains("apple", StringComparison.OrdinalIgnoreCase) is true, res.Text);
         }
     }

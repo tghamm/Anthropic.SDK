@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
-using System.Text;
+﻿using System.Runtime.Serialization;
 
 namespace Anthropic.SDK.Messaging
 {
@@ -9,6 +6,7 @@ namespace Anthropic.SDK.Messaging
     {
         [EnumMember(Value = "user")]
         User,
+
         [EnumMember(Value = "assistant")]
         Assistant
     }

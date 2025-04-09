@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Anthropic.SDK
 {
@@ -32,10 +30,18 @@ namespace Anthropic.SDK
         /// <summary>
         /// Instantiates a new Vertex AI Authentication object with the given parameters
         /// </summary>
-        /// <param name="projectId">The Google Cloud Project ID</param>
-        /// <param name="region">The Google Cloud Region (e.g., "us-east5")</param>
-        /// <param name="apiKey">The Google Cloud API Key (optional)</param>
-        /// <param name="accessToken">The OAuth2 Access Token (optional)</param>
+        /// <param name="projectId">
+        /// The Google Cloud Project ID
+        /// </param>
+        /// <param name="region">
+        /// The Google Cloud Region (e.g., "us-east5")
+        /// </param>
+        /// <param name="apiKey">
+        /// The Google Cloud API Key (optional)
+        /// </param>
+        /// <param name="accessToken">
+        /// The OAuth2 Access Token (optional)
+        /// </param>
         public VertexAIAuthentication(string projectId, string region, string apiKey = null, string accessToken = null)
         {
             this.ProjectId = projectId;
@@ -47,17 +53,20 @@ namespace Anthropic.SDK
         private static VertexAIAuthentication _cachedDefault = null;
 
         /// <summary>
-        /// The default authentication to use when no other auth is specified. This can be set manually, or automatically loaded via environment variables.
+        /// The default authentication to use when no other auth is specified. This can be set
+        /// manually, or automatically loaded via environment variables.
         /// </summary>
         public static VertexAIAuthentication Default
         {
             get
             {
                 if (_cachedDefault != null)
+                {
                     return _cachedDefault;
+                }
 
-                VertexAIAuthentication auth = LoadFromEnv();
-                
+                var auth = LoadFromEnv();
+
                 _cachedDefault = auth;
                 return auth;
             }
@@ -74,16 +83,21 @@ namespace Anthropic.SDK
         /// - GOOGLE_API_KEY: The Google Cloud API Key (optional)
         /// - GOOGLE_ACCESS_TOKEN: The OAuth2 Access Token (optional)
         /// </summary>
-        /// <returns>Returns the loaded <see cref="VertexAIAuthentication"/> if environment variables were found, or <see langword="null"/> if there were no matching environment vars.</returns>
+        /// <returns>
+        /// Returns the loaded <see cref="VertexAIAuthentication" /> if environment variables were
+        /// found, or <see langword="null" /> if there were no matching environment vars.
+        /// </returns>
         public static VertexAIAuthentication LoadFromEnv()
         {
-            string projectId = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_PROJECT");
-            string region = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_REGION");
-            string apiKey = Environment.GetEnvironmentVariable("GOOGLE_API_KEY");
-            string accessToken = Environment.GetEnvironmentVariable("GOOGLE_ACCESS_TOKEN");
+            var projectId = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_PROJECT");
+            var region = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_REGION");
+            var apiKey = Environment.GetEnvironmentVariable("GOOGLE_API_KEY");
+            var accessToken = Environment.GetEnvironmentVariable("GOOGLE_ACCESS_TOKEN");
 
             if (string.IsNullOrEmpty(projectId) || string.IsNullOrEmpty(region))
+            {
                 return null;
+            }
 
             return new VertexAIAuthentication(projectId, region, apiKey, accessToken);
         }
@@ -92,14 +106,22 @@ namespace Anthropic.SDK
     internal static class VertexAIAuthHelpers
     {
         /// <summary>
-        /// A helper method to swap out <see langword="null"/> <see cref="VertexAIAuthentication"/> objects with the <see cref="VertexAIAuthentication.Default"/> authentication, possibly loaded from ENV.
+        /// A helper method to swap out <see langword="null" /><see cref="VertexAIAuthentication" />
+        /// objects with the <see cref="VertexAIAuthentication.Default" /> authentication, possibly
+        /// loaded from ENV.
         /// </summary>
-        /// <param name="auth">The specific authentication to use if not <see langword="null"/></param>
-        /// <returns>Either the provided <paramref name="auth"/> or the <see cref="VertexAIAuthentication.Default"/></returns>
+        /// <param name="auth">
+        /// The specific authentication to use if not <see langword="null" />
+        /// </param>
+        /// <returns>
+        /// Either the provided <paramref name="auth" /> or the <see cref="VertexAIAuthentication.Default" />
+        /// </returns>
         public static VertexAIAuthentication ThisOrDefault(this VertexAIAuthentication auth)
         {
             if (auth == null)
+            {
                 auth = VertexAIAuthentication.Default;
+            }
 
             return auth;
         }

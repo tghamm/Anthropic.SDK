@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Reflection;
-using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using System.Text.Json;
-using System.Threading.Tasks;
+
 using Anthropic.SDK.Common;
 using Anthropic.SDK.Constants;
 using Anthropic.SDK.Messaging;
@@ -65,7 +61,6 @@ namespace Anthropic.SDK.Tests
             Assert.IsNotNull(res.Content.OfType<RedactedThinkingContent>());
             var response = res.Message.ToString();
         }
-
 
         [TestMethod]
         public async Task TestClaude37ThinkingConversation()
@@ -143,7 +138,6 @@ namespace Anthropic.SDK.Tests
             Assert.IsTrue(res2.Content.OfType<ThinkingContent>().Any());
             var response2 = res2.Message.ToString();
             Assert.IsNotNull(response2);
-
         }
 
         [TestMethod]
@@ -190,17 +184,16 @@ namespace Anthropic.SDK.Tests
             Assert.IsTrue(res2.Content.OfType<RedactedThinkingContent>().Any());
             var response2 = res2.Message.ToString();
             Assert.IsNotNull(response2);
-
         }
 
         [TestMethod]
         public async Task TestBasicClaude37ImageStreamingSchemaMessage()
         {
-            string resourceName = "Anthropic.SDK.Tests.Red_Apple.jpg";
+            var resourceName = "Anthropic.SDK.Tests.Red_Apple.jpg";
 
-            Assembly assembly = Assembly.GetExecutingAssembly();
+            var assembly = Assembly.GetExecutingAssembly();
 
-            await using Stream stream = assembly.GetManifestResourceStream(resourceName);
+            await using var stream = assembly.GetManifestResourceStream(resourceName);
             byte[] imageBytes;
             using (var memoryStream = new MemoryStream())
             {
@@ -208,7 +201,7 @@ namespace Anthropic.SDK.Tests
                 imageBytes = memoryStream.ToArray();
             }
 
-            string base64String = Convert.ToBase64String(imageBytes);
+            var base64String = Convert.ToBase64String(imageBytes);
 
             var client = new AnthropicClient();
 
@@ -255,7 +248,6 @@ namespace Anthropic.SDK.Tests
                     Description = new Tools.DescriptionDetail { Type = "string", Description = "Image description. One to two sentences max." },
                     EstimatedYear = new Tools.EstimatedYear { Type = "number", Description = "Estimated year that the images was taken, if is it a photo. Only set this if the image appears to be non-fictional. Rough estimates are okay!" }
                 }
-
             };
 
             JsonSerializerOptions jsonSerializationOptions = new()
@@ -264,7 +256,7 @@ namespace Anthropic.SDK.Tests
                 Converters = { new JsonStringEnumConverter() },
                 ReferenceHandler = ReferenceHandler.IgnoreCycles,
             };
-            string jsonString = JsonSerializer.Serialize(imageSchema, jsonSerializationOptions);
+            var jsonString = JsonSerializer.Serialize(imageSchema, jsonSerializationOptions);
             var tools = new List<Common.Tool>()
             {
                 new Function("record_summary", "Record summary of an image into well-structured JSON.",
@@ -289,7 +281,6 @@ namespace Anthropic.SDK.Tests
                 }
             };
 
-
             var outputs = new List<MessageResponse>();
             await foreach (var res in client.Messages.StreamClaudeMessageAsync(parameters))
             {
@@ -304,8 +295,6 @@ namespace Anthropic.SDK.Tests
             var toolResult = new Message(outputs).Content.OfType<ToolUseContent>().First();
 
             var json = toolResult.Input.ToJsonString();
-
-
         }
     }
 }

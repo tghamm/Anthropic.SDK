@@ -1,15 +1,14 @@
-using Anthropic.SDK.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using System.Net.Http;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+
+using Anthropic.SDK.Extensions;
 using Anthropic.SDK.Messaging;
 
 namespace Anthropic.SDK
@@ -37,7 +36,7 @@ namespace Anthropic.SDK
 #if NET6_0_OR_GREATER
             return await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
 #else
-                return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 #endif
         }
 
@@ -48,7 +47,7 @@ namespace Anthropic.SDK
             object postData = null, CancellationToken ctx = default)
         {
             var response = await HttpRequestRaw(url, verb, postData, false, ctx).ConfigureAwait(false);
-            string resultAsString = await ReadResponseContentAsync(response, ctx).ConfigureAwait(false);
+            var resultAsString = await ReadResponseContentAsync(response, ctx).ConfigureAwait(false);
 
             var options = new JsonSerializerOptions
             {
@@ -68,7 +67,7 @@ namespace Anthropic.SDK
             object postData = null, CancellationToken ctx = default)
         {
             var response = await HttpRequestRaw(url, verb, postData, false, ctx).ConfigureAwait(false);
-            string resultAsString = await ReadResponseContentAsync(response, ctx).ConfigureAwait(false);
+            var resultAsString = await ReadResponseContentAsync(response, ctx).ConfigureAwait(false);
 
             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(resultAsString));
             var res = await JsonSerializer.DeserializeAsync<T>(ms, cancellationToken: ctx).ConfigureAwait(false);
@@ -82,7 +81,9 @@ namespace Anthropic.SDK
             object postData = null, bool streaming = false, CancellationToken ctx = default)
         {
             if (string.IsNullOrEmpty(url))
+            {
                 url = this.Url;
+            }
 
             HttpResponseMessage response;
             string resultAsString = null;
@@ -101,7 +102,7 @@ namespace Anthropic.SDK
                         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                         Converters = { ContentConverter.Instance }
                     };
-                    string jsonContent = JsonSerializer.Serialize(postData, options);
+                    var jsonContent = JsonSerializer.Serialize(postData, options);
                     req.Content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
                 }
             }
@@ -122,7 +123,7 @@ namespace Anthropic.SDK
 #if NET6_0_OR_GREATER
                     resultAsString = await response.Content.ReadAsStringAsync(ctx).ConfigureAwait(false);
 #else
-                        resultAsString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    resultAsString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 #endif
                 }
                 catch (Exception e)
@@ -142,7 +143,8 @@ namespace Anthropic.SDK
         protected abstract Task<Exception> HandleErrorResponseAsync(HttpResponseMessage response, string resultAsString, string url);
 
         /// <summary>
-        /// Makes a streaming HTTP request and returns the response as an async enumerable of the specified type.
+        /// Makes a streaming HTTP request and returns the response as an async enumerable of the
+        /// specified type.
         /// </summary>
         protected abstract IAsyncEnumerable<MessageResponse> HttpStreamingRequestMessages(string url = null,
             HttpMethod verb = null,

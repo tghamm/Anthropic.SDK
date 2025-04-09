@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+
 using Anthropic.SDK.Messaging;
 
 namespace Anthropic.SDK.Extensions
@@ -11,7 +10,7 @@ namespace Anthropic.SDK.Extensions
     {
         public override RoleType Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            string value = reader.GetString();
+            var value = reader.GetString();
             return value switch
             {
                 "user" => RoleType.User,
@@ -22,7 +21,7 @@ namespace Anthropic.SDK.Extensions
 
         public override void Write(Utf8JsonWriter writer, RoleType value, JsonSerializerOptions options)
         {
-            string roleString = value switch
+            var roleString = value switch
             {
                 RoleType.User => "user",
                 RoleType.Assistant => "assistant",
