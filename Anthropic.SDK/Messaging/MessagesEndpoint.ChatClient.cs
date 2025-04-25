@@ -126,7 +126,13 @@ public partial class MessagesEndpoint : IChatClient
 
                 if (!string.IsNullOrEmpty(response.Delta.Signature))
                 {
-                    update.Contents.Add(new Anthropic.SDK.Extensions.MEAI.ThinkingContent(thinking, response.Delta.Signature));
+                    update.Contents.Add(new TextReasoningContent(thinking)
+                    {
+                        AdditionalProperties = new AdditionalPropertiesDictionary
+                        {
+                            [nameof(ThinkingContent.Signature)] = response.Delta.Signature
+                        }
+                    });
                 }
 
 
