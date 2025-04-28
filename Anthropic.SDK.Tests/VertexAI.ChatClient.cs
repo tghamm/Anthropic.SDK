@@ -168,7 +168,7 @@ namespace Anthropic.SDK.Tests
             
             messages.AddMessages(updates);
             
-            Assert.IsTrue(messages.Last().Contents.OfType<Extensions.MEAI.ThinkingContent>().Any());
+            Assert.IsTrue(messages.Last().Contents.OfType<Microsoft.Extensions.AI.TextReasoningContent>().Any());
             
             messages.Add(new ChatMessage(ChatRole.User, "and how many letters total?"));
 

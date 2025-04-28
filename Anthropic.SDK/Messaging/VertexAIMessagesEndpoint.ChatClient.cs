@@ -78,7 +78,13 @@ public partial class VertexAIMessagesEndpoint : IChatClient
 
                 if (!string.IsNullOrEmpty(response.Delta.Signature))
                 {
-                    update.Contents.Add(new Anthropic.SDK.Extensions.MEAI.ThinkingContent(thinking, response.Delta.Signature));
+                    update.Contents.Add(new Microsoft.Extensions.AI.TextReasoningContent(thinking)
+                    {
+                        AdditionalProperties = new AdditionalPropertiesDictionary
+                        {
+                            [nameof(ThinkingContent.Signature)] = response.Delta.Signature
+                        }
+                    });
                 }
 
 
