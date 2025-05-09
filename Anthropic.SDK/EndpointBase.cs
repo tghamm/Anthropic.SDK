@@ -102,22 +102,7 @@ namespace Anthropic.SDK
             return $"{resultAsString ?? "<no content>"}";
         }
 
-        /// <summary>
-        /// Override the base HttpRequestMessages to add rate limits
-        /// </summary>
-        protected new async Task<TResponse> HttpRequestMessages<TResponse>(string url = null, HttpMethod verb = null,
-            object postData = null, CancellationToken ctx = default)
-        {
-            var response = await base.HttpRequestMessages<TResponse>(url, verb, postData, ctx).ConfigureAwait(false);
-
-            if (response is MessageResponse messageResponse)
-            {
-                messageResponse.RateLimits = GetRateLimits(await HttpRequestRaw(url, verb, postData, false, ctx));
-            }
-
-            return response;
-        }
-
+        
         protected async IAsyncEnumerable<BatchLine> HttpStreamingRequestBatches(string url = null,
             HttpMethod verb = null,
             object postData = null, [EnumeratorCancellation] CancellationToken ctx = default)
@@ -168,29 +153,7 @@ namespace Anthropic.SDK
             }
         }
 
-        private static RateLimits GetRateLimits(HttpResponseMessage message)
-        {
-            var rateLimits = new RateLimits();
-
-            TryParseHeaderValue(message, "anthropic-ratelimit-requests-limit", long.Parse, value => rateLimits.RequestsLimit = value);
-            TryParseHeaderValue(message, "anthropic-ratelimit-requests-remaining", long.Parse, value => rateLimits.RequestsRemaining = value);
-            TryParseHeaderValue(message, "anthropic-ratelimit-requests-reset", DateTime.Parse, value => rateLimits.RequestsReset = value);
-            TryParseHeaderValue(message, "anthropic-ratelimit-tokens-limit", long.Parse, value => rateLimits.TokensLimit = value);
-            TryParseHeaderValue(message, "anthropic-ratelimit-tokens-remaining", long.Parse, value => rateLimits.TokensRemaining = value);
-            TryParseHeaderValue(message, "anthropic-ratelimit-tokens-reset", DateTime.Parse, value => rateLimits.TokensReset = value);
-
-            return rateLimits;
-        }
-
-        private static void TryParseHeaderValue<T>(HttpResponseMessage message, string headerName, Func<string, T> parser, Action<T> setter)
-        {
-            if (message.Headers.TryGetValues(headerName, out var values) &&
-                values.FirstOrDefault() is string value &&
-                parser(value) is T parsedValue)
-            {
-                setter(parsedValue);
-            }
-        }
+        
 
         /// <summary>
         /// Handle error responses from the API
