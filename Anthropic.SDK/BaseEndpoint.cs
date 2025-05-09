@@ -11,6 +11,7 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Anthropic.SDK.Messaging;
+using System.Linq;
 
 namespace Anthropic.SDK
 {
@@ -57,8 +58,35 @@ namespace Anthropic.SDK
 
             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(resultAsString));
             var res = await JsonSerializer.DeserializeAsync<TResponse>(ms, options, cancellationToken: ctx).ConfigureAwait(false);
-
+            if (res is MessageResponse messageResponse)
+            {
+                messageResponse.RateLimits = GetRateLimits(response);
+            }
             return res;
+        }
+
+        protected RateLimits GetRateLimits(HttpResponseMessage message)
+        {
+            var rateLimits = new RateLimits();
+
+            TryParseHeaderValue(message, "anthropic-ratelimit-requests-limit", long.Parse, value => rateLimits.RequestsLimit = value);
+            TryParseHeaderValue(message, "anthropic-ratelimit-requests-remaining", long.Parse, value => rateLimits.RequestsRemaining = value);
+            TryParseHeaderValue(message, "anthropic-ratelimit-requests-reset", DateTime.Parse, value => rateLimits.RequestsReset = value);
+            TryParseHeaderValue(message, "anthropic-ratelimit-tokens-limit", long.Parse, value => rateLimits.TokensLimit = value);
+            TryParseHeaderValue(message, "anthropic-ratelimit-tokens-remaining", long.Parse, value => rateLimits.TokensRemaining = value);
+            TryParseHeaderValue(message, "anthropic-ratelimit-tokens-reset", DateTime.Parse, value => rateLimits.TokensReset = value);
+
+            return rateLimits;
+        }
+
+        private static void TryParseHeaderValue<T>(HttpResponseMessage message, string headerName, Func<string, T> parser, Action<T> setter)
+        {
+            if (message.Headers.TryGetValues(headerName, out var values) &&
+                values.FirstOrDefault() is string value &&
+                parser(value) is T parsedValue)
+            {
+                setter(parsedValue);
+            }
         }
 
         /// <summary>
