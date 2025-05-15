@@ -14,12 +14,12 @@
 	  <PackageTags>Claude, AI, ML, API, Anthropic</PackageTags>
 	  <Title>Claude API</Title>
 	  <PackageReleaseNotes>
-		  Fixes a critical bug that causes the library to make double requests, increasing latency and cost.
+		  Update to Microsoft.Extensions.AI.Abstractions
 	  </PackageReleaseNotes>
 	  <PackageId>Anthropic.SDK</PackageId>
-	  <Version>5.2.2</Version>
-	  <AssemblyVersion>5.2.2.0</AssemblyVersion>
-	  <FileVersion>5.2.2.0</FileVersion>
+	  <Version>5.2.3</Version>
+	  <AssemblyVersion>5.2.3.0</AssemblyVersion>
+	  <FileVersion>5.2.3.0</FileVersion>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
 	  <PackageReadmeFile>README.md</PackageReadmeFile>
 	  <PackageIcon>icon.png</PackageIcon>
