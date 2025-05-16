@@ -16,7 +16,7 @@ public partial class VertexAIMessagesEndpoint : IChatClient
     async Task<ChatResponse> IChatClient.GetResponseAsync(
         IEnumerable<ChatMessage> messages, ChatOptions options, CancellationToken cancellationToken)
     {
-        MessageResponse response = await this.GetClaudeMessageAsync(ChatClientHelper.CreateMessageParameters(messages, options), cancellationToken);
+        MessageResponse response = await this.GetClaudeMessageAsync(ChatClientHelper.CreateMessageParameters(this, messages, options), cancellationToken);
 
         ChatMessage message = new(ChatRole.Assistant, ChatClientHelper.ProcessResponseContent(response));
 
@@ -44,7 +44,7 @@ public partial class VertexAIMessagesEndpoint : IChatClient
         IEnumerable<ChatMessage> messages, ChatOptions options, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var thinking = string.Empty;
-        await foreach (MessageResponse response in StreamClaudeMessageAsync(ChatClientHelper.CreateMessageParameters(messages, options), cancellationToken))
+        await foreach (MessageResponse response in StreamClaudeMessageAsync(ChatClientHelper.CreateMessageParameters(this, messages, options), cancellationToken))
         {
             var update = new ChatResponseUpdate
             {
