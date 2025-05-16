@@ -31,9 +31,9 @@ namespace Anthropic.SDK.Messaging
         /// <summary>
         /// Create message parameters from chat messages and options
         /// </summary>
-        public static MessageParameters CreateMessageParameters(IEnumerable<ChatMessage> messages, ChatOptions options)
+        public static MessageParameters CreateMessageParameters(IChatClient client, IEnumerable<ChatMessage> messages, ChatOptions options)
         {
-            MessageParameters parameters = new();
+            MessageParameters parameters = options?.RawRepresentationFactory?.Invoke(client) as MessageParameters ?? new();
 
             if (options is not null)
             {
@@ -64,19 +64,9 @@ namespace Anthropic.SDK.Messaging
                     parameters.StopSequences = options.StopSequences.ToArray();
                 }
 
-                if (options.AdditionalProperties?.TryGetValue(nameof(parameters.PromptCaching), out PromptCacheType pct) is true)
-                {
-                    parameters.PromptCaching = pct;
-                }
-
-                if (options.AdditionalProperties?.TryGetValue(nameof(parameters.Thinking), out ThinkingParameters think) is true)
-                {
-                    parameters.Thinking = think;
-                }
-
                 if (options.Tools is { Count: > 0 })
                 {
-                    parameters.ToolChoice = new();
+                    parameters.ToolChoice ??= new();
 
                     if (options.ToolMode is RequiredChatToolMode r)
                     {
@@ -84,11 +74,20 @@ namespace Anthropic.SDK.Messaging
                         parameters.ToolChoice.Name = r.RequiredFunctionName;
                     }
 
-                    parameters.Tools = options
-                        .Tools
-                        .OfType<AIFunction>()
-                        .Select(f => new Common.Tool(new Function(f.Name, f.Description, JsonSerializer.SerializeToNode(JsonSerializer.Deserialize<FunctionParameters>(f.JsonSchema)))))
-                        .ToList();
+                    IList<Common.Tool> tools = parameters.Tools ??= [];
+                    foreach (var tool in options.Tools)
+                    {
+                        switch (tool)
+                        {
+                            case AIFunction f:
+                                tools.Add(new Common.Tool(new Function(f.Name, f.Description, JsonSerializer.SerializeToNode(JsonSerializer.Deserialize<FunctionParameters>(f.JsonSchema)))));
+                                break;
+
+                            case HostedCodeInterpreterTool ci:
+                                tools.Add(Common.Tool.CodeInterpreter);
+                                break;
+                        }
+                    }
                 }
             }
 

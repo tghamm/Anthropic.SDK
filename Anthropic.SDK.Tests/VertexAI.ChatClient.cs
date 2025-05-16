@@ -114,13 +114,10 @@ namespace Anthropic.SDK.Tests
                 ModelId = Constants.VertexAIModels.Claude37Sonnet,
                 MaxOutputTokens = 20000,
                 Temperature = 1.0f,
-                AdditionalProperties = new()
+                RawRepresentationFactory = static _ => new MessageParameters()
                 {
-                    {nameof(MessageParameters.Thinking), new ThinkingParameters()
-                    {
-                        BudgetTokens = 16000
-                    }}
-                }
+                    Thinking = new() { BudgetTokens = 16000 },
+                },
             };
 
             var res = await client.GetResponseAsync(messages, options);
@@ -147,13 +144,10 @@ namespace Anthropic.SDK.Tests
                 ModelId = Constants.VertexAIModels.Claude37Sonnet,
                 MaxOutputTokens = 20000,
                 Temperature = 1.0f,
-                AdditionalProperties = new()
+                RawRepresentationFactory = static _ => new MessageParameters()
                 {
-                    {nameof(MessageParameters.Thinking), new ThinkingParameters()
-                    {
-                        BudgetTokens = 16000
-                    }}
-                }
+                    Thinking = new() { BudgetTokens = 16000 },
+                },
             };
 
             List<ChatResponseUpdate> updates = new();
@@ -252,13 +246,10 @@ namespace Anthropic.SDK.Tests
                 ModelId = Constants.VertexAIModels.Claude37Sonnet,
                 MaxOutputTokens = 20000,
                 Temperature = 1.0f,
-                AdditionalProperties = new()
+                RawRepresentationFactory = static _ => new MessageParameters()
                 {
-                    {nameof(MessageParameters.Thinking), new ThinkingParameters()
-                    {
-                        BudgetTokens = 16000
-                    }}
-                }
+                    Thinking = new() { BudgetTokens = 16000 },
+                },
             };
 
             List<ChatResponseUpdate> updates = new();
@@ -328,13 +319,10 @@ namespace Anthropic.SDK.Tests
                     "Alice" => "25",
                     _ => "40"
                 }, "GetPersonAge", "Gets the age of the person whose name is specified.")],
-                AdditionalProperties = new()
+                RawRepresentationFactory = static _ => new MessageParameters()
                 {
-                    {nameof(MessageParameters.Thinking), new ThinkingParameters()
-                    {
-                        BudgetTokens = 16000
-                    }}
-                }
+                    Thinking = new() { BudgetTokens = 16000 },
+                },
             };
 
             var res = await client.GetResponseAsync("How old is Alice?", options);
@@ -360,13 +348,10 @@ namespace Anthropic.SDK.Tests
                     "Alice" => "25",
                     _ => "40"
                 }, "GetPersonAge", "Gets the age of the person whose name is specified.")],
-                AdditionalProperties = new()
+                RawRepresentationFactory = static _ => new MessageParameters()
                 {
-                    {nameof(MessageParameters.Thinking), new ThinkingParameters()
-                    {
-                        BudgetTokens = 16000
-                    }}
-                }
+                    Thinking = new() { BudgetTokens = 16000 },
+                },
             };
             StringBuilder sb = new();
             await foreach (var update in client.GetStreamingResponseAsync("How old is Alice?", options))
