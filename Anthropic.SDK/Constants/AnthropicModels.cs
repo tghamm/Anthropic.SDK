@@ -51,5 +51,15 @@
         /// Claude 3 Haiku
         /// </summary>
         public const string Claude3Haiku = "claude-3-haiku-20240307";
+        
+        /// <summary>
+        /// Claude Sonnet 4
+        /// </summary>
+        public const string ClaudeSonnet4 = "claude-sonnet-4-20250514";
+        
+        /// <summary>
+        /// Claude Opus 4
+        /// </summary>
+        public const string ClaudeOpus4 = "claude-opus-4-20250514";
     }
 }

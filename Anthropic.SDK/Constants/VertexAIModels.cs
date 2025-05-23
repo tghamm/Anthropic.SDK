@@ -34,5 +34,15 @@ namespace Anthropic.SDK.Constants
         /// Claude 3.7 Sonnet on Vertex AI - Highest level of intelligence and capability with toggleable extended thinking
         /// </summary>
         public const string Claude37Sonnet = "claude-3-7-sonnet@20250219";
+
+        /// <summary>
+        /// Claude Sonnet 4 on Vertex AI
+        /// </summary>
+        public const string ClaudeSonnet4 = "claude-sonnet-4@20250514";
+        
+        /// <summary>
+        /// Claude Opus 4 on Vertex AI
+        /// </summary>
+        public const string ClaudeOpus4 = "claude-opus-4@20250514";
     }
 }
