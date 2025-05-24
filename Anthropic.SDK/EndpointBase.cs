@@ -239,7 +239,10 @@ namespace Anthropic.SDK
                         currentEvent.EventType == "message_delta")
                     {
                         using var ms = new MemoryStream(Encoding.UTF8.GetBytes(currentEvent.Data));
-                        var res = await JsonSerializer.DeserializeAsync<MessageResponse>(ms, cancellationToken: ctx).ConfigureAwait(false);
+                        var res = await JsonSerializer.DeserializeAsync<MessageResponse>(ms, new JsonSerializerOptions()
+                        {
+                            Converters = { ContentConverter.Instance }
+                        }, cancellationToken: ctx).ConfigureAwait(false);
                         res.RateLimits = GetRateLimits(response);
                         yield return res;
                     }

@@ -137,6 +137,10 @@ namespace Anthropic.SDK.Messaging
 
         [JsonPropertyName("data")]
         public string? Data { get; set; }
+        [JsonPropertyName("tool_use_id")]
+        public string? ToolUseId { get; set; }
+        [JsonPropertyName("content")]
+        public List<ContentBase> Content { get; set; }
     }
 
     public class Usage
@@ -152,5 +156,14 @@ namespace Anthropic.SDK.Messaging
 
         [JsonPropertyName("cache_read_input_tokens")]
         public int CacheReadInputTokens { get; set; }
+
+        [JsonPropertyName("server_tool_use")]
+        public ServerToolUse ServerToolUse { get; set; }
+    }
+
+    public class ServerToolUse
+    {
+        [JsonPropertyName("web_search_requests")]
+        public int? WebSearchRequests { get; set; }
     }
 }
