@@ -33,6 +33,10 @@ namespace Anthropic.SDK.Messaging
 
         web_search_result,
 
-        web_search_tool_result_error
+        web_search_tool_result_error,
+
+        mcp_tool_use,
+
+        mcp_tool_result
     }
 }

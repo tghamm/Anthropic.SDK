@@ -179,6 +179,53 @@ namespace Anthropic.SDK.Messaging
                 }
             }
 
+            var mcpToolUseFound = false;
+            MCPToolUseContent mcpToolUseContent = null;
+            var mcpPartialJson = string.Empty;
+            foreach (var result in asyncResponses)
+            {
+                if (result.ContentBlock != null && result.ContentBlock.Type == "mcp_tool_use")
+                {
+                    mcpToolUseFound = true;
+                    mcpToolUseContent = new MCPToolUseContent()
+                    {
+                        Name = result.ContentBlock.Name,
+                        Id = result.ContentBlock.Id,
+                        ServerName = result.ContentBlock.ServerName
+                    };
+                }
+                if (mcpToolUseFound && !string.IsNullOrWhiteSpace(result.Delta?.PartialJson))
+                {
+                    mcpPartialJson += result.Delta.PartialJson;
+
+                }
+                else if (mcpToolUseFound && string.IsNullOrWhiteSpace(result.Delta?.PartialJson) && !string.IsNullOrWhiteSpace(mcpPartialJson))
+                {
+                    var input = JsonNode.Parse(mcpPartialJson);
+                    mcpToolUseContent.Input = input;
+                    mcpToolUseFound = false; // reset for next tool use
+                    Content.Add(mcpToolUseContent);
+                }
+            }
+
+            var mcpToolResultFound = false;
+            MCPToolResultContent mcpToolResultContent = null;
+            foreach (var result in asyncResponses)
+            {
+                if (result.ContentBlock != null && result.ContentBlock.Type == "mcp_tool_result")
+                {
+                    mcpToolResultFound = true;
+                    mcpToolResultContent = new MCPToolResultContent()
+                    {
+                        ToolUseId = result.ContentBlock.ToolUseId,
+                        Content = result.ContentBlock.Content,
+                        IsError = result.ContentBlock.IsError
+                    };
+                    Content.Add(mcpToolResultContent);
+                }
+
+            }
+
             var webToolResultFound = false;
             WebSearchToolResultContent webToolUseContent = null;
             var webSearchPartialJson = string.Empty;
@@ -190,7 +237,8 @@ namespace Anthropic.SDK.Messaging
                     webToolUseContent = new WebSearchToolResultContent()
                     {
                         ToolUseId = result.ContentBlock.ToolUseId,
-                        Content = result.ContentBlock.Content
+                        Content = result.ContentBlock.Content,
+                        IsError = result.ContentBlock.IsError
                     };
                     Content.Add(webToolUseContent);
                 }

@@ -626,6 +626,51 @@ namespace Anthropic.SDK.Tests
         }
 
 
+        [TestMethod]
+        public async Task TestFuncParallelTool()
+        {
+            var client = new AnthropicClient();
+            var messages = new List<Message>
+            {
+                new Message(RoleType.User, "What is the weather like in San Francisco and what time is it there?")
+            };
+            var tools = new List<Common.Tool>
+            {
+                Common.Tool.FromFunc("Get_Weather",
+                    ([FunctionParameter("Location of the weather", true)]string location)=> "72 degrees and sunny"),
+                Common.Tool.FromFunc("Get_Time",
+                    ([FunctionParameter("Gets the current local time for a location", true)]string location)=>
+                    {
+                        return DateTime.Now.ToLongTimeString();
+                    })
+            };
+
+            var parameters = new MessageParameters()
+            {
+                Messages = messages,
+                MaxTokens = 2048,
+                Model = AnthropicModels.Claude4Sonnet,
+                Stream = false,
+                Temperature = 1.0m,
+                Tools = tools
+            };
+            var res = await client.Messages.GetClaudeMessageAsync(parameters);
+
+            messages.Add(res.Message);
+
+            foreach (var toolCall in res.ToolCalls)
+            {
+                var response = toolCall.Invoke<string>();
+
+                messages.Add(new Message(toolCall, response));
+            }
+
+            var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
+
+            Assert.IsTrue(finalResult.Message.ToString().Contains("72"));
+        }
+
+
 
 
 
