@@ -12,13 +12,6 @@ Anthropic.SDK is an unofficial C# client designed for interacting with the Claud
   - [API Keys](#api-keys)
   - [HttpClient](#httpclient)
   - [Usage](#usage)
-  - [Vertex AI Support](#vertex-ai-support)
-    - [Authentication](#authentication)
-      - [1. Environment Variables](#1-environment-variables)
-      - [2. gcloud CLI or Service Account Authentication (Recommended)](#2-gcloud-cli-or-service-account-authentication-recommended)
-    - [Basic Usage](#basic-usage)
-    - [Available Models](#available-models)
-    - [Streaming Support](#streaming-support)
   - [Examples](#examples)
     - [Non-Streaming Call](#non-streaming-call)
     - [Streaming Call](#streaming-call)
@@ -28,10 +21,19 @@ Anthropic.SDK is an unofficial C# client designed for interacting with the Claud
     - [Prompt Caching](#prompt-caching)
     - [Document Support](#document-support)
     - [Citations](#citations)
+    - [MCP Connector](#mcp-connector)
+    - [Web Search](#web-search)
     - [List Models](#list-models)
     - [Batching](#batching)
     - [Tools](#tools)
     - [Computer Use](#computer-use)
+  - [Vertex AI Support](#vertex-ai-support)
+    - [Authentication](#authentication)
+      - [1. Environment Variables](#1-environment-variables)
+      - [2. gcloud CLI or Service Account Authentication (Recommended)](#2-gcloud-cli-or-service-account-authentication-recommended)
+    - [Basic Usage](#basic-usage)
+    - [Available Models](#available-models)
+    - [Streaming Support](#streaming-support)
   - [Contributing](#contributing)
   - [License](#license)
 
@@ -79,110 +81,6 @@ sk.Plugins.AddFromType<SkPlugins>("Weather");
 sk.Services.AddSingleton<IChatCompletionService>(skChatService);
 ```
 See integration tests for a more complete example.
-
-## Vertex AI Support
-
-Anthropic.SDK now supports accessing Claude models through Google Cloud's Vertex AI platform. This allows you to use Claude models with your existing Google Cloud infrastructure and authentication mechanisms.
-
-### Authentication
-
-The SDK supports multiple authentication methods for Vertex AI:
-
-#### 1. Environment Variables
-
-You can load authentication values from environment variables:
-- `GOOGLE_CLOUD_PROJECT`: Your Google Cloud Project ID
-- `GOOGLE_CLOUD_REGION`: Your Google Cloud Region (e.g., "us-east5")
-- `GOOGLE_API_KEY`: (Optional) Your Google Cloud API Key
-- `GOOGLE_ACCESS_TOKEN`: (Optional) Your OAuth2 Access Token
-
-#### 2. gcloud CLI or Service Account Authentication (Recommended)
-
-If you're already authenticated with the gcloud CLI or have a service account JSON file, the SDK can be combined with the `Google.Cloud.AIPlatform.V1` nuget package to authenticate:
-
-```bash
-# Authenticate with gcloud CLI (do this once)
-gcloud auth login
-
-# Verify authentication
-gcloud auth print-access-token
-```
-
-Then in your code:
-```csharp
-using Google.Apis.Auth.OAuth2;
-
-var credential = (await GoogleCredential.GetApplicationDefaultAsync())
-    .CreateScoped("https://www.googleapis.com/auth/cloud-platform");
-
-var accessToken = await credential.UnderlyingCredential.GetAccessTokenForRequestAsync();
-
-var client = new VertexAIClient(
-    new VertexAIAuthentication(
-        projectId: "your-google-cloud-project-id",
-        region: "us-east5",
-        accessToken: accessToken
-    )
-);
-```
-
-### Basic Usage
-
-Using Claude via Vertex AI is similar to using the direct Anthropic API:
-
-```csharp
-// Create a message request
-var messages = new List<Message>
-{
-    new Message(RoleType.User, "Hello, Claude! Tell me about yourself.")
-};
-
-// Create message parameters
-var parameters = new MessageParameters
-{
-    Messages = messages,
-    MaxTokens = 1000,
-    Temperature = 0.7m,
-    Model = Constants.VertexAIModels.Claude37Sonnet
-};
-
-// Get a response from Claude via Vertex AI
-var response = await client.Messages
-    .GetClaudeMessageAsync(parameters);
-
-// Print the response
-Console.WriteLine($"Model: {response.Model}");
-Console.WriteLine($"Response: {response.Content[0]}");
-```
-
-### Available Models
-
-Vertex AI provides access to the following Claude models:
-
-- `VertexAIModels.Claude3Opus`: Powerful model for complex tasks
-- `VertexAIModels.Claude3Sonnet`: Balanced Claude model for a wide range of tasks
-- `VertexAIModels.Claude3Haiku`: Fastest and most compact model for near-instant responsiveness
-- `VertexAIModels.Claude35Sonnet`: High level of intelligence and capability
-- `VertexAIModels.Claude35Haiku`: Intelligence at blazing speeds
-- `VertexAIModels.Claude37Sonnet`: Highest level of intelligence and capability with toggleable extended thinking
-
-### Streaming Support
-
-Streaming responses is also supported:
-
-```csharp
-// Stream a response from Claude via Vertex AI
-await foreach (var chunk in client.Messages
-    .StreamClaudeMessageAsync(parameters))
-{
-    if (chunk.Delta?.Text != null)
-    {
-        Console.Write(chunk.Delta.Text);
-    }
-}
-```
-
-See the `Anthropic.SDK.Tests` project for more examples including an `IChatClient` implementation for `VertexAI`.
 
 ## Examples
 
@@ -623,6 +521,99 @@ Assert.IsTrue(res.Content.SelectMany(p => (p as TextContent).Citations ?? new Li
 ```
 
 See integration tests for more examples like streaming.
+
+### MCP Connector
+
+The `AnthropicClient` supports the new MCP connector, allowing for server-side connections to MCP server tool calls automatically.
+
+```csharp
+var client = new AnthropicClient();
+var parameters = new MessageParameters()
+{
+    Model = AnthropicModels.Claude37Sonnet,
+    MaxTokens = 5000,
+    Temperature = 1,
+    MCPServers = new List<MCPServer>()
+    {
+        new MCPServer()
+        {
+            Url = "https://mcp.deepwiki.com/sse",
+            Name = "DeepWiki",
+        }
+    }
+};
+var messages = new List<Message>
+{
+    new Message
+    {
+        Role = RoleType.User,
+        Content = new List<ContentBase>
+        {
+            new TextContent { Text = "Tell me about the repo tghamm/Anthropic.SDK" }
+        }
+    }
+};
+parameters.Messages = messages;
+var res = await client.Messages.GetClaudeMessageAsync(parameters);
+
+Console.WriteLine("----------------------------------------------");
+Console.WriteLine("Final Result:");
+Console.WriteLine(res.Content.OfType<TextContent>().Last().Text);
+```
+
+See the integration tests for more examples.
+
+### Web Search
+
+The `AnthropicClient` supports the Web Search API.
+Please note that citations are automatically turned on when Web search is used and you are responsible for displaying links to sources in a production setting per Anthropic documentation.
+
+```csharp
+var client = new AnthropicClient();
+var parameters = new MessageParameters()
+{
+    Model = AnthropicModels.Claude37Sonnet,
+    MaxTokens = 3000,
+    Temperature = 1,
+    Tools = new List<Common.Tool>()
+    {
+        ServerTools.GetWebSearchTool(5, null, new List<string>() { "wikipedia.org" }, new UserLocation()
+        {
+            City = "San Francisco",
+            Region = "California",
+            Country = "US",
+            Timezone = "America/Los_Angeles"
+        })
+    },
+    ToolChoice = new ToolChoice()
+    {
+        Type = ToolChoiceType.Auto
+    },
+};
+var messages = new List<Message>
+{
+    new Message
+    {
+        Role = RoleType.User,
+        Content = new List<ContentBase>
+        {
+            new TextContent { Text = "What is the weather like in San Francisco right now?" }
+        }
+    }
+};
+parameters.Messages = messages;
+var res = await client.Messages.GetClaudeMessageAsync(parameters);
+
+//get links to display
+var links = res.Content.OfType<WebSearchToolResultContent>()
+    .SelectMany(x => x.Content.OfType<WebSearchResultContent>()).ToList();
+
+Console.WriteLine("----------------------------------------------");
+Console.WriteLine("Final Result:");
+Console.WriteLine(res.Content.OfType<TextContent>().Last().Text);
+```
+See integration tests for more examples like streaming.
+
 
 ### List Models
 
@@ -1132,6 +1123,112 @@ var tools = new List<Common.Tool>()
     })
 };
 ```
+
+## Vertex AI Support
+
+Anthropic.SDK now supports accessing Claude models through Google Cloud's Vertex AI platform. This allows you to use Claude models with your existing Google Cloud infrastructure and authentication mechanisms.
+
+### Authentication
+
+The SDK supports multiple authentication methods for Vertex AI:
+
+#### 1. Environment Variables
+
+You can load authentication values from environment variables:
+- `GOOGLE_CLOUD_PROJECT`: Your Google Cloud Project ID
+- `GOOGLE_CLOUD_REGION`: Your Google Cloud Region (e.g., "us-east5")
+- `GOOGLE_API_KEY`: (Optional) Your Google Cloud API Key
+- `GOOGLE_ACCESS_TOKEN`: (Optional) Your OAuth2 Access Token
+
+#### 2. gcloud CLI or Service Account Authentication (Recommended)
+
+If you're already authenticated with the gcloud CLI or have a service account JSON file, the SDK can be combined with the `Google.Cloud.AIPlatform.V1` nuget package to authenticate:
+
+```bash
+# Authenticate with gcloud CLI (do this once)
+gcloud auth login
+
+# Verify authentication
+gcloud auth print-access-token
+```
+
+Then in your code:
+```csharp
+using Google.Apis.Auth.OAuth2;
+
+var credential = (await GoogleCredential.GetApplicationDefaultAsync())
+    .CreateScoped("https://www.googleapis.com/auth/cloud-platform");
+
+var accessToken = await credential.UnderlyingCredential.GetAccessTokenForRequestAsync();
+
+var client = new VertexAIClient(
+    new VertexAIAuthentication(
+        projectId: "your-google-cloud-project-id",
+        region: "us-east5",
+        accessToken: accessToken
+    )
+);
+```
+
+### Basic Usage
+
+Using Claude via Vertex AI is similar to using the direct Anthropic API:
+
+```csharp
+// Create a message request
+var messages = new List<Message>
+{
+    new Message(RoleType.User, "Hello, Claude! Tell me about yourself.")
+};
+
+// Create message parameters
+var parameters = new MessageParameters
+{
+    Messages = messages,
+    MaxTokens = 1000,
+    Temperature = 0.7m,
+    Model = Constants.VertexAIModels.Claude37Sonnet
+};
+
+// Get a response from Claude via Vertex AI
+var response = await client.Messages
+    .GetClaudeMessageAsync(parameters);
+
+// Print the response
+Console.WriteLine($"Model: {response.Model}");
+Console.WriteLine($"Response: {response.Content[0]}");
+```
+
+### Available Models
+
+Vertex AI provides access to the following Claude models:
+
+- `VertexAIModels.Claude3Opus`: Powerful model for complex tasks
+- `VertexAIModels.Claude3Sonnet`: Balanced Claude model for a wide range of tasks
+- `VertexAIModels.Claude3Haiku`: Fastest and most compact model for near-instant responsiveness
+- `VertexAIModels.Claude35Sonnet`: High level of intelligence and capability
+- `VertexAIModels.Claude35Haiku`: Intelligence at blazing speeds
+- `VertexAIModels.Claude37Sonnet`: Highest level of intelligence and capability with toggleable extended thinking
+- `VertexAIModels.Claude4Sonnet`: Newest Sonnet model with toggleable extended thinking
+- `VertexAIModels.Claude4Opus`: Newest Opus Model and most powerful thinking model
+
+### Streaming Support
+
+Streaming responses is also supported:
+
+```csharp
+// Stream a response from Claude via Vertex AI
+await foreach (var chunk in client.Messages
+    .StreamClaudeMessageAsync(parameters))
+{
+    if (chunk.Delta?.Text != null)
+    {
+        Console.Write(chunk.Delta.Text);
+    }
+}
+```
+
+See the `Anthropic.SDK.Tests` project for more examples including an `IChatClient` implementation for `VertexAI`.
 
 ## Contributing
 

@@ -84,10 +84,14 @@ namespace Anthropic.SDK.Tests
             };
             parameters.Messages = messages;
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
-            messages.Add(res.Message);
+            
+            //get links to display
+            var links = res.Content.OfType<WebSearchToolResultContent>()
+                .SelectMany(x => x.Content.OfType<WebSearchResultContent>()).ToList();
+            
             Console.WriteLine("----------------------------------------------");
             Console.WriteLine("Final Result:");
-            Console.WriteLine(messages.Last().Content.OfType<TextContent>().First().Text);
+            Console.WriteLine(res.Content.OfType<TextContent>().Last().Text);
         }
 
 
