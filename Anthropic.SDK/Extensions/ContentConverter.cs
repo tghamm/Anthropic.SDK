@@ -36,6 +36,18 @@ namespace Anthropic.SDK.Extensions
                         return JsonSerializer.Deserialize<ThinkingContent>(root.GetRawText(), options);
                     case "redacted_thinking":
                         return JsonSerializer.Deserialize<RedactedThinkingContent>(root.GetRawText(), options);
+                    case "server_tool_use":
+                        return JsonSerializer.Deserialize<ServerToolUseContent>(root.GetRawText(), options);
+                    case "web_search_tool_result":
+                        return JsonSerializer.Deserialize<WebSearchToolResultContent>(root.GetRawText(), options);
+                    case "web_search_result":
+                        return JsonSerializer.Deserialize<WebSearchResultContent>(root.GetRawText(), options);
+                    case "web_search_tool_result_error":
+                        return JsonSerializer.Deserialize<WebSearchToolResultErrorContent>(root.GetRawText(), options);
+                    case "mcp_tool_use":
+                        return JsonSerializer.Deserialize<MCPToolUseContent>(root.GetRawText(), options);
+                    case "mcp_tool_result":
+                        return JsonSerializer.Deserialize<MCPToolResultContent>(root.GetRawText(), options);
                     // Add cases for other types as necessary
                     default:
                         throw new JsonException($"Unknown type {type}");

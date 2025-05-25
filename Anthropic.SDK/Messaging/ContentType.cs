@@ -25,6 +25,18 @@ namespace Anthropic.SDK.Messaging
 
         thinking,
 
-        redacted_thinking
+        redacted_thinking,
+
+        server_tool_use,
+
+        web_search_tool_result,
+
+        web_search_result,
+
+        web_search_tool_result_error,
+
+        mcp_tool_use,
+
+        mcp_tool_result
     }
 }

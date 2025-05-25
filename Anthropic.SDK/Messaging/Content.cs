@@ -24,6 +24,38 @@ namespace Anthropic.SDK.Messaging
 
     }
     
+    public class ServerToolUseContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (Server_Tool_Use, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.server_tool_use;
+        /// <summary>
+        /// Id of the Tool
+        /// </summary>
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+        /// <summary>
+        /// Name of the Tool
+        /// </summary>
+        [JsonPropertyName("name")]
+        public string Name { get; set; }
+        /// <summary>
+        /// Inputs of the Tool
+        /// </summary>
+        [JsonPropertyName("input")]
+        public ServerToolInput Input { get; set; }
+    }
+
+    public class ServerToolInput
+    {
+        [JsonPropertyName("query")]
+        public string Query { get; set; }
+    }
+
+
+
     /// <summary>
     /// Helper Class for Text Content to Send to Claude
     /// </summary>
@@ -58,8 +90,14 @@ namespace Anthropic.SDK.Messaging
         public string Type { get; set; }
         [JsonPropertyName("cited_text")]
         public string CitedText { get; set; }
+        [JsonPropertyName("url")]
+        public string Url { get; set; }
+        [JsonPropertyName("title")]
+        public string Title { get; set; }
+        [JsonPropertyName("encrypted_index")]
+        public string EncryptedIndex { get; set; }
         [JsonPropertyName("document_index")]
-        public int DocumentIndex { get; set; }
+        public int? DocumentIndex { get; set; }
         [JsonPropertyName("document_title")]
         public string DocumentTitle { get; set; }
         [JsonPropertyName("start_char_index")]
@@ -295,6 +333,45 @@ namespace Anthropic.SDK.Messaging
     }
 
     /// <summary>
+    /// Tool Use Content To Send to Claude
+    /// </summary>
+    public class MCPToolUseContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (Tool_Use, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.mcp_tool_use;
+
+        /// <summary>
+        /// Id of the Tool
+        /// </summary>
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        /// <summary>
+        /// Name of the Tool
+        /// </summary>
+        [JsonPropertyName("name")]
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Server Name of the Tool
+        /// </summary>
+        [JsonPropertyName("server_name")]
+        public string ServerName { get; set; }
+
+        /// <summary>
+        /// Inputs of the Tool
+        /// </summary>
+        [JsonPropertyName("input")]
+        public JsonNode Input { get; set; }
+
+
+
+    }
+
+    /// <summary>
     /// Tool Result Content Returned From Claude
     /// </summary>
     public class ToolResultContent : ContentBase
@@ -322,5 +399,98 @@ namespace Anthropic.SDK.Messaging
         /// </summary>
         [JsonPropertyName("is_error")]
         public bool? IsError { get; set; }
+    }
+
+    /// <summary>
+    /// MCP Tool Result Content Returned From Claude
+    /// </summary>
+    public class MCPToolResultContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (Tool_Result, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.mcp_tool_result;
+
+        /// <summary>
+        /// Tool Use Id
+        /// </summary>
+        [JsonPropertyName("tool_use_id")]
+        public string ToolUseId { get; set; }
+
+        /// <summary>
+        /// Content of the Tool Result
+        /// </summary>
+        [JsonPropertyName("content")]
+        public List<ContentBase> Content { get; set; }
+
+        /// <summary>
+        /// Indicates if the Tool Result is an Error
+        /// </summary>
+        [JsonPropertyName("is_error")]
+        public bool? IsError { get; set; }
+    }
+
+    /// <summary>
+    /// Web Search Tool Result Content Returned From Claude
+    /// </summary>
+    public class WebSearchToolResultContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (Tool_Result, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.web_search_tool_result;
+
+        /// <summary>
+        /// Tool Use Id
+        /// </summary>
+        [JsonPropertyName("tool_use_id")]
+        public string ToolUseId { get; set; }
+
+        /// <summary>
+        /// Content of the Tool Result
+        /// </summary>
+        [JsonPropertyName("content")]
+        public List<ContentBase> Content { get; set; }
+
+        /// <summary>
+        /// Indicates if the Tool Result is an Error
+        /// </summary>
+        [JsonPropertyName("is_error")]
+        public bool? IsError { get; set; }
+    }
+
+    /// <summary>
+    /// Web Search Tool Result Error Returned From Claude
+    /// </summary>
+    public class WebSearchToolResultErrorContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (Tool_Result, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.web_search_tool_result_error;
+
+        [JsonPropertyName("error_code")]
+        public string ErrorCode { get; set; }
+    }
+
+    public class WebSearchResultContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (Web_Search_Result, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.web_search_result;
+
+        [JsonPropertyName("url")]
+        public string Url { get; set; }
+        [JsonPropertyName("title")]
+        public string Title { get; set; }
+        [JsonPropertyName("encrypted_content")]
+        public string EncryptedContent { get; set; }
+        [JsonPropertyName("page_age")]
+        public string PageAge { get; set; }
     }
 }

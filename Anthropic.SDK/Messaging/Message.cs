@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Xml.Linq;
@@ -149,8 +150,102 @@ namespace Anthropic.SDK.Messaging
             //        Text = innerText
             //    });
             //}
+            //find server_tool_use
+            var serverToolUseFound = false;
+            ServerToolUseContent serverToolUseContent = null;
+            var serverPartialJson = string.Empty;
+            foreach (var result in asyncResponses)
+            {
+                if (result.ContentBlock != null && result.ContentBlock.Type == "server_tool_use")
+                {
+                    serverToolUseFound = true;
+                    serverToolUseContent = new ServerToolUseContent()
+                    {
+                        Name = result.ContentBlock.Name,
+                        Id = result.ContentBlock.Id
+                    };
+                }
+                if (serverToolUseFound && !string.IsNullOrWhiteSpace(result.Delta?.PartialJson))
+                {
+                    serverPartialJson += result.Delta.PartialJson;
+                    
+                }
+                else if (serverToolUseFound && string.IsNullOrWhiteSpace(result.Delta?.PartialJson) && !string.IsNullOrWhiteSpace(serverPartialJson))
+                {
+                    var input = JsonSerializer.Deserialize<ServerToolInput>(serverPartialJson);
+                    serverToolUseContent.Input = input;
+                    serverToolUseFound = false; // reset for next tool use
+                    Content.Add(serverToolUseContent);
+                }
+            }
 
-            
+            var mcpToolUseFound = false;
+            MCPToolUseContent mcpToolUseContent = null;
+            var mcpPartialJson = string.Empty;
+            foreach (var result in asyncResponses)
+            {
+                if (result.ContentBlock != null && result.ContentBlock.Type == "mcp_tool_use")
+                {
+                    mcpToolUseFound = true;
+                    mcpToolUseContent = new MCPToolUseContent()
+                    {
+                        Name = result.ContentBlock.Name,
+                        Id = result.ContentBlock.Id,
+                        ServerName = result.ContentBlock.ServerName
+                    };
+                }
+                if (mcpToolUseFound && !string.IsNullOrWhiteSpace(result.Delta?.PartialJson))
+                {
+                    mcpPartialJson += result.Delta.PartialJson;
+
+                }
+                else if (mcpToolUseFound && string.IsNullOrWhiteSpace(result.Delta?.PartialJson) && !string.IsNullOrWhiteSpace(mcpPartialJson))
+                {
+                    var input = JsonNode.Parse(mcpPartialJson);
+                    mcpToolUseContent.Input = input;
+                    mcpToolUseFound = false; // reset for next tool use
+                    Content.Add(mcpToolUseContent);
+                }
+            }
+
+            var mcpToolResultFound = false;
+            MCPToolResultContent mcpToolResultContent = null;
+            foreach (var result in asyncResponses)
+            {
+                if (result.ContentBlock != null && result.ContentBlock.Type == "mcp_tool_result")
+                {
+                    mcpToolResultFound = true;
+                    mcpToolResultContent = new MCPToolResultContent()
+                    {
+                        ToolUseId = result.ContentBlock.ToolUseId,
+                        Content = result.ContentBlock.Content,
+                        IsError = result.ContentBlock.IsError
+                    };
+                    Content.Add(mcpToolResultContent);
+                }
+
+            }
+
+            var webToolResultFound = false;
+            WebSearchToolResultContent webToolUseContent = null;
+            var webSearchPartialJson = string.Empty;
+            foreach (var result in asyncResponses)
+            {
+                if (result.ContentBlock != null && result.ContentBlock.Type == "web_search_tool_result")
+                {
+                    webToolResultFound = true;
+                    webToolUseContent = new WebSearchToolResultContent()
+                    {
+                        ToolUseId = result.ContentBlock.ToolUseId,
+                        Content = result.ContentBlock.Content,
+                        IsError = result.ContentBlock.IsError
+                    };
+                    Content.Add(webToolUseContent);
+                }
+                
+            }
+
+
 
 
             foreach (var result in asyncResponses)
