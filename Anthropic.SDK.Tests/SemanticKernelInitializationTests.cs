@@ -103,6 +103,76 @@ namespace Anthropic.SDK.Tests
 
         }
 
+        [TestMethod]
+        public async Task TestSKLuckyNumber()
+        {
+            var skChatService =
+                new ChatClientBuilder(new AnthropicClient().Messages)
+                    .UseFunctionInvocation()
+                    .Build()
+                    .AsChatCompletionService();
+            var sk = Kernel.CreateBuilder();
+            sk.Plugins.AddFromType<SkPlugins>("LuckyNumber");
+            sk.Services.AddSingleton<IChatCompletionService>(skChatService);
+            var kernel = sk.Build();
+            var chatCompletionService = kernel.Services.GetRequiredService<IChatCompletionService>();
+            // Create chat history
+            var history = new ChatHistory();
+            history.AddUserMessage("What is today's lucky number?");
+            OpenAIPromptExecutionSettings promptExecutionSettings = new()
+            {
+                FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(),
+                ModelId = AnthropicModels.Claude35Haiku,
+                MaxTokens = 512
+            };
+            // Get the response from the AI
+            var result = await chatCompletionService.GetChatMessageContentAsync(
+                history,
+                executionSettings: promptExecutionSettings,
+                kernel: kernel
+            );
+            Assert.IsTrue(result.Content.Contains("895-122"));
+        }
+
+        [TestMethod]
+        public async Task TestSKLuckyNumberStreaming()
+        {
+            var skChatService =
+                new ChatClientBuilder(new AnthropicClient().Messages)
+                    .UseFunctionInvocation()
+                    .Build()
+                    .AsChatCompletionService();
+            var sk = Kernel.CreateBuilder();
+            sk.Plugins.AddFromType<SkPlugins>("LuckyNumber");
+            sk.Services.AddSingleton<IChatCompletionService>(skChatService);
+            var kernel = sk.Build();
+            var chatCompletionService = kernel.Services.GetRequiredService<IChatCompletionService>();
+            // Create chat history
+            var history = new ChatHistory();
+            history.AddUserMessage("What is today's lucky number?");
+            OpenAIPromptExecutionSettings promptExecutionSettings = new()
+            {
+                FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(),
+                ModelId = AnthropicModels.Claude35Haiku,
+                MaxTokens = 512
+            };
+            // Get the response from the AI
+            var sbResponse = new StringBuilder();
+            await foreach (var streamingContent in chatCompletionService.GetStreamingChatMessageContentsAsync(
+                               history, promptExecutionSettings, kernel))
+
+            {
+                if (streamingContent.Content is not null)
+                {
+                    sbResponse.Append(streamingContent.Content);
+                }
+            }
+
+            var result = sbResponse.ToString();
+
+            Assert.Contains("895-122", result);
+        }
+
 
     }
 
@@ -119,6 +189,13 @@ namespace Anthropic.SDK.Tests
         public async Task<string> GetWeather(string location)
         {
             return "It is 72 degrees and sunny in " + location;
+        }
+
+        [KernelFunction("LuckyNumber")]
+        [Description("Gets today's lucky number.")]
+        public string GetLuckyNumber()
+        {
+            return "Today's lucky number is 895-122";
         }
     }
 }

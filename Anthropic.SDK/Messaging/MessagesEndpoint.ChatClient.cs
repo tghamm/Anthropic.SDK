@@ -155,7 +155,10 @@ public partial class MessagesEndpoint : IChatClient
             {
                 foreach (var f in response.ToolCalls)
                 {
-                    update.Contents.Add(new FunctionCallContent(f.Id, f.Name, JsonSerializer.Deserialize<Dictionary<string, object>>(f.Arguments.ToString())));
+                    update.Contents.Add(new FunctionCallContent(f.Id, f.Name,
+                        !string.IsNullOrEmpty(f.Arguments.ToString())
+                            ? JsonSerializer.Deserialize<Dictionary<string, object>>(f.Arguments.ToString())
+                            : new Dictionary<string, object>()));
                 }
                 
             }
