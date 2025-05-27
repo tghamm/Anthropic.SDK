@@ -14,12 +14,12 @@
 	  <PackageTags>Claude, AI, ML, API, Anthropic</PackageTags>
 	  <Title>Claude API</Title>
 	  <PackageReleaseNotes>
-		  Web Search, MCP Servers, and Claude 4 Models
+		  Web Search, MCP Servers, and Claude 4 Models, Minor Bug Fixes
 	  </PackageReleaseNotes>
 	  <PackageId>Anthropic.SDK</PackageId>
-	  <Version>5.4.0</Version>
-	  <AssemblyVersion>5.4.0.0</AssemblyVersion>
-	  <FileVersion>5.4.0.0</FileVersion>
+	  <Version>5.4.1</Version>
+	  <AssemblyVersion>5.4.1.0</AssemblyVersion>
+	  <FileVersion>5.4.1.0</FileVersion>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
 	  <PackageReadmeFile>README.md</PackageReadmeFile>
 	  <PackageIcon>icon.png</PackageIcon>
