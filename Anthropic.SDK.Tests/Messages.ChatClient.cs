@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -229,6 +230,28 @@ namespace Anthropic.SDK.Tests
 
             Assert.IsTrue(
                 res.Text.Contains("25") is true, 
+                res.Text);
+        }
+
+        [TestMethod]
+        public async Task TestNonStreamingWebSearchCalls()
+        {
+            IChatClient client = new AnthropicClient().Messages
+                .AsBuilder()
+                .UseFunctionInvocation()
+                .Build();
+
+            ChatOptions options = new()
+            {
+                ModelId = AnthropicModels.Claude4Sonnet,
+                MaxOutputTokens = 5000,
+                Tools = [new HostedWebSearchTool()]
+            };
+
+            var res = await client.GetResponseAsync("What is the weather like in San Francisco, CA right now?", options);
+
+            Assert.IsTrue(
+                res.Text.Contains("San Francisco") is true,
                 res.Text);
         }
 

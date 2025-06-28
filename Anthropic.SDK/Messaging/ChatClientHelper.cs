@@ -86,6 +86,9 @@ namespace Anthropic.SDK.Messaging
                             case HostedCodeInterpreterTool ci:
                                 tools.Add(Common.Tool.CodeInterpreter);
                                 break;
+                            case HostedWebSearchTool wt:
+                                tools.Add(ServerTools.GetWebSearchTool(5));
+                                break;
                         }
                     }
                 }
