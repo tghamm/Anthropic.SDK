@@ -14,12 +14,12 @@
 	  <PackageTags>Claude, AI, ML, API, Anthropic</PackageTags>
 	  <Title>Claude API</Title>
 	  <PackageReleaseNotes>
-		  Improvements to Microsoft.Extensions.AI.Abstractions integration
+		  Updates Microsoft.Extensions.AI.Abstractions, Tool Call Bug Fix
 	  </PackageReleaseNotes>
 	  <PackageId>Anthropic.SDK</PackageId>
-	  <Version>5.4.2</Version>
-	  <AssemblyVersion>5.4.2.0</AssemblyVersion>
-	  <FileVersion>5.4.2.0</FileVersion>
+	  <Version>5.4.3</Version>
+	  <AssemblyVersion>5.4.3.0</AssemblyVersion>
+	  <FileVersion>5.4.3.0</FileVersion>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
 	  <PackageReadmeFile>README.md</PackageReadmeFile>
 	  <PackageIcon>icon.png</PackageIcon>
