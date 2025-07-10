@@ -39,6 +39,11 @@ namespace Anthropic.SDK.Messaging
             {
                 parameters.Model = options.ModelId;
 
+                if (options.Instructions is string instructions)
+                {
+                    (parameters.System ??= []).Add(new SystemMessage(instructions));
+                }
+
                 if (options.MaxOutputTokens is int maxOutputTokens)
                 {
                     parameters.MaxTokens = maxOutputTokens;
@@ -86,6 +91,7 @@ namespace Anthropic.SDK.Messaging
                             case HostedCodeInterpreterTool ci:
                                 tools.Add(Common.Tool.CodeInterpreter);
                                 break;
+
                             case HostedWebSearchTool wt:
                                 tools.Add(ServerTools.GetWebSearchTool(5));
                                 break;
