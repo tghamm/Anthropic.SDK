@@ -20,7 +20,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = AnthropicModels.Claude_v2_1,
+                ModelId = AnthropicModels.Claude4Sonnet,
                 MaxOutputTokens = 512,
                 Temperature = 1.0f,
             };
@@ -28,6 +28,24 @@ namespace Anthropic.SDK.Tests
             var res = await client.GetResponseAsync("Write a sonnet about the Statue of Liberty. The response must include the word green.", options);
 
             Assert.IsTrue(res.Text.Contains("green") is true, res.Text);
+        }
+
+        [TestMethod]
+        public async Task TestNonStreamingMessageWithInstructions()
+        {
+            IChatClient client = new AnthropicClient().Messages;
+
+            ChatOptions options = new()
+            {
+                ModelId = AnthropicModels.Claude4Sonnet,
+                MaxOutputTokens = 512,
+                Temperature = 1.0f,
+                Instructions = "Answer like a pirate."
+            };
+
+            var res = await client.GetResponseAsync("Write a sonnet about the Dread Pirate Roberts. The response must include the word pirate.", options);
+
+            Assert.IsTrue(res.Text.Contains("pirate") is true, res.Text);
         }
 
         [TestMethod]
@@ -159,7 +177,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = AnthropicModels.Claude_v2_1,
+                ModelId = AnthropicModels.Claude4Sonnet,
                 MaxOutputTokens = 512,
                 Temperature = 1.0f,
             };
@@ -342,7 +360,7 @@ namespace Anthropic.SDK.Tests
                 ])
             ], new()
             {
-                ModelId = AnthropicModels.Claude3Opus,
+                ModelId = AnthropicModels.Claude4Opus,
                 MaxOutputTokens = 512,
                 Temperature = 0f,
             });
