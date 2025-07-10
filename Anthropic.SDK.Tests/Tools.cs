@@ -840,5 +840,52 @@ namespace Anthropic.SDK.Tests
 
         }
 
+        [TestMethod]
+        public async Task TestMultipleCallsSameFunction()
+        {
+            var client = new AnthropicClient();
+            var messages = new List<Message>
+            {
+                new Message(RoleType.User, "Calculate 3 times 2, then 7 times 2, then 11 times 2. Use the multiply function for each calculation. Make all three function calls in a single response.")
+            };
+            var tools = new List<Common.Tool>
+            {
+                Common.Tool.FromFunc("Multiply_By_Two",
+                    ([FunctionParameter("Number to multiply by 2", true)]int number) => (number * 2).ToString())
+            };
+
+            var parameters = new MessageParameters()
+            {
+                Messages = messages,
+                MaxTokens = 2048,
+                Model = AnthropicModels.Claude3Sonnet,
+                Stream = false,
+                Temperature = 1.0m,
+                Tools = tools
+            };
+            var res = await client.Messages.GetClaudeMessageAsync(parameters);
+
+            messages.Add(res.Message);
+
+            // This tests the bug fix - multiple calls to same function should work correctly
+            Assert.IsTrue(res.ToolCalls.Count >= 2, "Should have multiple tool calls");
+
+            // Verify that each tool call has unique ID and different arguments
+            var ids = new HashSet<string>();
+            var args = new HashSet<string>();
+            
+            foreach (var toolCall in res.ToolCalls)
+            {
+                Assert.IsTrue(ids.Add(toolCall.Id), $"Tool call ID {toolCall.Id} should be unique");
+                
+                var argString = toolCall.Arguments?.ToJsonString() ?? "";
+                Assert.IsTrue(args.Add(argString), $"Tool call arguments {argString} should be different");
+                
+                var response = toolCall.Invoke<string>();
+                messages.Add(new Message(toolCall, response));
+            }
+
+        }
+
     }
 }

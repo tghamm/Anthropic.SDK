@@ -38,12 +38,14 @@ namespace Anthropic.SDK.Messaging
                 if (message.Type == ContentType.tool_use)
                 {
                     var tool = parameters.Tools?.FirstOrDefault(t => t.Function.Name == (message as ToolUseContent).Name);
-                    
+
                     if (tool != null)
                     {
-                        tool.Function.Arguments = (message as ToolUseContent).Input;
-                        tool.Function.Id = (message as ToolUseContent).Id;
-                        toolCalls.Add(tool.Function);
+                        var copiedTool = new Common.Tool(tool);
+                        copiedTool.Function.Arguments = (message as ToolUseContent).Input;
+                        copiedTool.Function.Id = (message as ToolUseContent).Id;
+
+                        toolCalls.Add(copiedTool.Function);
                     }
                 }
             }
@@ -117,9 +119,11 @@ namespace Anthropic.SDK.Messaging
 
                     if (tool != null)
                     {
-                        tool.Function.Arguments = arguments;
-                        tool.Function.Id = id;
-                        toolCalls.Add(tool.Function);
+                        var copiedTool = new Common.Tool(tool);
+                        copiedTool.Function.Arguments = arguments;
+                        copiedTool.Function.Id = id;
+
+                        toolCalls.Add(copiedTool.Function);
                     }
                     captureTool = false;
                     result.ToolCalls = toolCalls;
