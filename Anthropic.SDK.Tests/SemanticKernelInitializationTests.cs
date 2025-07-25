@@ -21,23 +21,22 @@ namespace Anthropic.SDK.Tests
         [TestMethod]
         public async Task TestSKInit()
         {
-            var skChatService =
-                new ChatClientBuilder(new AnthropicClient().Messages)
+            IChatClient CreateChatClient(IServiceProvider _)
+                => new ChatClientBuilder(new AnthropicClient().Messages)
                     .UseFunctionInvocation()
-                    .Build()
-                    .AsChatCompletionService();
-
+                    .Build();
 
             var sk = Kernel.CreateBuilder();
             sk.Plugins.AddFromType<SkPlugins>("Weather");
-            sk.Services.AddSingleton<IChatCompletionService>(skChatService);
+            sk.Services.AddSingleton(CreateChatClient);
 
             var kernel = sk.Build();
-            var chatCompletionService = kernel.Services.GetRequiredService<IChatCompletionService>();
+            var chatClient = kernel.Services.GetRequiredService<IChatClient>();
+
             // Create chat history
-            var history = new ChatHistory();
-            history.AddUserMessage("What is the weather like in San Francisco right now?");
-            OpenAIPromptExecutionSettings promptExecutionSettings = new()
+            List<ChatMessage> messages = [new(ChatRole.User, "What is the weather like in San Francisco right now?")];
+
+            var skExecutionSettings = new OpenAIPromptExecutionSettings()
             {
                 FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(),
                 ModelId = AnthropicModels.Claude35Haiku,
@@ -45,14 +44,9 @@ namespace Anthropic.SDK.Tests
             };
 
             // Get the response from the AI
-            var result = await chatCompletionService.GetChatMessageContentAsync(
-                history,
-                executionSettings: promptExecutionSettings,
-                kernel: kernel
-            ); ;
+            var result = await chatClient.GetResponseAsync(messages, options: skExecutionSettings.ToChatOptions(kernel));
 
-
-            Assert.IsTrue(result.Content.Contains("72"));
+            Assert.IsTrue(result.Text.Contains("72"));
         }
 
         [TestMethod]
@@ -62,7 +56,7 @@ namespace Anthropic.SDK.Tests
 
             Assembly assembly = Assembly.GetExecutingAssembly();
 
-            await using Stream stream = assembly.GetManifestResourceStream(resourceName);
+            await using Stream stream = assembly.GetManifestResourceStream(resourceName)!;
             //read stream into byte array
             using var ms = new MemoryStream();
             await stream.CopyToAsync(ms);
@@ -172,8 +166,6 @@ namespace Anthropic.SDK.Tests
 
             Assert.Contains("895-122", result);
         }
-
-
     }
 
     public class File
@@ -186,9 +178,9 @@ namespace Anthropic.SDK.Tests
     {
         [KernelFunction("GetWeather")]
         [Description("Gets the weather for a given location")]
-        public async Task<string> GetWeather(string location)
+        public Task<string> GetWeather(string location)
         {
-            return "It is 72 degrees and sunny in " + location;
+            return Task.FromResult("It is 72 degrees and sunny in " + location);
         }
 
         [KernelFunction("LuckyNumber")]
