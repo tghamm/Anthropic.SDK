@@ -69,16 +69,14 @@ Option 2:
 ```csharp
 using Microsoft.SemanticKernel;
 
-var skChatService =
-    new ChatClientBuilder(new AnthropicClient().Messages)
+IChatClient CreateChatClient(IServiceProvider _)
+    => new ChatClientBuilder(new AnthropicClient().Messages)
         .UseFunctionInvocation()
-        .Build()
-        .AsChatCompletionService();
-
+        .Build();
 
 var sk = Kernel.CreateBuilder();
 sk.Plugins.AddFromType<SkPlugins>("Weather");
-sk.Services.AddSingleton<IChatCompletionService>(skChatService);
+sk.Services.AddSingleton(CreateChatClient);
 ```
 See integration tests for a more complete example.
 
