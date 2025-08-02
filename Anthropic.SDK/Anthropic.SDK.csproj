@@ -14,12 +14,12 @@
 	  <PackageTags>Claude, AI, ML, API, Anthropic</PackageTags>
 	  <Title>Claude API</Title>
 	  <PackageReleaseNotes>
-		  Updates Microsoft.Extensions.AI.Abstractions, Tool Call Bug Fix
+		  Updates Microsoft.Extensions.AI.Abstractions, Strong Name Assembly, Model Constant Deprecations
 	  </PackageReleaseNotes>
 	  <PackageId>Anthropic.SDK</PackageId>
-	  <Version>5.4.3</Version>
-	  <AssemblyVersion>5.4.3.0</AssemblyVersion>
-	  <FileVersion>5.4.3.0</FileVersion>
+	  <Version>5.5.0</Version>
+	  <AssemblyVersion>5.5.0.0</AssemblyVersion>
+	  <FileVersion>5.5.0.0</FileVersion>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
 	  <PackageReadmeFile>README.md</PackageReadmeFile>
 	  <PackageIcon>icon.png</PackageIcon>
@@ -31,6 +31,8 @@
 	  <!-- Optional: Build symbol package (.snupkg) to distribute the PDB containing Source Link -->
 	  <IncludeSymbols>true</IncludeSymbols>
 	  <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+	  <SignAssembly>True</SignAssembly>
+	  <AssemblyOriginatorKeyFile>Anthropic.SDK.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>
