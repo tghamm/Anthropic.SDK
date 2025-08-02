@@ -28,7 +28,7 @@ namespace Anthropic.SDK.Messaging
         /// <summary>
         /// The default model to use when no model is specified in the request parameters
         /// </summary>
-        protected override string Model => Constants.VertexAIModels.Claude3Sonnet;
+        protected override string Model => Constants.VertexAIModels.Claude4Sonnet;
 
         /// <summary>
         /// Makes a non-streaming call to the Claude messages API via Vertex AI. Be sure to set stream to false in <param name="parameters"></param>.

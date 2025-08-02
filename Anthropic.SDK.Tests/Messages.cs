@@ -9,7 +9,7 @@ namespace Anthropic.SDK.Tests
     public class Messages
     {
         [TestMethod]
-        public async Task TestBasicClaude21Message()
+        public async Task TestBasicClaude4SonnetMessage()
         {
             var client = new AnthropicClient();
             var messages = new List<Message>();
@@ -18,7 +18,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 512,
-                Model = AnthropicModels.Claude_v2_1,
+                Model = AnthropicModels.Claude4Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
             };
@@ -126,7 +126,7 @@ namespace Anthropic.SDK.Tests
         }
 
         [TestMethod]
-        public async Task TestStreamingClaude21Message()
+        public async Task TestStreamingClaude4SonnetMessage()
         {
             var client = new AnthropicClient();
             var messages = new List<Message>();
@@ -135,7 +135,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 512,
-                Model = AnthropicModels.Claude_v2_1,
+                Model = AnthropicModels.Claude4Sonnet,
                 Stream = true,
                 Temperature = 1.0m,
             };

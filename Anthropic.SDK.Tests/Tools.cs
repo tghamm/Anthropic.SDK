@@ -92,7 +92,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 2048,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude4Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools.ToList()
@@ -127,7 +127,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 2048,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude4Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools.ToList()
@@ -166,7 +166,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 2048,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude4Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools
@@ -205,7 +205,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 2048,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude4Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools
@@ -253,7 +253,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 2048,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude4Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools
@@ -302,7 +302,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 2048,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude4Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools
@@ -350,7 +350,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 2048,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude4Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools
@@ -411,7 +411,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 2048,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude4Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools
@@ -464,7 +464,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 2048,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude4Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools
@@ -506,7 +506,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 2048,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude4Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools
@@ -553,7 +553,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 2048,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude4Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools,
@@ -604,7 +604,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 2048,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude4Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools
@@ -741,7 +741,7 @@ namespace Anthropic.SDK.Tests
 
 
         [TestMethod]
-        public async Task TestClaude3ImageJsonModeMessage()
+        public async Task TestClaude4ImageJsonModeMessage()
         {
             string resourceName = "Anthropic.SDK.Tests.Red_Apple.jpg";
 
@@ -826,7 +826,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 1024,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude4Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools
@@ -858,7 +858,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 2048,
-                Model = AnthropicModels.Claude3Sonnet,
+                Model = AnthropicModels.Claude4Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Tools = tools

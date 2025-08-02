@@ -11,11 +11,6 @@ namespace Anthropic.SDK.Constants
         public const string Claude3Opus = "claude-3-opus@20240229";
         
         /// <summary>
-        /// Claude 3 Sonnet on Vertex AI - Balanced Claude model for a wide range of tasks
-        /// </summary>
-        public const string Claude3Sonnet = "claude-3-sonnet@20240229";
-        
-        /// <summary>
         /// Claude 3 Haiku on Vertex AI - Fastest and most compact model for near-instant responsiveness
         /// </summary>
         public const string Claude3Haiku = "claude-3-haiku@20240307";
