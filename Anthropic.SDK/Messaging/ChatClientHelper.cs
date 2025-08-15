@@ -11,7 +11,7 @@ namespace Anthropic.SDK.Messaging
     /// <summary>
     /// Helper class for chat client implementations
     /// </summary>
-    internal static class ChatClientHelper
+    public static class ChatClientHelper
     {
         /// <summary>
         /// Create usage details from usage
@@ -108,72 +108,108 @@ namespace Anthropic.SDK.Messaging
                 }
                 else
                 {
-                    Message m = new()
-                    {
-                        Role = message.Role == ChatRole.Assistant ? RoleType.Assistant : RoleType.User,
-                        Content = [],
-                    };
-                    (parameters.Messages ??= []).Add(m);
-
+                    // Separate content types for proper message roles:
+                    // FunctionResultContent must be in User messages, others in Assistant/User based on original role
+                    var nonToolResultContent = new List<AIContent>();
+                    var toolResultContent = new List<AIContent>();
+                    
                     foreach (AIContent content in message.Contents)
                     {
-                        switch (content)
+                        if (content is Microsoft.Extensions.AI.FunctionResultContent)
                         {
-                            case Microsoft.Extensions.AI.TextReasoningContent textReasoningContent:
-                                m.Content.Add(new Messaging.ThinkingContent()
-                                {
-                                    Thinking = textReasoningContent.Text,
-                                    Signature = textReasoningContent.AdditionalProperties[nameof(ThinkingContent.Signature)]?.ToString()
-                                });
-                                break;
+                            toolResultContent.Add(content);
+                        }
+                        else
+                        {
+                            nonToolResultContent.Add(content);
+                        }
+                    }
+                    
+                    // Create message for non-tool result content (respecting original role)
+                    if (nonToolResultContent.Count > 0)
+                    {
+                        Message m = new()
+                        {
+                            Role = message.Role == ChatRole.Assistant ? RoleType.Assistant : RoleType.User,
+                            Content = [],
+                        };
+                        (parameters.Messages ??= []).Add(m);
 
-                            case Anthropic.SDK.Extensions.MEAI.RedactedThinkingContent redactedThinkingContent:
-                                m.Content.Add(new Messaging.RedactedThinkingContent() { Data = redactedThinkingContent.Data });
-                                break;
-
-                            case Microsoft.Extensions.AI.TextContent textContent:
-                                m.Content.Add(new TextContent() { Text = textContent.Text });
-                                break;
-
-                            case Microsoft.Extensions.AI.DataContent imageContent when imageContent.HasTopLevelMediaType("image"):
-                                m.Content.Add(new ImageContent()
-                                {
-                                    Source = new()
+                        foreach (AIContent content in nonToolResultContent)
+                        {
+                            switch (content)
+                            {
+                                case Microsoft.Extensions.AI.TextReasoningContent textReasoningContent:
+                                    m.Content.Add(new Messaging.ThinkingContent()
                                     {
-                                        Data = Convert.ToBase64String(imageContent.Data.ToArray()),
-                                        MediaType = imageContent.MediaType,
-                                    }
-                                });
-                                break;
+                                        Thinking = textReasoningContent.Text,
+                                        Signature = textReasoningContent.AdditionalProperties[nameof(ThinkingContent.Signature)]?.ToString()
+                                    });
+                                    break;
 
-                            case Microsoft.Extensions.AI.DataContent documentContent when documentContent.HasTopLevelMediaType("application"):
-                                m.Content.Add(new DocumentContent()
-                                {
-                                    Source = new()
+                                case Anthropic.SDK.Extensions.MEAI.RedactedThinkingContent redactedThinkingContent:
+                                    m.Content.Add(new Messaging.RedactedThinkingContent() { Data = redactedThinkingContent.Data });
+                                    break;
+
+                                case Microsoft.Extensions.AI.TextContent textContent:
+                                    m.Content.Add(new TextContent() { Text = textContent.Text });
+                                    break;
+
+                                case Microsoft.Extensions.AI.DataContent imageContent when imageContent.HasTopLevelMediaType("image"):
+                                    m.Content.Add(new ImageContent()
                                     {
-                                        Data = Convert.ToBase64String(documentContent.Data.ToArray()),
-                                        MediaType = documentContent.MediaType,
-                                    }
-                                });
-                                break;
+                                        Source = new()
+                                        {
+                                            Data = Convert.ToBase64String(imageContent.Data.ToArray()),
+                                            MediaType = imageContent.MediaType,
+                                        }
+                                    });
+                                    break;
 
-                            case Microsoft.Extensions.AI.FunctionCallContent fcc:
-                                m.Content.Add(new ToolUseContent()
-                                {
-                                    Id = fcc.CallId,
-                                    Name = fcc.Name,
-                                    Input = JsonSerializer.SerializeToNode(fcc.Arguments)
-                                });
-                                break;
+                                case Microsoft.Extensions.AI.DataContent documentContent when documentContent.HasTopLevelMediaType("application"):
+                                    m.Content.Add(new DocumentContent()
+                                    {
+                                        Source = new()
+                                        {
+                                            Data = Convert.ToBase64String(documentContent.Data.ToArray()),
+                                            MediaType = documentContent.MediaType,
+                                        }
+                                    });
+                                    break;
 
-                            case Microsoft.Extensions.AI.FunctionResultContent frc:
-                                m.Content.Add(new ToolResultContent()
+                                case Microsoft.Extensions.AI.FunctionCallContent fcc:
+                                    m.Content.Add(new ToolUseContent()
+                                    {
+                                        Id = fcc.CallId,
+                                        Name = fcc.Name,
+                                        Input = JsonSerializer.SerializeToNode(fcc.Arguments)
+                                    });
+                                    break;
+                            }
+                        }
+                    }
+                    
+                    // Create separate User message for tool results
+                    if (toolResultContent.Count > 0)
+                    {
+                        Message toolResultMessage = new()
+                        {
+                            Role = RoleType.User,  // Tool results must always be in User messages
+                            Content = [],
+                        };
+                        (parameters.Messages ??= []).Add(toolResultMessage);
+
+                        foreach (AIContent content in toolResultContent)
+                        {
+                            if (content is Microsoft.Extensions.AI.FunctionResultContent frc)
+                            {
+                                toolResultMessage.Content.Add(new ToolResultContent()
                                 {
                                     ToolUseId = frc.CallId,
                                     Content = new List<ContentBase>() { new TextContent () { Text = frc.Result?.ToString() ?? string.Empty } },
                                     IsError = frc.Exception is not null,
                                 });
-                                break;
+                            }
                         }
                     }
                 }
