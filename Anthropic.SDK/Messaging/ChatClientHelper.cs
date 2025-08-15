@@ -11,7 +11,7 @@ namespace Anthropic.SDK.Messaging
     /// <summary>
     /// Helper class for chat client implementations
     /// </summary>
-    internal static class ChatClientHelper
+    public static class ChatClientHelper
     {
         /// <summary>
         /// Create usage details from usage
@@ -108,19 +108,44 @@ namespace Anthropic.SDK.Messaging
                 }
                 else
                 {
-                    Message m = new()
-                    {
-                        Role = message.Role == ChatRole.Assistant ? RoleType.Assistant : RoleType.User,
-                        Content = [],
-                    };
-                    (parameters.Messages ??= []).Add(m);
-
+                    // Process contents in order, creating new messages when switching between tool results and other content
+                    // This preserves ordering and handles interleaved tool calls, AI output, and tool results
+                    Message currentMessage = null;
+                    bool lastWasToolResult = false;
+                    
                     foreach (AIContent content in message.Contents)
                     {
+                        bool isToolResult = content is Microsoft.Extensions.AI.FunctionResultContent;
+                        
+                        // Create new message if:
+                        // 1. This is the first content item, OR
+                        // 2. We're switching between tool result and non-tool result content
+                        if (currentMessage == null || lastWasToolResult != isToolResult)
+                        {
+                            currentMessage = new()
+                            {
+                                // Tool results must always be in User messages, others respect original role
+                                Role = isToolResult ? RoleType.User : (message.Role == ChatRole.Assistant ? RoleType.Assistant : RoleType.User),
+                                Content = [],
+                            };
+                            (parameters.Messages ??= []).Add(currentMessage);
+                            lastWasToolResult = isToolResult;
+                        }
+                        
+                        // Add content to current message
                         switch (content)
                         {
+                            case Microsoft.Extensions.AI.FunctionResultContent frc:
+                                currentMessage.Content.Add(new ToolResultContent()
+                                {
+                                    ToolUseId = frc.CallId,
+                                    Content = new List<ContentBase>() { new TextContent () { Text = frc.Result?.ToString() ?? string.Empty } },
+                                    IsError = frc.Exception is not null,
+                                });
+                                break;
+
                             case Microsoft.Extensions.AI.TextReasoningContent textReasoningContent:
-                                m.Content.Add(new Messaging.ThinkingContent()
+                                currentMessage.Content.Add(new Messaging.ThinkingContent()
                                 {
                                     Thinking = textReasoningContent.Text,
                                     Signature = textReasoningContent.AdditionalProperties[nameof(ThinkingContent.Signature)]?.ToString()
@@ -128,15 +153,15 @@ namespace Anthropic.SDK.Messaging
                                 break;
 
                             case Anthropic.SDK.Extensions.MEAI.RedactedThinkingContent redactedThinkingContent:
-                                m.Content.Add(new Messaging.RedactedThinkingContent() { Data = redactedThinkingContent.Data });
+                                currentMessage.Content.Add(new Messaging.RedactedThinkingContent() { Data = redactedThinkingContent.Data });
                                 break;
 
                             case Microsoft.Extensions.AI.TextContent textContent:
-                                m.Content.Add(new TextContent() { Text = textContent.Text });
+                                currentMessage.Content.Add(new TextContent() { Text = textContent.Text });
                                 break;
 
                             case Microsoft.Extensions.AI.DataContent imageContent when imageContent.HasTopLevelMediaType("image"):
-                                m.Content.Add(new ImageContent()
+                                currentMessage.Content.Add(new ImageContent()
                                 {
                                     Source = new()
                                     {
@@ -147,7 +172,7 @@ namespace Anthropic.SDK.Messaging
                                 break;
 
                             case Microsoft.Extensions.AI.DataContent documentContent when documentContent.HasTopLevelMediaType("application"):
-                                m.Content.Add(new DocumentContent()
+                                currentMessage.Content.Add(new DocumentContent()
                                 {
                                     Source = new()
                                     {
@@ -158,20 +183,11 @@ namespace Anthropic.SDK.Messaging
                                 break;
 
                             case Microsoft.Extensions.AI.FunctionCallContent fcc:
-                                m.Content.Add(new ToolUseContent()
+                                currentMessage.Content.Add(new ToolUseContent()
                                 {
                                     Id = fcc.CallId,
                                     Name = fcc.Name,
                                     Input = JsonSerializer.SerializeToNode(fcc.Arguments)
-                                });
-                                break;
-
-                            case Microsoft.Extensions.AI.FunctionResultContent frc:
-                                m.Content.Add(new ToolResultContent()
-                                {
-                                    ToolUseId = frc.CallId,
-                                    Content = new List<ContentBase>() { new TextContent () { Text = frc.Result?.ToString() ?? string.Empty } },
-                                    IsError = frc.Exception is not null,
                                 });
                                 break;
                         }
