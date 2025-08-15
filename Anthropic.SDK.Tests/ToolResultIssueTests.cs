@@ -65,6 +65,61 @@ namespace Anthropic.SDK.Tests
         }
 
         [TestMethod]
+        public void TestMessageParametersWithInterleavedContentPreservesOrdering()
+        {
+            // Arrange: Create a complex message with interleaved content that requires multiple message splits
+            var messages = new List<ChatMessage>
+            {
+                new ChatMessage(ChatRole.User, "What is the weather in Paris and London?"),
+                new ChatMessage(ChatRole.Assistant, new List<AIContent>
+                {
+                    new Microsoft.Extensions.AI.TextContent("Let me check tool A"),
+                    new Microsoft.Extensions.AI.FunctionCallContent("call_1", "GetWeather", new Dictionary<string, object> { { "location", "Paris" } }),
+                    new Microsoft.Extensions.AI.FunctionResultContent("call_1", "Sunny, 22°C"),
+                    new Microsoft.Extensions.AI.TextContent("Let me check tool B, I need more info"),
+                    new Microsoft.Extensions.AI.FunctionCallContent("call_2", "GetWeather", new Dictionary<string, object> { { "location", "London" } }),
+                    new Microsoft.Extensions.AI.FunctionResultContent("call_2", "Cloudy, 18°C"),
+                    new Microsoft.Extensions.AI.TextContent("I've researched your question and the answer is: Paris is sunny at 22°C and London is cloudy at 18°C!")
+                })
+            };
+
+            var client = new AnthropicClient().Messages;
+
+            // Act: Convert to MessageParameters
+            var parameters = ChatClientHelper.CreateMessageParameters(client, messages, null);
+
+            // Assert: Should create multiple messages preserving order
+            Assert.IsNotNull(parameters.Messages);
+            Assert.IsTrue(parameters.Messages.Count >= 5, "Should have multiple messages to preserve ordering");
+
+            // Verify the expected pattern:
+            // 1. User message (original question)
+            // 2. Assistant message (text + tool call)
+            // 3. User message (tool result)
+            // 4. Assistant message (text + tool call)  
+            // 5. User message (tool result)
+            // 6. Assistant message (final text)
+
+            var userMessages = parameters.Messages.Where(m => m.Role == RoleType.User).ToList();
+            var assistantMessages = parameters.Messages.Where(m => m.Role == RoleType.Assistant).ToList();
+
+            // Should have user messages for the original question + 2 tool results
+            Assert.IsTrue(userMessages.Count >= 3, "Should have at least 3 user messages");
+            // Should have assistant messages for tool calls and responses
+            Assert.IsTrue(assistantMessages.Count >= 3, "Should have at least 3 assistant messages");
+
+            // Verify all tool results are in user messages
+            var toolResultMessages = parameters.Messages.Where(m => 
+                m.Content.Any(c => c is ToolResultContent)).ToList();
+            
+            foreach (var msg in toolResultMessages)
+            {
+                Assert.AreEqual(RoleType.User, msg.Role, 
+                    "All tool result messages must have User role");
+            }
+        }
+
+        [TestMethod]
         public void TestMessageParametersWithOnlyToolResultsAreInUserMessage()
         {
             // Arrange: Create a message with only tool results (simulating a user providing tool results)
