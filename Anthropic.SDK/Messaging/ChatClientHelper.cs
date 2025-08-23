@@ -224,7 +224,24 @@ namespace Anthropic.SDK.Messaging
                         break;
 
                     case TextContent tc:
-                        contents.Add(new Microsoft.Extensions.AI.TextContent(tc.Text));
+                        var textContent = new Microsoft.Extensions.AI.TextContent(tc.Text);
+                        if (tc.Citations != null && tc.Citations.Any())
+                        {
+                            foreach (var tau in tc.Citations)
+                            {
+                                (textContent.Annotations ?? []).Add(new CitationAnnotation
+                                {
+                                    RawRepresentation = tau,
+                                    AnnotatedRegions =
+                                    [
+                                        new TextSpanAnnotatedRegion
+                                            { StartIndex = (int?)tau.StartPageNumber, EndIndex = (int?)tau.EndPageNumber }
+                                    ],
+                                    FileId = tau.Title
+                                });
+                            }
+                        }
+                        contents.Add(textContent);
                         break;
 
                     case ImageContent ic:
