@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Anthropic.SDK;
 using Anthropic.SDK.Constants;
 using Anthropic.SDK.Extensions;
 using Anthropic.SDK.Messaging;
@@ -145,6 +147,33 @@ namespace Anthropic.SDK.Tests
             var thinkingParams = options.GetThinkingParameters();
             Assert.IsNotNull(thinkingParams);
             Assert.AreEqual(16000, thinkingParams.BudgetTokens);
+        }
+
+        [TestMethod]
+        public void ChatClientHelper_MapsThinkingParametersCorrectly()
+        {
+            // Arrange
+            var client = new AnthropicClient().Messages;
+            var messages = new List<ChatMessage>
+            {
+                new ChatMessage(ChatRole.User, "Test message")
+            };
+            var options = new ChatOptions
+            {
+                ModelId = AnthropicModels.Claude37Sonnet,
+                MaxOutputTokens = 20000,
+                Temperature = 1.0f
+            }.WithThinking(8000);
+
+            // Act
+            var messageParams = ChatClientHelper.CreateMessageParameters(client, messages, options);
+
+            // Assert
+            Assert.IsNotNull(messageParams.Thinking);
+            Assert.AreEqual(8000, messageParams.Thinking.BudgetTokens);
+            Assert.AreEqual("enabled", messageParams.Thinking.Type);
+            Assert.AreEqual(AnthropicModels.Claude37Sonnet, messageParams.Model);
+            Assert.AreEqual(20000, messageParams.MaxTokens);
         }
     }
 }
