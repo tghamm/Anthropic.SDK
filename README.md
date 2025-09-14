@@ -326,6 +326,66 @@ Assert.IsTrue(res.Message.Text?.Contains("apple", StringComparison.OrdinalIgnore
 ```
 Please see the unit tests for even more examples.
 
+#### Extended Thinking with IChatClient
+
+The `IChatClient` supports extended thinking through the ChatOptions extension methods. This provides a clean and fluent API for enabling thinking in compatible models like Claude 3.7 Sonnet:
+
+```csharp
+using Anthropic.SDK.Extensions;
+
+IChatClient client = new AnthropicClient().Messages;
+
+List<ChatMessage> messages = new()
+{
+    new ChatMessage(ChatRole.User, "How many r's are in the word strawberry?")
+};
+
+// Using the extension method for thinking parameters
+ChatOptions options = new()
+{
+    ModelId = AnthropicModels.Claude37Sonnet,
+    MaxOutputTokens = 20000,
+    Temperature = 1.0f,
+}.WithThinking(16000); // Enable thinking with 16,000 budget tokens
+
+var res = await client.GetResponseAsync(messages, options);
+Console.WriteLine(res.Text); // The final answer
+
+// Access thinking content if available
+var thinkingContent = res.Message.Contents.OfType<TextReasoningContent>().FirstOrDefault();
+if (thinkingContent != null)
+{
+    Console.WriteLine("Claude's reasoning: " + thinkingContent.Text);
+}
+
+// Continue the conversation
+messages.AddMessages(res);
+messages.Add(new ChatMessage(ChatRole.User, "And how many letters total?"));
+
+res = await client.GetResponseAsync(messages, options);
+Console.WriteLine(res.Text);
+
+//Streaming with thinking
+StringBuilder sb = new();
+await foreach (var update in client.GetStreamingResponseAsync(messages, options))
+{
+    sb.Append(update);
+}
+Console.WriteLine(sb.ToString());
+```
+
+You can also set thinking parameters using a `ThinkingParameters` object:
+
+```csharp
+var thinkingParams = new ThinkingParameters { BudgetTokens = 8000 };
+ChatOptions options = new()
+{
+    ModelId = AnthropicModels.Claude37Sonnet,
+    MaxOutputTokens = 20000,
+    Temperature = 1.0f,
+}.WithThinking(thinkingParams);
+```
+
 ### Prompt Caching
 
 The `AnthropicClient` supports prompt caching of system messages, user messages (including images), assistant messages, tool_results, documents, and tools in accordance with model limitations. There are two primary mechanisms for prompt caching in the `AnthropicClient`. `FineGrained` and `AutomaticToolsAndSystem`. The former allows for complete control of all set-points of caching (up to the 4 set-points allowed) where-as `AutomaticToolsAndSystem` automatically caches the System prompt and Tools when present, leaving you the ability to add set-points in Messages yourself when you so choose.  When caching, be aware of the 5 minute expiry enforced by Anthropic, as well as other limitations that can cause a cache miss.  You can check the Token Usage data in results to ensure you are indeed receiving the benefits of caching. 
