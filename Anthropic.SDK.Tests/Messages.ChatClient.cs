@@ -4,6 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using Anthropic.SDK.Constants;
+using Anthropic.SDK.Extensions;
 using Anthropic.SDK.Messaging;
 using Microsoft.Extensions.AI;
 using TextContent = Microsoft.Extensions.AI.TextContent;
@@ -46,6 +47,75 @@ namespace Anthropic.SDK.Tests
             var res = await client.GetResponseAsync("Write a sonnet about the Dread Pirate Roberts. The response must include the word pirate.", options);
 
             Assert.IsTrue(res.Text.Contains("pirate") is true, res.Text);
+        }
+
+        [TestMethod]
+        public async Task TestNonStreamingThinkingWithExtensionMethods()
+        {
+            IChatClient client = new AnthropicClient().Messages;
+
+            List<ChatMessage> messages = new()
+            {
+                new ChatMessage(ChatRole.User, "How many r's are in the word strawberry?")
+            };
+
+            ChatOptions options = new ChatOptions()
+            {
+                ModelId = AnthropicModels.Claude37Sonnet,
+                MaxOutputTokens = 20000,
+                Temperature = 1.0f,
+            }.WithThinking(16000);
+
+            var res = await client.GetResponseAsync(messages, options);
+            Assert.IsTrue(res.Text.Contains("3") is true, res.Text);
+            messages.AddMessages(res);
+            messages.Add(new ChatMessage(ChatRole.User, "and how many letters total?"));
+            res = await client.GetResponseAsync(messages, options);
+            Assert.IsTrue(res.Text?.Contains("10") is true, res.Text);
+        }
+
+        [TestMethod]
+        public async Task TestThinkingStreamingWithExtensionMethods()
+        {
+            IChatClient client = new AnthropicClient().Messages;
+
+            List<ChatMessage> messages = new()
+            {
+                new ChatMessage(ChatRole.User, "How many r's are in the word strawberry?")
+            };
+
+            ChatOptions options = new ChatOptions()
+            {
+                ModelId = AnthropicModels.Claude37Sonnet,
+                MaxOutputTokens = 20000,
+                Temperature = 1.0f,
+            }.WithThinking(16000);
+
+            List<ChatResponseUpdate> updates = new();
+            StringBuilder sb = new();
+            await foreach (var res in client.GetStreamingResponseAsync(messages, options))
+            {
+                updates.Add(res);
+                sb.Append(res);
+            }
+
+            Assert.IsTrue(sb.ToString().Contains("3") is true, sb.ToString());
+
+            messages.AddMessages(updates);
+
+            Assert.IsTrue(messages.Last().Contents.OfType<Microsoft.Extensions.AI.TextReasoningContent>().Any());
+
+            messages.Add(new ChatMessage(ChatRole.User, "and how many letters total?"));
+
+            updates.Clear();
+            await foreach (var res in client.GetStreamingResponseAsync(messages, options))
+            {
+                updates.Add(res);
+            }
+            var text = string.Join("",
+                updates.SelectMany(p => p.Contents.OfType<TextContent>()).Select(p => p.Text));
+
+            Assert.IsTrue(text.Contains("10") is true, text);
         }
 
         [TestMethod]

@@ -39,5 +39,10 @@ namespace Anthropic.SDK.Constants
         /// Claude 4 Opus
         /// </summary>
         public const string Claude4Opus = "claude-opus-4@20250514";
+
+        /// <summary>
+        /// Claude 4.1 Opus
+        /// </summary>
+        public const string Claude41Opus = "claude-opus-4-1@20250805"; 
     }
 }
