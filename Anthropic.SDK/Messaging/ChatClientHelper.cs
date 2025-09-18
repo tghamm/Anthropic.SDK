@@ -85,17 +85,46 @@ namespace Anthropic.SDK.Messaging
                     {
                         switch (tool)
                         {
-                            case AIFunction f:
+                            case AIFunctionDeclaration f:
                                 tools.Add(new Common.Tool(new Function(f.Name, f.Description, JsonSerializer.SerializeToNode(JsonSerializer.Deserialize<FunctionParameters>(f.JsonSchema)))));
                                 break;
 
-                            case HostedCodeInterpreterTool ci:
+                            case HostedCodeInterpreterTool:
                                 tools.Add(Common.Tool.CodeInterpreter);
                                 break;
 
-                            case HostedWebSearchTool wt:
+                            case HostedWebSearchTool:
                                 tools.Add(ServerTools.GetWebSearchTool(5));
                                 break;
+
+#pragma warning disable MEAI001 // Type is for evaluation purposes only and is subject to change or removal in future updates.
+                            case HostedMcpServerTool mcpt:
+                                MCPServer mcpServer = new()
+                                {
+                                    Url = mcpt.Url.ToString(),
+                                    Name = mcpt.ServerName,
+                                };
+
+                                if (mcpt.AllowedTools is not null)
+                                {
+                                    mcpServer.ToolConfiguration.AllowedTools.AddRange(mcpt.AllowedTools);
+                                }
+
+                                if (mcpt.Headers?.TryGetValue("Authorization", out string authHeader) is true)
+                                {
+                                    ReadOnlySpan<char> actual = authHeader.AsSpan().Trim();
+                                    int spacePos = actual.IndexOf(' ');
+                                    if (spacePos > 0)
+                                    {
+                                        authHeader = actual.Slice(spacePos + 1).Trim().ToString();
+                                    }
+
+                                    mcpServer.AuthorizationToken = authHeader;
+                                }
+
+                                (parameters.MCPServers ??= []).Add(mcpServer);
+                                break;
+#pragma warning restore MEAI001
                         }
                     }
                 }

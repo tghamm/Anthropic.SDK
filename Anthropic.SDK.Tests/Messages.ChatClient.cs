@@ -168,7 +168,7 @@ namespace Anthropic.SDK.Tests
                 },
             };
 
-            List<ChatResponseUpdate> updates  = new();
+            List<ChatResponseUpdate> updates = new();
             StringBuilder sb = new();
             await foreach (var res in client.GetStreamingResponseAsync(messages, options))
             {
@@ -181,7 +181,7 @@ namespace Anthropic.SDK.Tests
             messages.AddMessages(updates);
 
             Assert.IsTrue(messages.Last().Contents.OfType<Microsoft.Extensions.AI.TextReasoningContent>().Any());
-            
+
             messages.Add(new ChatMessage(ChatRole.User, "and how many letters total?"));
 
             updates.Clear();
@@ -221,7 +221,7 @@ namespace Anthropic.SDK.Tests
             {
                 updates.Add(res);
             }
-            
+
 
             messages.AddMessages(updates);
 
@@ -317,7 +317,7 @@ namespace Anthropic.SDK.Tests
             var res = await client.GetResponseAsync("How old is Alice?", options);
 
             Assert.IsTrue(
-                res.Text.Contains("25") is true, 
+                res.Text.Contains("25") is true,
                 res.Text);
         }
 
@@ -436,6 +436,29 @@ namespace Anthropic.SDK.Tests
             });
 
             Assert.IsTrue(res.Text.Contains("apple", StringComparison.OrdinalIgnoreCase) is true, res.Text);
+        }
+
+        [TestMethod]
+        public async Task TestNonStreamingMCPMessage()
+        {
+            IChatClient client = new AnthropicClient().Messages
+                .AsBuilder()
+                .UseFunctionInvocation()
+                .Build();
+
+#pragma warning disable MEAI001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+            ChatOptions options = new()
+            {
+                ModelId = AnthropicModels.Claude4Sonnet,
+                MaxOutputTokens = 512,
+                Temperature = 1.0f,
+                Tools = [new HostedMcpServerTool("DeepWiki", "https://mcp.deepwiki.com/sse")]
+            };
+#pragma warning restore MEAI001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
+            var res = await client.GetResponseAsync("Tell me about the repo tghamm/Anthropic.SDK", options);
+
+            Assert.IsTrue(res.Text.ToLower().Contains("anthropic") is true, res.Text);
         }
     }
 }
