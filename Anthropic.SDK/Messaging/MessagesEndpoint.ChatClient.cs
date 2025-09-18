@@ -135,7 +135,6 @@ public partial class MessagesEndpoint : IChatClient
                     });
                 }
 
-
                 if (response.Delta?.StopReason is string stopReason)
                 {
                     update.FinishReason = response.Delta.StopReason switch
