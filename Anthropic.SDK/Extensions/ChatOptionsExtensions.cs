@@ -15,7 +15,7 @@ namespace Anthropic.SDK.Extensions
         /// Sets thinking parameters for extended thinking support in compatible models like Claude 3.7 Sonnet
         /// </summary>
         /// <param name="options">The ChatOptions instance</param>
-        /// <param name="budgetTokens">The budget tokens for thinking (typically 8000-32000)</param>
+        /// <param name="budgetTokens">The budget tokens for thinking (typically up to max_tokens unless using interleaved thinking)</param>
         /// <returns>The ChatOptions instance for fluent chaining</returns>
         public static ChatOptions WithThinking(this ChatOptions options, int budgetTokens)
         {
@@ -47,6 +47,53 @@ namespace Anthropic.SDK.Extensions
             if (thinkingParameters == null)
                 throw new ArgumentNullException(nameof(thinkingParameters));
 
+            (options.AdditionalProperties ??= new())[ThinkingParametersKey] = thinkingParameters;
+
+            return options;
+        }
+
+        /// <summary>
+        /// Sets interleaved thinking parameters for enhanced thinking support. This enables the interleaved-thinking-2025-05-14 beta header
+        /// which allows thinking tokens to exceed max_tokens. Note: On 3rd-party platforms (Bedrock, Vertex AI), this only works 
+        /// with Claude Opus 4.1, Opus 4, or Sonnet 4 models.
+        /// </summary>
+        /// <param name="options">The ChatOptions instance</param>
+        /// <param name="budgetTokens">The budget tokens for thinking (can exceed max_tokens when using interleaved thinking)</param>
+        /// <returns>The ChatOptions instance for fluent chaining</returns>
+        public static ChatOptions WithInterleavedThinking(this ChatOptions options, int budgetTokens)
+        {
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
+
+            if (budgetTokens <= 0)
+                throw new ArgumentOutOfRangeException(nameof(budgetTokens), "Budget tokens must be greater than 0");
+
+            (options.AdditionalProperties ??= new())[ThinkingParametersKey] = new ThinkingParameters
+            {
+                BudgetTokens = budgetTokens,
+                UseInterleavedThinking = true
+            };
+
+            return options;
+        }
+
+        /// <summary>
+        /// Sets interleaved thinking parameters for enhanced thinking support. This enables the interleaved-thinking-2025-05-14 beta header
+        /// which allows thinking tokens to exceed max_tokens. Note: On 3rd-party platforms (Bedrock, Vertex AI), this only works 
+        /// with Claude Opus 4.1, Opus 4, or Sonnet 4 models.
+        /// </summary>
+        /// <param name="options">The ChatOptions instance</param>
+        /// <param name="thinkingParameters">The thinking parameters to set</param>
+        /// <returns>The ChatOptions instance for fluent chaining</returns>
+        public static ChatOptions WithInterleavedThinking(this ChatOptions options, ThinkingParameters thinkingParameters)
+        {
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
+
+            if (thinkingParameters == null)
+                throw new ArgumentNullException(nameof(thinkingParameters));
+
+            thinkingParameters.UseInterleavedThinking = true;
             (options.AdditionalProperties ??= new())[ThinkingParametersKey] = thinkingParameters;
 
             return options;

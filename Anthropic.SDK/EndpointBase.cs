@@ -204,7 +204,20 @@ namespace Anthropic.SDK
             HttpMethod verb = null,
             object postData = null, [EnumeratorCancellation] CancellationToken ctx = default)
         {
-            var response = await HttpRequestRaw(url, verb, postData, streaming: true, ctx).ConfigureAwait(false);
+            await foreach (var item in HttpStreamingRequestMessages(url, verb, postData, null, ctx))
+            {
+                yield return item;
+            }
+        }
+
+        /// <summary>
+        /// Makes a streaming HTTP request and returns the response as an async enumerable of MessageResponse with additional headers.
+        /// </summary>
+        protected async IAsyncEnumerable<MessageResponse> HttpStreamingRequestMessages(string url = null,
+            HttpMethod verb = null,
+            object postData = null, Dictionary<string, string> additionalHeaders = null, [EnumeratorCancellation] CancellationToken ctx = default)
+        {
+            var response = await HttpRequestRaw(url, verb, postData, streaming: true, additionalHeaders, ctx).ConfigureAwait(false);
 #if NET6_0_OR_GREATER
             await using var stream = await response.Content.ReadAsStreamAsync(ctx).ConfigureAwait(false);
 #else

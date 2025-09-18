@@ -29,7 +29,30 @@ namespace Anthropic.SDK.Messaging
             SetCacheControls(parameters);
 
             parameters.Stream = false;
-            var response = await HttpRequestMessages<MessageResponse>(Url, HttpMethod.Post, parameters, ctx).ConfigureAwait(false);
+
+            // Check if interleaved thinking is needed and add the header
+            Dictionary<string, string> additionalHeaders = null;
+            if (parameters.Thinking?.UseInterleavedThinking == true)
+            {
+                // Add the interleaved thinking beta header to the existing beta features
+                var existingBeta = Client.AnthropicBetaVersion;
+                var interleavedBeta = "interleaved-thinking-2025-05-14";
+                
+                // Combine with existing beta features if they don't already include interleaved thinking
+                if (!existingBeta.Contains(interleavedBeta))
+                {
+                    var combinedBeta = string.IsNullOrWhiteSpace(existingBeta) 
+                        ? interleavedBeta 
+                        : $"{existingBeta},{interleavedBeta}";
+                    
+                    additionalHeaders = new Dictionary<string, string>
+                    {
+                        ["anthropic-beta"] = combinedBeta
+                    };
+                }
+            }
+
+            var response = await HttpRequestMessages<MessageResponse>(Url, HttpMethod.Post, parameters, additionalHeaders, ctx).ConfigureAwait(false);
 
             var toolCalls = new List<Function>();
             foreach (var message in response.Content)
@@ -94,12 +117,35 @@ namespace Anthropic.SDK.Messaging
             SetCacheControls(parameters);
 
             parameters.Stream = true;
+
+            // Check if interleaved thinking is needed and add the header
+            Dictionary<string, string> additionalHeaders = null;
+            if (parameters.Thinking?.UseInterleavedThinking == true)
+            {
+                // Add the interleaved thinking beta header to the existing beta features
+                var existingBeta = Client.AnthropicBetaVersion;
+                var interleavedBeta = "interleaved-thinking-2025-05-14";
+                
+                // Combine with existing beta features if they don't already include interleaved thinking
+                if (!existingBeta.Contains(interleavedBeta))
+                {
+                    var combinedBeta = string.IsNullOrWhiteSpace(existingBeta) 
+                        ? interleavedBeta 
+                        : $"{existingBeta},{interleavedBeta}";
+                    
+                    additionalHeaders = new Dictionary<string, string>
+                    {
+                        ["anthropic-beta"] = combinedBeta
+                    };
+                }
+            }
+
             var toolCalls = new List<Function>();
             var arguments = string.Empty;
             var name = string.Empty;
             bool captureTool = false;
             var id = string.Empty;
-            await foreach (var result in HttpStreamingRequestMessages(Url, HttpMethod.Post, parameters, ctx).ConfigureAwait(false))
+            await foreach (var result in HttpStreamingRequestMessages(Url, HttpMethod.Post, parameters, additionalHeaders, ctx).ConfigureAwait(false))
             {
                 if (result.ContentBlock != null && result.ContentBlock.Type == "tool_use")
                 {

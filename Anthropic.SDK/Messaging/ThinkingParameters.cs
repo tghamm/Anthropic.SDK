@@ -12,5 +12,11 @@ namespace Anthropic.SDK.Messaging
         public string Type => "enabled";
         [JsonPropertyName("budget_tokens")]
         public int BudgetTokens { get; set; }
+
+        /// <summary>
+        /// Indicates whether to use interleaved thinking mode which allows thinking tokens to exceed max_tokens
+        /// </summary>
+        [JsonIgnore]
+        public bool UseInterleavedThinking { get; set; }
     }
 }
