@@ -48,7 +48,16 @@ namespace Anthropic.SDK
         protected async Task<TResponse> HttpRequestMessages<TResponse>(string url = null, HttpMethod verb = null,
             object postData = null, CancellationToken ctx = default)
         {
-            var response = await HttpRequestRaw(url, verb, postData, false, ctx).ConfigureAwait(false);
+            return await HttpRequestMessages<TResponse>(url, verb, postData, null, ctx).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Makes an HTTP request and deserializes the response to the specified type with additional headers.
+        /// </summary>
+        protected async Task<TResponse> HttpRequestMessages<TResponse>(string url = null, HttpMethod verb = null,
+            object postData = null, Dictionary<string, string> additionalHeaders = null, CancellationToken ctx = default)
+        {
+            var response = await HttpRequestRaw(url, verb, postData, false, additionalHeaders, ctx).ConfigureAwait(false);
             string resultAsString = await ReadResponseContentAsync(response, ctx).ConfigureAwait(false);
 
             var options = new JsonSerializerOptions
@@ -109,12 +118,30 @@ namespace Anthropic.SDK
         protected async Task<HttpResponseMessage> HttpRequestRaw(string url = null, HttpMethod verb = null,
             object postData = null, bool streaming = false, CancellationToken ctx = default)
         {
+            return await HttpRequestRaw(url, verb, postData, streaming, null, ctx).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Makes a raw HTTP request and returns the response with additional headers.
+        /// </summary>
+        protected async Task<HttpResponseMessage> HttpRequestRaw(string url = null, HttpMethod verb = null,
+            object postData = null, bool streaming = false, Dictionary<string, string> additionalHeaders = null, CancellationToken ctx = default)
+        {
             if (string.IsNullOrEmpty(url))
                 url = this.Url;
 
             HttpResponseMessage response;
             string resultAsString = null;
             var req = new HttpRequestMessage(verb, url);
+
+            // Add additional headers if provided
+            if (additionalHeaders != null)
+            {
+                foreach (var header in additionalHeaders)
+                {
+                    req.Headers.Add(header.Key, header.Value);
+                }
+            }
 
             if (postData != null)
             {

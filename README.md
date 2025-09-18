@@ -216,13 +216,13 @@ messages.Add(new Message(RoleType.User, "How many r's are in the word strawberry
 var parameters = new MessageParameters()
 {
     Messages = messages,
-    MaxTokens = 20000,
+    MaxTokens = 4096,
     Model = AnthropicModels.Claude37Sonnet,
     Stream = false,
     Temperature = 1.0m,
     Thinking = new ThinkingParameters()
     {
-        BudgetTokens = 16000
+        BudgetTokens = 4000
     }
 };
 var res = await client.Messages.GetClaudeMessageAsync(parameters);
@@ -325,6 +325,88 @@ Assert.IsTrue(res.Message.Text?.Contains("apple", StringComparison.OrdinalIgnore
 
 ```
 Please see the unit tests for even more examples.
+
+#### Extended Thinking with IChatClient
+
+The `IChatClient` supports extended thinking through the ChatOptions extension methods. This provides a clean and fluent API for enabling thinking in compatible models like Claude 3.7 Sonnet:
+
+```csharp
+using Anthropic.SDK.Extensions;
+
+IChatClient client = new AnthropicClient().Messages;
+
+List<ChatMessage> messages = new()
+{
+    new ChatMessage(ChatRole.User, "How many r's are in the word strawberry?")
+};
+
+// Using the extension method for thinking parameters
+ChatOptions options = new()
+{
+    ModelId = AnthropicModels.Claude37Sonnet,
+    MaxOutputTokens = 4096,
+    Temperature = 1.0f,
+}.WithThinking(4000); // Enable thinking with 4,000 budget tokens
+
+var res = await client.GetResponseAsync(messages, options);
+Console.WriteLine(res.Text); // The final answer
+
+// Access thinking content if available
+var thinkingContent = res.Message.Contents.OfType<TextReasoningContent>().FirstOrDefault();
+if (thinkingContent != null)
+{
+    Console.WriteLine("Claude's reasoning: " + thinkingContent.Text);
+}
+
+// Continue the conversation
+messages.AddMessages(res);
+messages.Add(new ChatMessage(ChatRole.User, "And how many letters total?"));
+
+res = await client.GetResponseAsync(messages, options);
+Console.WriteLine(res.Text);
+
+//Streaming with thinking
+StringBuilder sb = new();
+await foreach (var update in client.GetStreamingResponseAsync(messages, options))
+{
+    sb.Append(update);
+}
+Console.WriteLine(sb.ToString());
+```
+
+You can also set thinking parameters using a `ThinkingParameters` object:
+
+```csharp
+var thinkingParams = new ThinkingParameters { BudgetTokens = 3000 };
+ChatOptions options = new()
+{
+    ModelId = AnthropicModels.Claude37Sonnet,
+    MaxOutputTokens = 4096,
+    Temperature = 1.0f,
+}.WithThinking(thinkingParams);
+```
+
+### Interleaved Thinking (Advanced)
+
+For enhanced thinking capabilities that allow thinking tokens to exceed max_tokens, you can use the `WithInterleavedThinking` extension method. This enables the `interleaved-thinking-2025-05-14` beta header:
+
+```csharp
+// Enable interleaved thinking with budget tokens exceeding max_tokens
+ChatOptions options = new()
+{
+    ModelId = AnthropicModels.Claude37Sonnet,
+    MaxOutputTokens = 4096,
+    Temperature = 1.0f,
+}.WithInterleavedThinking(8000); // 8,000 thinking tokens with 4,096 max output tokens
+
+var response = await client.GetResponseAsync("Complex reasoning task", options);
+```
+
+**Important Notes about Interleaved Thinking:**
+- On direct Anthropic API access, this feature works with all compatible models
+- On 3rd-party platforms (Amazon Bedrock, Vertex AI), it only works with Claude Opus 4.1, Opus 4, or Sonnet 4 models
+- With interleaved thinking enabled, thinking tokens can exceed the max_tokens limit
+- Developers are responsible for ensuring compatibility with their chosen platform and model
 
 ### Prompt Caching
 
