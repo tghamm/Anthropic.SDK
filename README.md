@@ -1290,7 +1290,8 @@ Vertex AI provides access to the following Claude models:
 - `VertexAIModels.Claude35Haiku`: Intelligence at blazing speeds
 - `VertexAIModels.Claude37Sonnet`: Highest level of intelligence and capability with toggleable extended thinking
 - `VertexAIModels.Claude4Sonnet`: Newest Sonnet model with toggleable extended thinking
-- `VertexAIModels.Claude4Opus`: Newest Opus Model and most powerful thinking model
+- `VertexAIModels.Claude4Opus`: Previous Opus Model and powerful thinking model
+- `VertexAIModels.Claude41Opus`: Newest Opus Model and most powerful thinking model
 
 ### Streaming Support
 
