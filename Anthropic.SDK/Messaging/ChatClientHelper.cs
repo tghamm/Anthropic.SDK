@@ -186,7 +186,20 @@ namespace Anthropic.SDK.Messaging
                                 break;
 
                             case Microsoft.Extensions.AI.TextContent textContent:
-                                currentMessage.Content.Add(new TextContent() { Text = textContent.Text });
+                                string text = textContent.Text;
+                                if (currentMessage.Role == RoleType.Assistant)
+                                {
+                                    text.TrimEnd();
+                                    if (text.Length != 0)
+                                    {
+                                        currentMessage.Content.Add(new TextContent() { Text = text });
+                                    }
+                                }
+                                else
+                                {
+                                    currentMessage.Content.Add(new TextContent() { Text = text });
+                                }
+
                                 break;
 
                             case Microsoft.Extensions.AI.DataContent imageContent when imageContent.HasTopLevelMediaType("image"):
@@ -223,6 +236,8 @@ namespace Anthropic.SDK.Messaging
                     }
                 }
             }
+
+            parameters.Messages.RemoveAll(m => m.Content.Count == 0);
 
             return parameters;
         }
