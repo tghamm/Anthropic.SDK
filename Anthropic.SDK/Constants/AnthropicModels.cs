@@ -33,6 +33,11 @@
         public const string Claude4Opus = "claude-opus-4-20250514";
 
         /// <summary>
+        /// Claude 4.1 Opus
+        /// </summary>
+        public const string Claude41Opus = "claude-opus-4-1-20250805";        
+
+        /// <summary>
         /// Claude 3.5 Haiku
         /// </summary>
         public const string Claude35Haiku = "claude-3-5-haiku-20241022";
