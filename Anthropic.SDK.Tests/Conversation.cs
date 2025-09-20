@@ -22,7 +22,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 1024,
-                Model = AnthropicModels.Claude3Opus,
+                Model = AnthropicModels.Claude41Opus,
                 Stream = false,
                 Temperature = 1.0m,
             };
