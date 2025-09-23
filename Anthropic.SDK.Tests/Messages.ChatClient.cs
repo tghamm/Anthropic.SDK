@@ -360,7 +360,7 @@ namespace Anthropic.SDK.Tests
                 ])
             ], new()
             {
-                ModelId = AnthropicModels.Claude4Opus,
+                ModelId = AnthropicModels.Claude41Opus,
                 MaxOutputTokens = 512,
                 Temperature = 0f,
             });
