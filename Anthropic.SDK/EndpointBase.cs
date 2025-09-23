@@ -11,6 +11,8 @@ using System.Security.Authentication;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
 using System.Threading;
 using System.Threading.Tasks;
 using Anthropic.SDK.Batches;
@@ -123,7 +125,9 @@ namespace Anthropic.SDK
             {
                 var options = new JsonSerializerOptions
                 {
-                    Converters = { ContentConverter.Instance }
+                    Converters = { ContentConverter.Instance },
+                    // Ensure proper Unicode handling for all characters
+                    Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
                 };
                 using var ms = new MemoryStream(Encoding.UTF8.GetBytes(line));
                 var res = await JsonSerializer.DeserializeAsync<BatchLine>(ms, options, cancellationToken: ctx).ConfigureAwait(false);
@@ -241,7 +245,9 @@ namespace Anthropic.SDK
                         using var ms = new MemoryStream(Encoding.UTF8.GetBytes(currentEvent.Data));
                         var res = await JsonSerializer.DeserializeAsync<MessageResponse>(ms, new JsonSerializerOptions()
                         {
-                            Converters = { ContentConverter.Instance }
+                            Converters = { ContentConverter.Instance },
+                            // Ensure proper Unicode handling for all characters
+                            Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
                         }, cancellationToken: ctx).ConfigureAwait(false);
                         res.RateLimits = GetRateLimits(response);
                         yield return res;
@@ -249,7 +255,12 @@ namespace Anthropic.SDK
                     else if (currentEvent.EventType == "error")
                     {
                         using var ms = new MemoryStream(Encoding.UTF8.GetBytes(currentEvent.Data));
-                        var res = await JsonSerializer.DeserializeAsync<ErrorResponse>(ms, cancellationToken: ctx).ConfigureAwait(false);
+                        var errorOptions = new JsonSerializerOptions
+                        {
+                            // Ensure proper Unicode handling for all characters
+                            Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
+                        };
+                        var res = await JsonSerializer.DeserializeAsync<ErrorResponse>(ms, errorOptions, cancellationToken: ctx).ConfigureAwait(false);
                         throw new Exception(res.Error.Message);
                     }
                     currentEvent = new SseEvent();
