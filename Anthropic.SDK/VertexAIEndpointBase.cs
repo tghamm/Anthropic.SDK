@@ -10,6 +10,8 @@ using System.Security.Authentication;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
 using System.Threading;
 using System.Threading.Tasks;
 using Anthropic.SDK.Extensions;
@@ -223,14 +225,25 @@ namespace Anthropic.SDK
                         try
                         {
                             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(currentEvent.Data));
-                            result = await JsonSerializer.DeserializeAsync<MessageResponse>(ms, cancellationToken: ctx).ConfigureAwait(false);
+                            var options = new JsonSerializerOptions
+                            {
+                                Converters = { ContentConverter.Instance },
+                                // Ensure proper Unicode handling for all characters
+                                Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
+                            };
+                            result = await JsonSerializer.DeserializeAsync<MessageResponse>(ms, options, cancellationToken: ctx).ConfigureAwait(false);
                         }
                         catch (JsonException)
                         {
                             // Try to parse as a Vertex AI response
                             try
                             {
-                                var vertexResponse = JsonSerializer.Deserialize<JsonElement>(currentEvent.Data);
+                                var vertexOptions = new JsonSerializerOptions
+                                {
+                                    // Ensure proper Unicode handling for all characters
+                                    Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
+                                };
+                                var vertexResponse = JsonSerializer.Deserialize<JsonElement>(currentEvent.Data, vertexOptions);
                                 
                                 // Check if it has predictions
                                 if (vertexResponse.TryGetProperty("predictions", out var predictions) &&

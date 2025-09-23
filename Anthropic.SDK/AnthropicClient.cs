@@ -3,6 +3,8 @@ using System.Net.Http;
 using Anthropic.SDK.Messaging;
 using System.Text.Json.Serialization;
 using System.Text.Json;
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
 using Anthropic.SDK.Batches;
 using Anthropic.SDK.Models;
 
@@ -72,6 +74,8 @@ namespace Anthropic.SDK
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             Converters = { new JsonStringEnumConverter() },
             ReferenceHandler = ReferenceHandler.IgnoreCycles,
+            // Ensure proper Unicode handling for all characters
+            Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
         };
 
 
