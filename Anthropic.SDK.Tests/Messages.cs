@@ -197,7 +197,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 512,
-                Model = AnthropicModels.Claude3Opus,
+                Model = AnthropicModels.Claude41Opus,
                 Stream = false,
                 Temperature = 1.0m,
             };
@@ -251,7 +251,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 512,
-                Model = AnthropicModels.Claude3Opus,
+                Model = AnthropicModels.Claude41Opus,
                 Stream = true,
                 Temperature = 1.0m,
             };

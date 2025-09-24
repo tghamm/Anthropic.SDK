@@ -1,4 +1,6 @@
-﻿namespace Anthropic.SDK.Constants
+﻿using System;
+
+namespace Anthropic.SDK.Constants
 {
 
 
@@ -10,6 +12,7 @@
         /// <summary>
         /// Claude 3 Opus
         /// </summary>
+        [Obsolete ("This Model will be retired on January 5th 2026")]
         public const string Claude3Opus = "claude-3-opus-20240229";
         
         /// <summary>

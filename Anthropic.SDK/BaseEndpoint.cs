@@ -8,6 +8,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
 using System.Threading;
 using System.Threading.Tasks;
 using Anthropic.SDK.Messaging;
@@ -62,7 +64,9 @@ namespace Anthropic.SDK
 
             var options = new JsonSerializerOptions
             {
-                Converters = { ContentConverter.Instance }
+                Converters = { ContentConverter.Instance },
+                // Ensure proper Unicode handling for all characters
+                Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
             };
 
             using var ms = new MemoryStream(Encoding.UTF8.GetBytes(resultAsString));
@@ -154,7 +158,9 @@ namespace Anthropic.SDK
                     var options = new JsonSerializerOptions
                     {
                         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                        Converters = { ContentConverter.Instance }
+                        Converters = { ContentConverter.Instance },
+                        // Ensure proper Unicode handling for all characters
+                        Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
                     };
                     string jsonContent = JsonSerializer.Serialize(postData, options);
                     req.Content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
