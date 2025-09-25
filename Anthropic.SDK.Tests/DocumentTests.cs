@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Reflection;
 using Anthropic.SDK.Constants;
 using Anthropic.SDK.Messaging;
 
@@ -41,7 +35,8 @@ namespace Anthropic.SDK.Tests
                     },
                     CacheControl = new CacheControl()
                     {
-                        Type = CacheControlType.ephemeral
+                        Type = CacheControlType.ephemeral,
+                        TTL = CacheControl.CacheDuration5Minutes,
                     }
                 }),
                 new Message(RoleType.User, "Which model has the highest human preference win rates across each use-case?"),
@@ -60,8 +55,11 @@ namespace Anthropic.SDK.Tests
             
             Assert.IsNotNull(res.FirstMessage.ToString());
             Assert.IsTrue(res.Usage.CacheCreationInputTokens > 0 || res.Usage.CacheReadInputTokens > 0);
-
-            
+            if (res.Usage.CacheCreationInputTokens > 0)
+            {
+                Assert.IsNotNull(res.Usage.CacheCreation);
+                Assert.IsTrue(res.Usage.CacheCreation.Ephemeral5mInputTokens > 0);
+            }
         }
 
         [TestMethod]

@@ -236,6 +236,11 @@ namespace Anthropic.SDK.Tests
             Assert.IsTrue(messageResponses.First().StreamStartMessage.Usage.CacheCreationInputTokens > 0 ||
                           messageResponses.First().StreamStartMessage.Usage.CacheReadInputTokens > 0);
 
+            if (messageResponses.First().StreamStartMessage.Usage.CacheCreationInputTokens > 0)
+            {
+                Assert.IsTrue(messageResponses.First().StreamStartMessage.Usage.CacheCreation.Ephemeral5mInputTokens > 0);
+            }
+
             messages.Add(new Message(messageResponses));
             messages.Add(new Message(RoleType.User, "Who is the main character and how old is he?"));
 
@@ -487,7 +492,11 @@ namespace Anthropic.SDK.Tests
             var systemMessages = new List<SystemMessage>()
             {
                 new SystemMessage("You are an expert at analyzing literary texts."),
-                new SystemMessage(content, new CacheControl() { Type = CacheControlType.ephemeral })
+                new SystemMessage(content, new CacheControl()
+                {
+                    Type = CacheControlType.ephemeral,
+                    TTL = CacheControl.CacheDuration1Hour,
+                })
             };
             var parameters = new MessageParameters()
             {
@@ -505,7 +514,11 @@ namespace Anthropic.SDK.Tests
             Assert.IsTrue(res.Usage.CacheCreationInputTokens > 0 || res.Usage.CacheReadInputTokens > 0);
 
             //try caching an assistant message
-            res.Message.Content.First().CacheControl = new CacheControl() { Type = CacheControlType.ephemeral };
+            res.Message.Content.First().CacheControl = new CacheControl()
+            {
+                Type = CacheControlType.ephemeral,
+                TTL = CacheControl.CacheDuration1Hour,
+            };
 
             messages.Add(res.Message);
             messages.Add(new Message(RoleType.User, "Who is the main character and how old is he?"));
@@ -513,7 +526,7 @@ namespace Anthropic.SDK.Tests
             var res2 = await client.Messages.GetClaudeMessageAsync(parameters);
 
             Assert.IsTrue(res2.Usage.CacheReadInputTokens > 0);
-
+            Assert.IsTrue(res2.Usage.CacheCreation.Ephemeral1hInputTokens > 0);
             Assert.IsNotNull(res2.Message.ToString());
 
             //message 3

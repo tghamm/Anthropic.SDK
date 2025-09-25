@@ -165,11 +165,26 @@ namespace Anthropic.SDK.Messaging
 
         [JsonPropertyName("server_tool_use")]
         public ServerToolUse ServerToolUse { get; set; }
+        
+        [JsonPropertyName("cache_creation")]
+        public CacheCreation CacheCreation { get; set; }
+    }
+
+    public class CacheCreation
+    {
+        [JsonPropertyName("ephemeral_5m_input_tokens")]
+        public int? Ephemeral5mInputTokens { get; set; }
+        
+        [JsonPropertyName("ephemeral_1h_input_tokens")]
+        public int? Ephemeral1hInputTokens { get; set; }
     }
 
     public class ServerToolUse
     {
         [JsonPropertyName("web_search_requests")]
         public int? WebSearchRequests { get; set; }
+        
+        [JsonPropertyName("web_fetch_requests")]
+        public int? WebFetchRequests { get; set; }
     }
 }
