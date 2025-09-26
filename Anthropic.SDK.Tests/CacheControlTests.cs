@@ -495,7 +495,7 @@ namespace Anthropic.SDK.Tests
                 new SystemMessage(content, new CacheControl()
                 {
                     Type = CacheControlType.ephemeral,
-                    TTL = CacheControl.CacheDuration1Hour,
+                    TTL = CacheDuration.OneHour,
                 })
             };
             var parameters = new MessageParameters()
@@ -517,7 +517,7 @@ namespace Anthropic.SDK.Tests
             res.Message.Content.First().CacheControl = new CacheControl()
             {
                 Type = CacheControlType.ephemeral,
-                TTL = CacheControl.CacheDuration1Hour,
+                TTL = CacheDuration.OneHour,
             };
 
             messages.Add(res.Message);

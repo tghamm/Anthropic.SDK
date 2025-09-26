@@ -36,7 +36,7 @@ namespace Anthropic.SDK.Tests
                     CacheControl = new CacheControl()
                     {
                         Type = CacheControlType.ephemeral,
-                        TTL = CacheControl.CacheDuration5Minutes,
+                        TTL = CacheDuration.FiveMinutes,
                     }
                 }),
                 new Message(RoleType.User, "Which model has the highest human preference win rates across each use-case?"),

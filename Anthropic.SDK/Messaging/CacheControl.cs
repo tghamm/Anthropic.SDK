@@ -4,9 +4,6 @@ namespace Anthropic.SDK.Messaging;
 
 public class CacheControl
 {
-    public static string CacheDuration5Minutes = "5m";
-    public static string CacheDuration1Hour = "1h";
-
     [JsonPropertyName("type")]
     public CacheControlType Type { get; set; }
 
@@ -15,7 +12,8 @@ public class CacheControl
     /// Supported values are <see cref="CacheDuration5Minutes"/> or <see cref="CacheDuration1Hour"/>
     /// </summary>
     [JsonPropertyName("ttl")]
-    public string TTL { get; set; }
+    [JsonConverter(typeof(CacheDurationConverter))]
+    public CacheDuration TTL { get; set; }
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
