@@ -526,6 +526,7 @@ namespace Anthropic.SDK.Tests
             var res2 = await client.Messages.GetClaudeMessageAsync(parameters);
 
             Assert.IsTrue(res2.Usage.CacheReadInputTokens > 0);
+            Assert.IsNotNull(res2.Usage.CacheCreation);
             Assert.IsTrue(res2.Usage.CacheCreation.Ephemeral1hInputTokens > 0);
             Assert.IsNotNull(res2.Message.ToString());
 
