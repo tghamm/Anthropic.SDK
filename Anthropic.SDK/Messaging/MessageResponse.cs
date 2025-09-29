@@ -168,6 +168,9 @@ namespace Anthropic.SDK.Messaging
         
         [JsonPropertyName("cache_creation")]
         public CacheCreation CacheCreation { get; set; }
+        
+        [JsonPropertyName("service_tier")]
+        public string ServiceTier { get; set; }
     }
 
     public class CacheCreation
