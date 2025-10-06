@@ -180,16 +180,19 @@ namespace Anthropic.SDK.Messaging
                                 });
                                 break;
 
-                            case Microsoft.Extensions.AI.TextReasoningContent textReasoningContent:
-                                currentMessage.Content.Add(new Messaging.ThinkingContent()
+                            case Microsoft.Extensions.AI.TextReasoningContent reasoningContent:
+                                if (string.IsNullOrEmpty(reasoningContent.Text))
                                 {
-                                    Thinking = textReasoningContent.Text,
-                                    Signature = textReasoningContent.AdditionalProperties[nameof(ThinkingContent.Signature)]?.ToString()
-                                });
-                                break;
-
-                            case Anthropic.SDK.Extensions.MEAI.RedactedThinkingContent redactedThinkingContent:
-                                currentMessage.Content.Add(new Messaging.RedactedThinkingContent() { Data = redactedThinkingContent.Data });
+                                    currentMessage.Content.Add(new Messaging.RedactedThinkingContent() { Data = reasoningContent.ProtectedData });
+                                }
+                                else
+                                {
+                                    currentMessage.Content.Add(new Messaging.ThinkingContent()
+                                    {
+                                        Thinking = reasoningContent.Text,
+                                        Signature = reasoningContent.ProtectedData,
+                                    });
+                                }
                                 break;
 
                             case Microsoft.Extensions.AI.TextContent textContent:
@@ -269,15 +272,15 @@ namespace Anthropic.SDK.Messaging
                     case Messaging.ThinkingContent thinkingContent:
                         contents.Add(new Microsoft.Extensions.AI.TextReasoningContent(thinkingContent.Thinking)
                         {
-                            AdditionalProperties = new AdditionalPropertiesDictionary
-                            {
-                                [nameof(ThinkingContent.Signature)] = thinkingContent.Signature
-                            }
+                            ProtectedData = thinkingContent.Signature,
                         });
                         break;
 
                     case Messaging.RedactedThinkingContent redactedThinkingContent:
-                        contents.Add(new Anthropic.SDK.Extensions.MEAI.RedactedThinkingContent(redactedThinkingContent.Data));
+                        contents.Add(new Microsoft.Extensions.AI.TextReasoningContent(null)
+                        {
+                            ProtectedData = redactedThinkingContent.Data,
+                        });
                         break;
 
                     case TextContent tc:

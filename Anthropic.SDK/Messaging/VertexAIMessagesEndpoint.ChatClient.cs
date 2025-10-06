@@ -56,7 +56,7 @@ public partial class VertexAIMessagesEndpoint : IChatClient
 
             if (!string.IsNullOrEmpty(response.ContentBlock?.Data))
             {
-                update.Contents.Add(new SDK.Extensions.MEAI.RedactedThinkingContent(response.ContentBlock?.Data));
+                update.Contents.Add(new TextReasoningContent(null) { ProtectedData = response.ContentBlock.Data });
             }
             
             if (response.StreamStartMessage?.Usage is {} startStreamMessageUsage)
@@ -80,10 +80,7 @@ public partial class VertexAIMessagesEndpoint : IChatClient
                 {
                     update.Contents.Add(new Microsoft.Extensions.AI.TextReasoningContent(thinking)
                     {
-                        AdditionalProperties = new AdditionalPropertiesDictionary
-                        {
-                            [nameof(ThinkingContent.Signature)] = response.Delta.Signature
-                        }
+                        ProtectedData = response.Delta.Signature,
                     });
                 }
 
