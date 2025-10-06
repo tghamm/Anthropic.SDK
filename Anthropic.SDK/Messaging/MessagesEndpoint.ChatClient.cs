@@ -104,7 +104,7 @@ public partial class MessagesEndpoint : IChatClient
 
             if (!string.IsNullOrEmpty(response.ContentBlock?.Data))
             {
-                update.Contents.Add(new SDK.Extensions.MEAI.RedactedThinkingContent(response.ContentBlock?.Data));
+                update.Contents.Add(new TextReasoningContent(null) { ProtectedData = response.ContentBlock.Data });
             }
             
             if (response.StreamStartMessage?.Usage is {} startStreamMessageUsage)
@@ -128,10 +128,7 @@ public partial class MessagesEndpoint : IChatClient
                 {
                     update.Contents.Add(new TextReasoningContent(thinking)
                     {
-                        AdditionalProperties = new AdditionalPropertiesDictionary
-                        {
-                            [nameof(ThinkingContent.Signature)] = response.Delta.Signature
-                        }
+                        ProtectedData = response.Delta.Signature,
                     });
                 }
 
