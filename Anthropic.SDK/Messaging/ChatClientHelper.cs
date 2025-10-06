@@ -35,6 +35,13 @@ namespace Anthropic.SDK.Messaging
         {
             MessageParameters parameters = options?.RawRepresentationFactory?.Invoke(client) as MessageParameters ?? new();
 
+            parameters.Messages ??= [];
+            if (parameters.MaxTokens == 0)
+            {
+                // Not setting MaxTokens to a value > 0 results in error.
+                parameters.MaxTokens = 4096;
+            }
+
             if (options is not null)
             {
                 parameters.Model = options.ModelId;
@@ -157,7 +164,7 @@ namespace Anthropic.SDK.Messaging
                                 Role = isToolResult ? RoleType.User : (message.Role == ChatRole.Assistant ? RoleType.Assistant : RoleType.User),
                                 Content = [],
                             };
-                            (parameters.Messages ??= []).Add(currentMessage);
+                            parameters.Messages.Add(currentMessage);
                             lastWasToolResult = isToolResult;
                         }
                         
@@ -190,12 +197,12 @@ namespace Anthropic.SDK.Messaging
                                 if (currentMessage.Role == RoleType.Assistant)
                                 {
                                     text.TrimEnd();
-                                    if (text.Length != 0)
+                                    if (!string.IsNullOrWhiteSpace(text))
                                     {
                                         currentMessage.Content.Add(new TextContent() { Text = text });
                                     }
                                 }
-                                else
+                                else if (!string.IsNullOrWhiteSpace(text))
                                 {
                                     currentMessage.Content.Add(new TextContent() { Text = text });
                                 }
@@ -238,6 +245,12 @@ namespace Anthropic.SDK.Messaging
             }
 
             parameters.Messages.RemoveAll(m => m.Content.Count == 0);
+
+            // Avoid errors from completely empty input.
+            if (!parameters.Messages.Any(m => m.Content.Count > 0))
+            {
+                parameters.Messages.Add(new(RoleType.User, "\u200b")); // zero-width space
+            }
 
             return parameters;
         }
