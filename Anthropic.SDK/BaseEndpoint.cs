@@ -60,7 +60,6 @@ namespace Anthropic.SDK
             object postData = null, Dictionary<string, string> additionalHeaders = null, CancellationToken ctx = default)
         {
             var response = await HttpRequestRaw(url, verb, postData, false, additionalHeaders, ctx).ConfigureAwait(false);
-            string resultAsString = await ReadResponseContentAsync(response, ctx).ConfigureAwait(false);
 
             var options = new JsonSerializerOptions
             {
@@ -69,8 +68,15 @@ namespace Anthropic.SDK
                 Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
             };
 
-            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(resultAsString));
-            var res = await JsonSerializer.DeserializeAsync<TResponse>(ms, options, cancellationToken: ctx).ConfigureAwait(false);
+            // Optimization: Deserialize directly from HTTP response stream
+            // Avoids intermediate string allocation and UTF8 encoding conversion
+#if NET6_0_OR_GREATER
+            await using var stream = await response.Content.ReadAsStreamAsync(ctx).ConfigureAwait(false);
+            var res = await JsonSerializer.DeserializeAsync<TResponse>(stream, options, cancellationToken: ctx).ConfigureAwait(false);
+#else
+            using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+            var res = await JsonSerializer.DeserializeAsync<TResponse>(stream, options, cancellationToken: ctx).ConfigureAwait(false);
+#endif
             if (res is MessageResponse messageResponse)
             {
                 messageResponse.RateLimits = GetRateLimits(response);
@@ -109,10 +115,16 @@ namespace Anthropic.SDK
             object postData = null, CancellationToken ctx = default)
         {
             var response = await HttpRequestRaw(url, verb, postData, false, ctx).ConfigureAwait(false);
-            string resultAsString = await ReadResponseContentAsync(response, ctx).ConfigureAwait(false);
 
-            using var ms = new MemoryStream(Encoding.UTF8.GetBytes(resultAsString));
-            var res = await JsonSerializer.DeserializeAsync<T>(ms, cancellationToken: ctx).ConfigureAwait(false);
+            // Optimization: Deserialize directly from HTTP response stream
+            // Avoids intermediate string allocation and UTF8 encoding conversion
+#if NET6_0_OR_GREATER
+            await using var stream = await response.Content.ReadAsStreamAsync(ctx).ConfigureAwait(false);
+            var res = await JsonSerializer.DeserializeAsync<T>(stream, cancellationToken: ctx).ConfigureAwait(false);
+#else
+            using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+            var res = await JsonSerializer.DeserializeAsync<T>(stream, cancellationToken: ctx).ConfigureAwait(false);
+#endif
             return res;
         }
 

@@ -36,6 +36,13 @@ namespace Anthropic.SDK.Messaging
         {
             MessageParameters parameters = options?.RawRepresentationFactory?.Invoke(client) as MessageParameters ?? new();
 
+            parameters.Messages ??= [];
+            if (parameters.MaxTokens == 0)
+            {
+                // Not setting MaxTokens to a value > 0 results in error.
+                parameters.MaxTokens = 4096;
+            }
+
             if (options is not null)
             {
                 parameters.Model = options.ModelId;
@@ -165,7 +172,7 @@ namespace Anthropic.SDK.Messaging
                                 Role = isToolResult ? RoleType.User : (message.Role == ChatRole.Assistant ? RoleType.Assistant : RoleType.User),
                                 Content = [],
                             };
-                            (parameters.Messages ??= []).Add(currentMessage);
+                            parameters.Messages.Add(currentMessage);
                             lastWasToolResult = isToolResult;
                         }
                         
@@ -181,16 +188,19 @@ namespace Anthropic.SDK.Messaging
                                 });
                                 break;
 
-                            case Microsoft.Extensions.AI.TextReasoningContent textReasoningContent:
-                                currentMessage.Content.Add(new Messaging.ThinkingContent()
+                            case Microsoft.Extensions.AI.TextReasoningContent reasoningContent:
+                                if (string.IsNullOrEmpty(reasoningContent.Text))
                                 {
-                                    Thinking = textReasoningContent.Text,
-                                    Signature = textReasoningContent.AdditionalProperties[nameof(ThinkingContent.Signature)]?.ToString()
-                                });
-                                break;
-
-                            case Anthropic.SDK.Extensions.MEAI.RedactedThinkingContent redactedThinkingContent:
-                                currentMessage.Content.Add(new Messaging.RedactedThinkingContent() { Data = redactedThinkingContent.Data });
+                                    currentMessage.Content.Add(new Messaging.RedactedThinkingContent() { Data = reasoningContent.ProtectedData });
+                                }
+                                else
+                                {
+                                    currentMessage.Content.Add(new Messaging.ThinkingContent()
+                                    {
+                                        Thinking = reasoningContent.Text,
+                                        Signature = reasoningContent.ProtectedData,
+                                    });
+                                }
                                 break;
 
                             case Microsoft.Extensions.AI.TextContent textContent:
@@ -198,12 +208,12 @@ namespace Anthropic.SDK.Messaging
                                 if (currentMessage.Role == RoleType.Assistant)
                                 {
                                     text.TrimEnd();
-                                    if (text.Length != 0)
+                                    if (!string.IsNullOrWhiteSpace(text))
                                     {
                                         currentMessage.Content.Add(new TextContent() { Text = text });
                                     }
                                 }
-                                else
+                                else if (!string.IsNullOrWhiteSpace(text))
                                 {
                                     currentMessage.Content.Add(new TextContent() { Text = text });
                                 }
@@ -247,6 +257,12 @@ namespace Anthropic.SDK.Messaging
 
             parameters.Messages.RemoveAll(m => m.Content.Count == 0);
 
+            // Avoid errors from completely empty input.
+            if (!parameters.Messages.Any(m => m.Content.Count > 0))
+            {
+                parameters.Messages.Add(new(RoleType.User, "\u200b")); // zero-width space
+            }
+
             return parameters;
         }
 
@@ -264,15 +280,15 @@ namespace Anthropic.SDK.Messaging
                     case Messaging.ThinkingContent thinkingContent:
                         contents.Add(new Microsoft.Extensions.AI.TextReasoningContent(thinkingContent.Thinking)
                         {
-                            AdditionalProperties = new AdditionalPropertiesDictionary
-                            {
-                                [nameof(ThinkingContent.Signature)] = thinkingContent.Signature
-                            }
+                            ProtectedData = thinkingContent.Signature,
                         });
                         break;
 
                     case Messaging.RedactedThinkingContent redactedThinkingContent:
-                        contents.Add(new Anthropic.SDK.Extensions.MEAI.RedactedThinkingContent(redactedThinkingContent.Data));
+                        contents.Add(new Microsoft.Extensions.AI.TextReasoningContent(null)
+                        {
+                            ProtectedData = redactedThinkingContent.Data,
+                        });
                         break;
 
                     case TextContent tc:

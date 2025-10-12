@@ -31,6 +31,11 @@ namespace Anthropic.SDK.Constants
         public const string Claude4Sonnet = "claude-sonnet-4-20250514";
 
         /// <summary>
+        /// Claude 4.5 Sonnet
+        /// </summary>
+        public const string Claude45Sonnet = "claude-sonnet-4-5-20250929";
+
+        /// <summary>
         /// Claude 4 Opus
         /// </summary>
         public const string Claude4Opus = "claude-opus-4-20250514";

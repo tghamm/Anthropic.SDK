@@ -2,7 +2,7 @@
 
 [![.NET](https://github.com/tghamm/Anthropic.SDK/actions/workflows/dotnet.yml/badge.svg)](https://github.com/tghamm/Anthropic.SDK/actions/workflows/dotnet.yml) [![Nuget](https://img.shields.io/nuget/v/Anthropic.SDK)](https://www.nuget.org/packages/Anthropic.SDK/) [![Nuget](https://img.shields.io/nuget/dt/Anthropic.SDK)](https://www.nuget.org/packages/Anthropic.SDK/)
 
-Anthropic.SDK is an unofficial C# client designed for interacting with the Claude AI API. This powerful interface simplifies the integration of the Claude AI into your C# applications.  It targets NetStandard 2.0, .NET 6.0, and .NET 8.0.
+Anthropic.SDK is an unofficial C# client designed for interacting with the Claude AI API. This powerful interface simplifies the integration of the Claude AI into your C# applications.  It targets NetStandard 2.0, .NET 6.0, .NET 8.0, and .NET 9.0.
 
 ## Table of Contents
 
@@ -1289,7 +1289,8 @@ Vertex AI provides access to the following Claude models:
 - `VertexAIModels.Claude35Sonnet`: High level of intelligence and capability
 - `VertexAIModels.Claude35Haiku`: Intelligence at blazing speeds
 - `VertexAIModels.Claude37Sonnet`: Highest level of intelligence and capability with toggleable extended thinking
-- `VertexAIModels.Claude4Sonnet`: Newest Sonnet model with toggleable extended thinking
+- `VertexAIModels.Claude4Sonnet`: Sonnet model with toggleable extended thinking
+- `VertexAIModels.Claude45Sonnet`: Newest Sonnet model with toggleable extended thinking
 - `VertexAIModels.Claude4Opus`: Previous Opus Model and powerful thinking model
 - `VertexAIModels.Claude41Opus`: Newest Opus Model and most powerful thinking model
 
