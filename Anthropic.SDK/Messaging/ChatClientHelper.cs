@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Anthropic.SDK.Common;
+using Anthropic.SDK.Extensions;
 using Microsoft.Extensions.AI;
 
 namespace Anthropic.SDK.Messaging
@@ -133,6 +134,13 @@ namespace Anthropic.SDK.Messaging
 #pragma warning restore MEAI001
                         }
                     }
+                }
+
+                // Map thinking parameters from ChatOptions
+                var thinkingParameters = options.GetThinkingParameters();
+                if (thinkingParameters != null)
+                {
+                    parameters.Thinking = thinkingParameters;
                 }
             }
 
