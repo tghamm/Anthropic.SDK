@@ -56,6 +56,12 @@ namespace Anthropic.SDK.Extensions
                         return JsonSerializer.Deserialize<BashCodeExecutionOutputContent>(root.GetRawText(), options);
                     case "bash_code_execution_tool_result_error":
                         return JsonSerializer.Deserialize<BashCodeExecutionToolResultErrorContent>(root.GetRawText(), options);
+                    case "text_editor_code_execution_tool_result":
+                        return JsonSerializer.Deserialize<TextEditorCodeExecutionToolResultContent>(root.GetRawText(), options);
+                    case "text_editor_code_execution_result":
+                        return JsonSerializer.Deserialize<TextEditorCodeExecutionResultContent>(root.GetRawText(), options);
+                    case "text_editor_code_execution_tool_result_error":
+                        return JsonSerializer.Deserialize<TextEditorCodeExecutionToolResultErrorContent>(root.GetRawText(), options);
                     // Add cases for other types as necessary
                     default:
                         throw new JsonException($"Unknown type {type}");
