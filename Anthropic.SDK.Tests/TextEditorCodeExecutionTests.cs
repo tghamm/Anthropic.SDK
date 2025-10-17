@@ -170,4 +170,291 @@ public class TextEditorCodeExecutionTests
         Assert.AreEqual("msg_01XFDUDYJgAACzvnptvVoYEL", response.Id);
         Assert.AreEqual("assistant", response.Role.ToString().ToLower());
     }
+
+    [TestMethod]
+    public void TestTextEditorViewResultDeserialization()
+    {
+        var json = @"{
+  ""type"": ""text_editor_code_execution_view_result"",
+  ""content"": ""function example() {\n  return 'Hello, World!';\n}"",
+  ""file_type"": ""text"",
+  ""num_lines"": 3,
+  ""start_line"": 1,
+  ""total_lines"": 100
+}";
+
+        var options = new JsonSerializerOptions
+        {
+            Converters = { ContentConverter.Instance }
+        };
+
+        var content = JsonSerializer.Deserialize<TextEditorCodeExecutionViewResultContent>(json, options);
+        
+        Assert.IsNotNull(content);
+        Assert.AreEqual(ContentType.text_editor_code_execution_view_result, content.Type);
+        Assert.AreEqual("function example() {\n  return 'Hello, World!';\n}", content.Content);
+        Assert.AreEqual("text", content.FileType);
+        Assert.AreEqual(3, content.NumLines);
+        Assert.AreEqual(1, content.StartLine);
+        Assert.AreEqual(100, content.TotalLines);
+    }
+
+    [TestMethod]
+    public void TestTextEditorViewResultWithNullableFieldsDeserialization()
+    {
+        var json = @"{
+  ""type"": ""text_editor_code_execution_view_result"",
+  ""content"": ""Full file content"",
+  ""file_type"": ""pdf""
+}";
+
+        var options = new JsonSerializerOptions
+        {
+            Converters = { ContentConverter.Instance }
+        };
+
+        var content = JsonSerializer.Deserialize<TextEditorCodeExecutionViewResultContent>(json, options);
+        
+        Assert.IsNotNull(content);
+        Assert.AreEqual(ContentType.text_editor_code_execution_view_result, content.Type);
+        Assert.AreEqual("Full file content", content.Content);
+        Assert.AreEqual("pdf", content.FileType);
+        Assert.IsNull(content.NumLines);
+        Assert.IsNull(content.StartLine);
+        Assert.IsNull(content.TotalLines);
+    }
+
+    [TestMethod]
+    public void TestTextEditorCreateResultDeserialization()
+    {
+        var json = @"{
+  ""type"": ""text_editor_code_execution_create_result"",
+  ""is_file_update"": false
+}";
+
+        var options = new JsonSerializerOptions
+        {
+            Converters = { ContentConverter.Instance }
+        };
+
+        var content = JsonSerializer.Deserialize<TextEditorCodeExecutionCreateResultContent>(json, options);
+        
+        Assert.IsNotNull(content);
+        Assert.AreEqual(ContentType.text_editor_code_execution_create_result, content.Type);
+        Assert.AreEqual(false, content.IsFileUpdate);
+    }
+
+    [TestMethod]
+    public void TestTextEditorCreateResultFileUpdateDeserialization()
+    {
+        var json = @"{
+  ""type"": ""text_editor_code_execution_create_result"",
+  ""is_file_update"": true
+}";
+
+        var options = new JsonSerializerOptions
+        {
+            Converters = { ContentConverter.Instance }
+        };
+
+        var content = JsonSerializer.Deserialize<TextEditorCodeExecutionCreateResultContent>(json, options);
+        
+        Assert.IsNotNull(content);
+        Assert.AreEqual(ContentType.text_editor_code_execution_create_result, content.Type);
+        Assert.AreEqual(true, content.IsFileUpdate);
+    }
+
+    [TestMethod]
+    public void TestTextEditorStrReplaceResultDeserialization()
+    {
+        var json = @"{
+  ""type"": ""text_editor_code_execution_str_replace_result"",
+  ""old_start"": 5,
+  ""old_lines"": 2,
+  ""new_start"": 5,
+  ""new_lines"": 3,
+  ""lines"": [
+    ""-    old line 1"",
+    ""-    old line 2"",
+    ""+    new line 1"",
+    ""+    new line 2"",
+    ""+    new line 3""
+  ]
+}";
+
+        var options = new JsonSerializerOptions
+        {
+            Converters = { ContentConverter.Instance }
+        };
+
+        var content = JsonSerializer.Deserialize<TextEditorCodeExecutionStrReplaceResultContent>(json, options);
+        
+        Assert.IsNotNull(content);
+        Assert.AreEqual(ContentType.text_editor_code_execution_str_replace_result, content.Type);
+        Assert.AreEqual(5, content.OldStart);
+        Assert.AreEqual(2, content.OldLines);
+        Assert.AreEqual(5, content.NewStart);
+        Assert.AreEqual(3, content.NewLines);
+        Assert.IsNotNull(content.Lines);
+        Assert.AreEqual(5, content.Lines.Count);
+        Assert.AreEqual("-    old line 1", content.Lines[0]);
+        Assert.AreEqual("+    new line 3", content.Lines[4]);
+    }
+
+    [TestMethod]
+    public void TestTextEditorStrReplaceResultWithNullsDeserialization()
+    {
+        var json = @"{
+  ""type"": ""text_editor_code_execution_str_replace_result"",
+  ""old_start"": null,
+  ""old_lines"": null,
+  ""new_start"": null,
+  ""new_lines"": null,
+  ""lines"": null
+}";
+
+        var options = new JsonSerializerOptions
+        {
+            Converters = { ContentConverter.Instance }
+        };
+
+        var content = JsonSerializer.Deserialize<TextEditorCodeExecutionStrReplaceResultContent>(json, options);
+        
+        Assert.IsNotNull(content);
+        Assert.AreEqual(ContentType.text_editor_code_execution_str_replace_result, content.Type);
+        Assert.IsNull(content.OldStart);
+        Assert.IsNull(content.OldLines);
+        Assert.IsNull(content.NewStart);
+        Assert.IsNull(content.NewLines);
+        Assert.IsNull(content.Lines);
+    }
+
+    [TestMethod]
+    public void TestTextEditorToolResultErrorWithMessageDeserialization()
+    {
+        var json = @"{
+  ""type"": ""text_editor_code_execution_tool_result_error"",
+  ""error_code"": ""file_not_found"",
+  ""error_message"": ""The specified file does not exist""
+}";
+
+        var options = new JsonSerializerOptions
+        {
+            Converters = { ContentConverter.Instance }
+        };
+
+        var content = JsonSerializer.Deserialize<TextEditorCodeExecutionToolResultErrorContent>(json, options);
+        
+        Assert.IsNotNull(content);
+        Assert.AreEqual(ContentType.text_editor_code_execution_tool_result_error, content.Type);
+        Assert.AreEqual("file_not_found", content.ErrorCode);
+        Assert.AreEqual("The specified file does not exist", content.ErrorMessage);
+    }
+
+    [TestMethod]
+    public void TestTextEditorToolResultWithCreateResultDeserialization()
+    {
+        var json = @"{
+  ""type"": ""text_editor_code_execution_tool_result"",
+  ""tool_use_id"": ""srvtoolu_01ABC123"",
+  ""content"": {
+    ""type"": ""text_editor_code_execution_create_result"",
+    ""is_file_update"": false
+  }
+}";
+
+        var options = new JsonSerializerOptions
+        {
+            Converters = { ContentConverter.Instance }
+        };
+
+        var content = JsonSerializer.Deserialize<TextEditorCodeExecutionToolResultContent>(json, options);
+        
+        Assert.IsNotNull(content);
+        Assert.AreEqual(ContentType.text_editor_code_execution_tool_result, content.Type);
+        Assert.AreEqual("srvtoolu_01ABC123", content.ToolUseId);
+        Assert.IsNotNull(content.Content);
+        
+        var createResult = content.Content as TextEditorCodeExecutionCreateResultContent;
+        Assert.IsNotNull(createResult);
+        Assert.AreEqual(ContentType.text_editor_code_execution_create_result, createResult.Type);
+        Assert.AreEqual(false, createResult.IsFileUpdate);
+    }
+
+    [TestMethod]
+    public void TestTextEditorToolResultWithStrReplaceResultDeserialization()
+    {
+        var json = @"{
+  ""type"": ""text_editor_code_execution_tool_result"",
+  ""tool_use_id"": ""srvtoolu_01XYZ789"",
+  ""content"": {
+    ""type"": ""text_editor_code_execution_str_replace_result"",
+    ""old_start"": 10,
+    ""old_lines"": 1,
+    ""new_start"": 10,
+    ""new_lines"": 1,
+    ""lines"": [""-  old content"", ""+  new content""]
+  }
+}";
+
+        var options = new JsonSerializerOptions
+        {
+            Converters = { ContentConverter.Instance }
+        };
+
+        var content = JsonSerializer.Deserialize<TextEditorCodeExecutionToolResultContent>(json, options);
+        
+        Assert.IsNotNull(content);
+        Assert.AreEqual(ContentType.text_editor_code_execution_tool_result, content.Type);
+        Assert.AreEqual("srvtoolu_01XYZ789", content.ToolUseId);
+        Assert.IsNotNull(content.Content);
+        
+        var strReplaceResult = content.Content as TextEditorCodeExecutionStrReplaceResultContent;
+        Assert.IsNotNull(strReplaceResult);
+        Assert.AreEqual(ContentType.text_editor_code_execution_str_replace_result, strReplaceResult.Type);
+        Assert.AreEqual(10, strReplaceResult.OldStart);
+        Assert.AreEqual(1, strReplaceResult.OldLines);
+        Assert.AreEqual(10, strReplaceResult.NewStart);
+        Assert.AreEqual(1, strReplaceResult.NewLines);
+        Assert.IsNotNull(strReplaceResult.Lines);
+        Assert.AreEqual(2, strReplaceResult.Lines.Count);
+    }
+
+    [TestMethod]
+    public void TestTextEditorToolResultWithViewResultDeserialization()
+    {
+        var json = @"{
+  ""type"": ""text_editor_code_execution_tool_result"",
+  ""tool_use_id"": ""srvtoolu_01VIEW123"",
+  ""content"": {
+    ""type"": ""text_editor_code_execution_view_result"",
+    ""content"": ""line 1\nline 2\nline 3"",
+    ""file_type"": ""text"",
+    ""num_lines"": 3,
+    ""start_line"": 1,
+    ""total_lines"": 100
+  }
+}";
+
+        var options = new JsonSerializerOptions
+        {
+            Converters = { ContentConverter.Instance }
+        };
+
+        var content = JsonSerializer.Deserialize<TextEditorCodeExecutionToolResultContent>(json, options);
+        
+        Assert.IsNotNull(content);
+        Assert.AreEqual(ContentType.text_editor_code_execution_tool_result, content.Type);
+        Assert.AreEqual("srvtoolu_01VIEW123", content.ToolUseId);
+        Assert.IsNotNull(content.Content);
+        
+        var viewResult = content.Content as TextEditorCodeExecutionViewResultContent;
+        Assert.IsNotNull(viewResult);
+        Assert.AreEqual(ContentType.text_editor_code_execution_view_result, viewResult.Type);
+        Assert.AreEqual("line 1\nline 2\nline 3", viewResult.Content);
+        Assert.AreEqual("text", viewResult.FileType);
+        Assert.AreEqual(3, viewResult.NumLines);
+        Assert.AreEqual(1, viewResult.StartLine);
+        Assert.AreEqual(100, viewResult.TotalLines);
+    }
 }

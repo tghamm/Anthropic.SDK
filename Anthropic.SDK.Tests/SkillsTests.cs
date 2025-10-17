@@ -293,5 +293,47 @@ namespace Anthropic.SDK.Tests
             var bashOutput = content as BashCodeExecutionOutputContent;
             Assert.AreEqual("file_test123", bashOutput.FileId);
         }
+
+        [TestMethod]
+        public async Task TestSkillUseMessage()
+        {
+            var client = new AnthropicClient();
+            var messages = new List<Message>();
+            messages.Add(new Message(RoleType.User, "Please create a one-page PowerPoint presentation with the title 'Testing Skills' and a bullet point list with the items 'Skill 1', 'Skill 2', and 'Skill 3'."));
+
+            var container = new Container
+            {
+                Skills = new List<Skill>
+                {
+                    new Skill
+                    {
+                        Type = "anthropic",
+                        SkillId = "pptx",  // Built-in PowerPoint skill
+                        Version = "latest"
+                    }
+                }
+            };
+
+            var parameters = new MessageParameters()
+            {
+                Messages = messages,
+                MaxTokens = 4096,
+                Model = AnthropicModels.Claude4Sonnet,
+                Stream = false,
+                Temperature = 1.0m,
+                Container = container,
+                Tools = new List<Common.Tool>
+                {
+                    new Function("code_execution", "code_execution_20250825", 
+                        new Dictionary<string, object> { { "name", "code_execution" } })
+                }
+            };
+            var res = await client.Messages.GetClaudeMessageAsync(parameters);
+            Assert.IsNotNull(res.Message.ToString());
+            Assert.IsNotNull(res.Content.LastOrDefault(c =>
+                c is BashCodeExecutionToolResultContent bashCodeExecutionToolResultContent &&
+                bashCodeExecutionToolResultContent.Content is BashCodeExecutionOutputContent bashCodeExecutionOutputContent &&
+                !string.IsNullOrEmpty(bashCodeExecutionOutputContent.FileId)) != null);
+        }
     }
 }

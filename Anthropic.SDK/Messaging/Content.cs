@@ -741,5 +741,113 @@ namespace Anthropic.SDK.Messaging
         /// </summary>
         [JsonPropertyName("error_code")]
         public string ErrorCode { get; set; }
+
+        /// <summary>
+        /// Error message providing additional details (nullable)
+        /// </summary>
+        [JsonPropertyName("error_message")]
+        public string ErrorMessage { get; set; }
+    }
+
+    /// <summary>
+    /// Text Editor Code Execution View Result Content
+    /// </summary>
+    public class TextEditorCodeExecutionViewResultContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (text_editor_code_execution_view_result, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.text_editor_code_execution_view_result;
+
+        /// <summary>
+        /// Content of the file
+        /// </summary>
+        [JsonPropertyName("content")]
+        public string Content { get; set; }
+
+        /// <summary>
+        /// File type ('text', 'image', or 'pdf')
+        /// </summary>
+        [JsonPropertyName("file_type")]
+        public string FileType { get; set; }
+
+        /// <summary>
+        /// Number of lines displayed (nullable)
+        /// </summary>
+        [JsonPropertyName("num_lines")]
+        public int? NumLines { get; set; }
+
+        /// <summary>
+        /// Starting line number (nullable)
+        /// </summary>
+        [JsonPropertyName("start_line")]
+        public int? StartLine { get; set; }
+
+        /// <summary>
+        /// Total lines in the file (nullable)
+        /// </summary>
+        [JsonPropertyName("total_lines")]
+        public int? TotalLines { get; set; }
+    }
+
+    /// <summary>
+    /// Text Editor Code Execution Create Result Content
+    /// </summary>
+    public class TextEditorCodeExecutionCreateResultContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (text_editor_code_execution_create_result, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.text_editor_code_execution_create_result;
+
+        /// <summary>
+        /// Whether file already existed (true if update, false if new file)
+        /// </summary>
+        [JsonPropertyName("is_file_update")]
+        public bool IsFileUpdate { get; set; }
+    }
+
+    /// <summary>
+    /// Text Editor Code Execution String Replace Result Content
+    /// </summary>
+    public class TextEditorCodeExecutionStrReplaceResultContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (text_editor_code_execution_str_replace_result, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.text_editor_code_execution_str_replace_result;
+
+        /// <summary>
+        /// Diff lines showing the changes (nullable)
+        /// </summary>
+        [JsonPropertyName("lines")]
+        public List<string> Lines { get; set; }
+
+        /// <summary>
+        /// New number of lines (nullable)
+        /// </summary>
+        [JsonPropertyName("new_lines")]
+        public int? NewLines { get; set; }
+
+        /// <summary>
+        /// New start line (nullable)
+        /// </summary>
+        [JsonPropertyName("new_start")]
+        public int? NewStart { get; set; }
+
+        /// <summary>
+        /// Old number of lines (nullable)
+        /// </summary>
+        [JsonPropertyName("old_lines")]
+        public int? OldLines { get; set; }
+
+        /// <summary>
+        /// Old start line (nullable)
+        /// </summary>
+        [JsonPropertyName("old_start")]
+        public int? OldStart { get; set; }
     }
 }
