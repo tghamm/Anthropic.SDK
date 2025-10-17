@@ -493,4 +493,100 @@ namespace Anthropic.SDK.Messaging
         [JsonPropertyName("page_age")]
         public string PageAge { get; set; }
     }
+
+    /// <summary>
+    /// Bash Code Execution Tool Result Content
+    /// </summary>
+    public class BashCodeExecutionToolResultContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (bash_code_execution_tool_result, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.bash_code_execution_tool_result;
+
+        /// <summary>
+        /// Tool Use Id
+        /// </summary>
+        [JsonPropertyName("tool_use_id")]
+        public string ToolUseId { get; set; }
+
+        /// <summary>
+        /// Content - can be either BashCodeExecutionResultContent or BashCodeExecutionToolResultErrorContent
+        /// </summary>
+        [JsonPropertyName("content")]
+        public ContentBase Content { get; set; }
+    }
+
+    /// <summary>
+    /// Bash Code Execution Result Content
+    /// </summary>
+    public class BashCodeExecutionResultContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (bash_code_execution_result, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.bash_code_execution_result;
+
+        /// <summary>
+        /// Standard output from the bash execution
+        /// </summary>
+        [JsonPropertyName("stdout")]
+        public string Stdout { get; set; }
+
+        /// <summary>
+        /// Standard error from the bash execution
+        /// </summary>
+        [JsonPropertyName("stderr")]
+        public string Stderr { get; set; }
+
+        /// <summary>
+        /// Return code from the bash execution
+        /// </summary>
+        [JsonPropertyName("return_code")]
+        public int ReturnCode { get; set; }
+
+        /// <summary>
+        /// Array of output content blocks (files)
+        /// </summary>
+        [JsonPropertyName("content")]
+        public List<BashCodeExecutionOutputContent> Content { get; set; }
+    }
+
+    /// <summary>
+    /// Bash Code Execution Output Content (represents a file)
+    /// </summary>
+    public class BashCodeExecutionOutputContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (bash_code_execution_output, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.bash_code_execution_output;
+
+        /// <summary>
+        /// File ID that can be used to download the file
+        /// </summary>
+        [JsonPropertyName("file_id")]
+        public string FileId { get; set; }
+    }
+
+    /// <summary>
+    /// Bash Code Execution Tool Result Error Content
+    /// </summary>
+    public class BashCodeExecutionToolResultErrorContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (bash_code_execution_tool_result_error, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.bash_code_execution_tool_result_error;
+
+        /// <summary>
+        /// Error code describing the failure
+        /// </summary>
+        [JsonPropertyName("error_code")]
+        public string ErrorCode { get; set; }
+    }
 }
