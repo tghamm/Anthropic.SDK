@@ -36,14 +36,19 @@ namespace Anthropic.SDK.Constants
         public const string Claude4Sonnet = "claude-sonnet-4@20250514";
 
         /// <summary>
-        /// Claude 4.5 Sonnet
+        /// Claude 4.5 Sonnet on Vertex AI - Supports extended thinking
         /// </summary>
-        public const string Claude45Sonnet = "claude-sonnet-4@20250514";
+        public const string Claude45Sonnet = "claude-sonnet-4-5@20250929";
+
+        /// <summary>
+        /// Claude 4.5 Haiku on Vertex AI - Supports extended thinking
+        /// </summary>
+        public const string Claude45Haiku = "claude-haiku-4-5@20251001";
 
         /// <summary>
         /// Claude 4 Opus
         /// </summary>
-        public const string Claude4Opus = "claude-sonnet-4-5@20250929";
+        public const string Claude4Opus = "claude-opus-4@20250514";
 
         /// <summary>
         /// Claude 4.1 Opus
