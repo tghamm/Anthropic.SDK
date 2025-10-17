@@ -46,6 +46,9 @@ namespace Anthropic.SDK.Messaging
         [JsonPropertyName("mcp_servers")]
         public List<MCPServer> MCPServers { get; set; }
 
+        [JsonPropertyName("container")]
+        public Container Container { get; set; }
+
         /// <summary>
         /// Prompt Cache Type Definitions. Designed to be used as a bitwise assignment if you want to cache multiple types and are caching enough context.
         /// </summary>
