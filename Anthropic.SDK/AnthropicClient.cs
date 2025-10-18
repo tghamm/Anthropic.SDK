@@ -8,6 +8,7 @@ using System.Text.Unicode;
 using Anthropic.SDK.Batches;
 using Anthropic.SDK.Models;
 using Anthropic.SDK.Files;
+using Anthropic.SDK.Skills;
 
 namespace Anthropic.SDK
 {
@@ -69,6 +70,7 @@ namespace Anthropic.SDK
             Batches = new BatchesEndpoint(this);
             Models = new ModelsEndpoint(this);
             Files = new FilesEndpoint(this);
+            Skills = new SkillsEndpoint(this);
         }
 
         internal static JsonSerializerOptions JsonSerializationOptions { get; } = new()
@@ -122,6 +124,11 @@ namespace Anthropic.SDK
         /// Files API allows you to download, list, and manage Claude-generated files.
         /// </summary>
         public FilesEndpoint Files { get; }
+
+        /// <summary>
+        /// Skills API allows you to create, list, retrieve, and delete custom skills that extend Claude's capabilities.
+        /// </summary>
+        public SkillsEndpoint Skills { get; }
 
         #region IDisposable
 
