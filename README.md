@@ -1318,6 +1318,35 @@ foreach (var content in response.Content)
 }
 ```
 
+#### Downloading Skill Output Files
+
+For convenience, you can use the `DownloadFilesAsync` extension method to automatically download all file outputs from skill execution:
+
+```csharp
+using Anthropic.SDK.Extensions;
+
+var response = await client.Messages.GetClaudeMessageAsync(parameters);
+
+// Download all file outputs to a specified directory
+var downloadedFiles = await response.DownloadFilesAsync(
+    client, 
+    @"C:\Output\SkillFiles"
+);
+
+foreach (var filePath in downloadedFiles)
+{
+    Console.WriteLine($"Downloaded: {filePath}");
+}
+
+// Or just get the file IDs if you want to handle downloads manually
+var fileIds = response.GetFileIds();
+foreach (var fileId in fileIds)
+{
+    var metadata = await client.Files.GetFileMetadataAsync(fileId);
+    Console.WriteLine($"File: {metadata.Filename} ({metadata.SizeBytes} bytes)");
+}
+```
+
 **Note:** Skills require the following beta headers:
 - `code-execution-2025-08-25` - Enables code execution (required for Skills)
 - `skills-2025-10-02` - Enables Skills API
