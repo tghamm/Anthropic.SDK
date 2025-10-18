@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -22,35 +23,51 @@ namespace Anthropic.SDK.Files
         protected override string Endpoint => "files";
 
         /// <summary>
-        /// Lists files within the workspace with optional pagination.
+        /// Lists all files in the organization. Supports pagination using before_id/after_id cursors.
         /// </summary>
-        /// <param name="beforeId">ID of the object to use as a cursor for pagination. When provided, returns the page of results immediately before this object.</param>
-        /// <param name="afterId">ID of the object to use as a cursor for pagination. When provided, returns the page of results immediately after this object.</param>
-        /// <param name="limit">Number of items to return per page. Defaults to 20. Ranges from 1 to 1000.</param>
-        /// <param name="ctx">Cancellation token.</param>
-        /// <returns>A paginated list of file metadata.</returns>
-        public async Task<FileListResponse> ListFilesAsync(string beforeId = null, string afterId = null, int limit = 20, CancellationToken ctx = default)
+        /// <param name="beforeId">Only return files with IDs alphabetically before this file ID.</param>
+        /// <param name="afterId">Only return files with IDs alphabetically after this file ID.</param>
+        /// <param name="limit">Number of files to return per page (1-1000, default 20).</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
+        /// <returns>A paginated list of file metadata objects.</returns>
+        public async Task<FileListResponse> ListFilesAsync(
+            string beforeId = null,
+            string afterId = null,
+            int limit = 20,
+            CancellationToken cancellationToken = default)
         {
             if (limit < 1 || limit > 1000)
             {
                 throw new ArgumentOutOfRangeException(nameof(limit), "Limit must be between 1 and 1000.");
             }
 
-            var url = $"{Url}?limit={limit}";
+            var queryParams = new List<string> { $"limit={limit}" };
+            if (!string.IsNullOrEmpty(beforeId))
+                queryParams.Add($"before_id={beforeId}");
+            if (!string.IsNullOrEmpty(afterId))
+                queryParams.Add($"after_id={afterId}");
 
-            if (!string.IsNullOrWhiteSpace(beforeId))
+            var queryString = "?" + string.Join("&", queryParams);
+            return await HttpRequestSimple<FileListResponse>($"{Endpoint}{queryString}", HttpMethod.Get, null, cancellationToken);
+        }
+
+        /// <summary>
+        /// Retrieves metadata for a specific file by its ID.
+        /// </summary>
+        /// <param name="fileId">The ID of the file to retrieve metadata for.</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
+        /// <returns>The file metadata object.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when fileId is null or empty.</exception>
+        public async Task<FileMetadata> GetFileMetadataAsync(
+            string fileId,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(fileId))
             {
-                url += $"&before_id={beforeId}";
+                throw new ArgumentNullException(nameof(fileId), "File ID cannot be null or empty.");
             }
 
-            if (!string.IsNullOrWhiteSpace(afterId))
-            {
-                url += $"&after_id={afterId}";
-            }
-
-            var result = await HttpRequestSimple<FileListResponse>(url, HttpMethod.Get, null, ctx).ConfigureAwait(false);
-
-            return result;
+            return await HttpRequestSimple<FileMetadata>($"{Endpoint}/{fileId}", HttpMethod.Get, null, cancellationToken);
         }
 
         /// <summary>
