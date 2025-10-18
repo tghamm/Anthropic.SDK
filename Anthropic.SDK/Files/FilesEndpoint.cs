@@ -71,6 +71,25 @@ namespace Anthropic.SDK.Files
         }
 
         /// <summary>
+        /// Deletes a file, making it inaccessible through the API.
+        /// </summary>
+        /// <param name="fileId">The ID of the file to delete.</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
+        /// <returns>A response confirming the file deletion.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when fileId is null or empty.</exception>
+        public async Task<FileDeleteResponse> DeleteFileAsync(
+            string fileId,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(fileId))
+            {
+                throw new ArgumentNullException(nameof(fileId), "File ID cannot be null or empty.");
+            }
+
+            return await HttpRequestSimple<FileDeleteResponse>($"{Endpoint}/{fileId}", HttpMethod.Delete, null, cancellationToken);
+        }
+
+        /// <summary>
         /// Uploads a file to Claude for use in conversations.
         /// </summary>
         /// <param name="filePath">Path to the file to upload.</param>
