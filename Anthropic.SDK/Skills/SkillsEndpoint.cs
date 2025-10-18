@@ -182,6 +182,246 @@ namespace Anthropic.SDK.Skills
         }
 
         /// <summary>
+        /// Creates a new version of an existing skill by uploading skill files.
+        /// All files must be in the same top-level directory and must include a SKILL.md file at the root of that directory.
+        /// </summary>
+        /// <param name="skillId">The ID of the skill to create a version for.</param>
+        /// <param name="skillDirectoryPath">Path to the directory containing skill files. Must include a SKILL.md file.</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
+        /// <returns>The created skill version response.</returns>
+        /// <exception cref="ArgumentException">Thrown when parameters are invalid or SKILL.md is not found.</exception>
+        public async Task<SkillVersionResponse> CreateSkillVersionAsync(
+            string skillId,
+            string skillDirectoryPath,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(skillId))
+            {
+                throw new ArgumentNullException(nameof(skillId), "Skill ID cannot be null or empty.");
+            }
+
+            if (string.IsNullOrWhiteSpace(skillDirectoryPath))
+            {
+                throw new ArgumentException("Skill directory path cannot be null or empty.", nameof(skillDirectoryPath));
+            }
+
+            if (!Directory.Exists(skillDirectoryPath))
+            {
+                throw new ArgumentException($"Skill directory not found: {skillDirectoryPath}", nameof(skillDirectoryPath));
+            }
+
+            // Verify SKILL.md exists
+            var skillMdPath = Path.Combine(skillDirectoryPath, "SKILL.md");
+            if (!File.Exists(skillMdPath))
+            {
+                throw new ArgumentException("SKILL.md file must exist in the skill directory.", nameof(skillDirectoryPath));
+            }
+
+            // Get all files in the directory
+            var files = Directory.GetFiles(skillDirectoryPath, "*", SearchOption.AllDirectories);
+            
+            using var content = new MultipartFormDataContent();
+
+            // Add all files
+            foreach (var filePath in files)
+            {
+                // Get relative path (compatible with .NET Standard 2.0)
+                var relativePath = GetRelativePath(skillDirectoryPath, filePath);
+                // Normalize path separators to forward slashes for consistency
+                relativePath = relativePath.Replace(Path.DirectorySeparatorChar, '/');
+                
+#if NET6_0_OR_GREATER
+                var fileBytes = await File.ReadAllBytesAsync(filePath, cancellationToken).ConfigureAwait(false);
+#else
+                var fileBytes = File.ReadAllBytes(filePath);
+#endif
+                var fileContent = new ByteArrayContent(fileBytes);
+                var mimeType = GetMimeType(filePath);
+                fileContent.Headers.ContentType = new MediaTypeHeaderValue(mimeType);
+                
+                // Use the relative path as the filename in the multipart form
+                content.Add(fileContent, "files[]", relativePath);
+            }
+
+            return await HttpRequestSimple<SkillVersionResponse>($"{Endpoint}/{skillId}/versions", HttpMethod.Post, content, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Creates a new version of an existing skill by uploading a zip file.
+        /// The zip file must contain a SKILL.md file at its root.
+        /// </summary>
+        /// <param name="skillId">The ID of the skill to create a version for.</param>
+        /// <param name="zipFilePath">Path to the zip file containing skill files. Must include a SKILL.md file.</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
+        /// <returns>The created skill version response.</returns>
+        /// <exception cref="ArgumentException">Thrown when parameters are invalid.</exception>
+        public async Task<SkillVersionResponse> CreateSkillVersionFromZipAsync(
+            string skillId,
+            string zipFilePath,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(skillId))
+            {
+                throw new ArgumentNullException(nameof(skillId), "Skill ID cannot be null or empty.");
+            }
+
+            if (string.IsNullOrWhiteSpace(zipFilePath))
+            {
+                throw new ArgumentException("Zip file path cannot be null or empty.", nameof(zipFilePath));
+            }
+
+            if (!File.Exists(zipFilePath))
+            {
+                throw new ArgumentException($"Zip file not found: {zipFilePath}", nameof(zipFilePath));
+            }
+
+#if NET6_0_OR_GREATER
+            var fileBytes = await File.ReadAllBytesAsync(zipFilePath, cancellationToken).ConfigureAwait(false);
+#else
+            var fileBytes = File.ReadAllBytes(zipFilePath);
+#endif
+
+            using var content = new MultipartFormDataContent();
+
+            // Add zip file
+            var fileContent = new ByteArrayContent(fileBytes);
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
+            content.Add(fileContent, "files[]", Path.GetFileName(zipFilePath));
+
+            return await HttpRequestSimple<SkillVersionResponse>($"{Endpoint}/{skillId}/versions", HttpMethod.Post, content, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Creates a new version of an existing skill by uploading file streams.
+        /// Files must include a SKILL.md file.
+        /// </summary>
+        /// <param name="skillId">The ID of the skill to create a version for.</param>
+        /// <param name="files">List of tuples containing (filename, stream, mimeType) for each file to upload.</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
+        /// <returns>The created skill version response.</returns>
+        /// <exception cref="ArgumentException">Thrown when parameters are invalid.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when files is null or empty.</exception>
+        public async Task<SkillVersionResponse> CreateSkillVersionFromStreamsAsync(
+            string skillId,
+            List<(string filename, Stream stream, string mimeType)> files,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(skillId))
+            {
+                throw new ArgumentNullException(nameof(skillId), "Skill ID cannot be null or empty.");
+            }
+
+            if (files == null || !files.Any())
+            {
+                throw new ArgumentNullException(nameof(files), "Files list cannot be null or empty.");
+            }
+
+            // Verify SKILL.md is present
+            if (!files.Any(f => f.filename.EndsWith("SKILL.md", StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new ArgumentException("Files must include a SKILL.md file.", nameof(files));
+            }
+
+            using var content = new MultipartFormDataContent();
+
+            // Add all files
+            foreach (var (filename, stream, mimeType) in files)
+            {
+                var streamContent = new StreamContent(stream);
+                streamContent.Headers.ContentType = new MediaTypeHeaderValue(mimeType);
+                content.Add(streamContent, "files[]", filename);
+            }
+
+            return await HttpRequestSimple<SkillVersionResponse>($"{Endpoint}/{skillId}/versions", HttpMethod.Post, content, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Lists all versions of a specific skill. Supports pagination using page tokens.
+        /// </summary>
+        /// <param name="skillId">The ID of the skill to list versions for.</param>
+        /// <param name="page">Pagination token for fetching a specific page of results. Optionally set to the next_page token from the previous response.</param>
+        /// <param name="limit">Number of items to return per page. Defaults to 20. Ranges from 1 to 1000.</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
+        /// <returns>A paginated list of skill version objects.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when skillId is null or empty.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when limit is outside the valid range.</exception>
+        public async Task<SkillVersionListResponse> ListSkillVersionsAsync(
+            string skillId,
+            string page = null,
+            int limit = 20,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(skillId))
+            {
+                throw new ArgumentNullException(nameof(skillId), "Skill ID cannot be null or empty.");
+            }
+
+            if (limit < 1 || limit > 1000)
+            {
+                throw new ArgumentOutOfRangeException(nameof(limit), "Limit must be between 1 and 1000.");
+            }
+
+            var queryParams = new List<string> { $"limit={limit}" };
+            if (!string.IsNullOrEmpty(page))
+                queryParams.Add($"page={page}");
+
+            var queryString = "?" + string.Join("&", queryParams);
+            return await HttpRequestSimple<SkillVersionListResponse>($"{Endpoint}/{skillId}/versions{queryString}", HttpMethod.Get, null, cancellationToken);
+        }
+
+        /// <summary>
+        /// Retrieves details for a specific version of a skill.
+        /// </summary>
+        /// <param name="skillId">The ID of the skill.</param>
+        /// <param name="version">Version identifier for the skill. Each version is identified by a Unix epoch timestamp (e.g., "1759178010641129").</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
+        /// <returns>The skill version response.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when skillId or version is null or empty.</exception>
+        public async Task<SkillVersionResponse> GetSkillVersionAsync(
+            string skillId,
+            string version,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(skillId))
+            {
+                throw new ArgumentNullException(nameof(skillId), "Skill ID cannot be null or empty.");
+            }
+
+            if (string.IsNullOrWhiteSpace(version))
+            {
+                throw new ArgumentNullException(nameof(version), "Version cannot be null or empty.");
+            }
+
+            return await HttpRequestSimple<SkillVersionResponse>($"{Endpoint}/{skillId}/versions/{version}", HttpMethod.Get, null, cancellationToken);
+        }
+
+        /// <summary>
+        /// Deletes a specific version of a skill, making it inaccessible through the API.
+        /// </summary>
+        /// <param name="skillId">The ID of the skill.</param>
+        /// <param name="version">Version identifier for the skill. Each version is identified by a Unix epoch timestamp (e.g., "1759178010641129").</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
+        /// <returns>A response confirming the skill version deletion.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when skillId or version is null or empty.</exception>
+        public async Task<SkillVersionDeleteResponse> DeleteSkillVersionAsync(
+            string skillId,
+            string version,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(skillId))
+            {
+                throw new ArgumentNullException(nameof(skillId), "Skill ID cannot be null or empty.");
+            }
+
+            if (string.IsNullOrWhiteSpace(version))
+            {
+                throw new ArgumentNullException(nameof(version), "Version cannot be null or empty.");
+            }
+
+            return await HttpRequestSimple<SkillVersionDeleteResponse>($"{Endpoint}/{skillId}/versions/{version}", HttpMethod.Delete, null, cancellationToken);
+        }
+
+        /// <summary>
         /// Lists all skills in the organization. Supports pagination using page tokens.
         /// </summary>
         /// <param name="page">Pagination token for fetching a specific page of results. Pass the value from a previous response's next_page field to get the next page of results.</param>
