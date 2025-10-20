@@ -48,6 +48,26 @@ namespace Anthropic.SDK.Extensions
                         return JsonSerializer.Deserialize<MCPToolUseContent>(root.GetRawText(), options);
                     case "mcp_tool_result":
                         return JsonSerializer.Deserialize<MCPToolResultContent>(root.GetRawText(), options);
+                    case "bash_code_execution_tool_result":
+                        return JsonSerializer.Deserialize<BashCodeExecutionToolResultContent>(root.GetRawText(), options);
+                    case "bash_code_execution_result":
+                        return JsonSerializer.Deserialize<BashCodeExecutionResultContent>(root.GetRawText(), options);
+                    case "bash_code_execution_output":
+                        return JsonSerializer.Deserialize<BashCodeExecutionOutputContent>(root.GetRawText(), options);
+                    case "bash_code_execution_tool_result_error":
+                        return JsonSerializer.Deserialize<BashCodeExecutionToolResultErrorContent>(root.GetRawText(), options);
+                    case "text_editor_code_execution_tool_result":
+                        return JsonSerializer.Deserialize<TextEditorCodeExecutionToolResultContent>(root.GetRawText(), options);
+                    case "text_editor_code_execution_result":
+                        return JsonSerializer.Deserialize<TextEditorCodeExecutionResultContent>(root.GetRawText(), options);
+                    case "text_editor_code_execution_tool_result_error":
+                        return JsonSerializer.Deserialize<TextEditorCodeExecutionToolResultErrorContent>(root.GetRawText(), options);
+                    case "text_editor_code_execution_view_result":
+                        return JsonSerializer.Deserialize<TextEditorCodeExecutionViewResultContent>(root.GetRawText(), options);
+                    case "text_editor_code_execution_create_result":
+                        return JsonSerializer.Deserialize<TextEditorCodeExecutionCreateResultContent>(root.GetRawText(), options);
+                    case "text_editor_code_execution_str_replace_result":
+                        return JsonSerializer.Deserialize<TextEditorCodeExecutionStrReplaceResultContent>(root.GetRawText(), options);
                     // Add cases for other types as necessary
                     default:
                         throw new JsonException($"Unknown type {type}");

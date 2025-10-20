@@ -53,6 +53,9 @@ namespace Anthropic.SDK.Messaging
 
         [JsonIgnore]
         public RateLimits RateLimits { get; set; }
+
+        [JsonPropertyName("container")]
+        public ContainerResponse Container { get; set; }
     }
 
     public class StreamMessage

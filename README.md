@@ -26,6 +26,7 @@ Anthropic.SDK is an unofficial C# client designed for interacting with the Claud
     - [List Models](#list-models)
     - [Batching](#batching)
     - [Tools](#tools)
+    - [Skills](#skills)
     - [Computer Use](#computer-use)
   - [Vertex AI Support](#vertex-ai-support)
     - [Authentication](#authentication)
@@ -1167,6 +1168,189 @@ Output From Json Mode
   ]
 }
 ```
+
+### Skills
+
+The `AnthropicClient` supports the Skills API, which allows Claude to use tools like PowerPoint, Excel, Word, and PDF generation through code execution in a containerized environment. Skills can be used with the `container` parameter in message requests.
+
+#### Basic Skills Usage
+
+```csharp
+var client = new AnthropicClient();
+
+// Create a container with skills
+var container = new Container
+{
+    Skills = new List<Skill>
+    {
+        new Skill
+        {
+            Type = "anthropic",
+            SkillId = "pptx",  // Built-in PowerPoint skill
+            Version = "latest"
+        }
+    }
+};
+
+var parameters = new MessageParameters
+{
+    Model = AnthropicModels.Claude4Sonnet,
+    MaxTokens = 4096,
+    Messages = new List<Message>
+    {
+        new Message(RoleType.User, "Create a presentation about renewable energy")
+    },
+    Container = container,
+    Tools = new List<Common.Tool>
+    {
+        new Function("code_execution", "code_execution_20250825", 
+            new Dictionary<string, object> { { "name", "code_execution" } })
+    }
+};
+
+var response = await client.Messages.GetClaudeMessageAsync(parameters);
+
+// The response will include the container ID for reuse
+var containerId = response.Container?.Id;
+```
+
+#### Reusing Containers
+
+Containers can be reused across multiple requests to maintain state:
+
+```csharp
+// First request creates the container
+var response1 = await client.Messages.GetClaudeMessageAsync(parameters);
+
+// Subsequent requests can reuse the same container
+var containerWithId = new Container
+{
+    Id = response1.Container.Id,  // Reuse the container
+    Skills = new List<Skill>
+    {
+        new Skill { Type = "anthropic", SkillId = "xlsx", Version = "latest" }
+    }
+};
+
+var messages = new List<Message>
+{
+    new Message(RoleType.User, "Analyze this sales data"),
+    response1.Message,
+    new Message(RoleType.User, "What was the total revenue?")
+};
+
+var response2 = await client.Messages.GetClaudeMessageAsync(new MessageParameters
+{
+    Model = AnthropicModels.Claude4Sonnet,
+    MaxTokens = 4096,
+    Messages = messages,
+    Container = containerWithId
+});
+```
+
+#### Built-in Skills
+
+The following built-in Anthropic skills are available:
+- **pptx**: Create and edit PowerPoint presentations
+- **xlsx**: Create and analyze Excel spreadsheets  
+- **docx**: Create and edit Word documents
+- **pdf**: Generate PDF documents
+
+#### Multiple Skills
+
+You can include up to 8 skills per request:
+
+```csharp
+var container = new Container
+{
+    Skills = new List<Skill>
+    {
+        new Skill { Type = "anthropic", SkillId = "pptx", Version = "latest" },
+        new Skill { Type = "anthropic", SkillId = "xlsx", Version = "latest" },
+        new Skill { Type = "anthropic", SkillId = "docx", Version = "latest" },
+        new Skill { Type = "anthropic", SkillId = "pdf", Version = "latest" }
+    }
+};
+```
+
+#### Custom Skills
+
+Custom skills can also be used by specifying `Type = "custom"`:
+
+```csharp
+var container = new Container
+{
+    Skills = new List<Skill>
+    {
+        new Skill
+        {
+            Type = "custom",
+            SkillId = "my-custom-skill-id",
+            Version = "1.0.0"
+        }
+    }
+};
+```
+
+#### Working with Skill Results
+
+Skills execution results are returned as bash code execution content blocks:
+
+```csharp
+foreach (var content in response.Content)
+{
+    if (content is BashCodeExecutionToolResultContent bashResult)
+    {
+        if (bashResult.Content is BashCodeExecutionResultContent result)
+        {
+            Console.WriteLine($"Return Code: {result.ReturnCode}");
+            Console.WriteLine($"Stdout: {result.Stdout}");
+            Console.WriteLine($"Stderr: {result.Stderr}");
+            
+            // Access any file outputs
+            foreach (var output in result.Content)
+            {
+                Console.WriteLine($"File ID: {output.FileId}");
+                // Use Files API to download the file
+            }
+        }
+    }
+}
+```
+
+#### Downloading Skill Output Files
+
+For convenience, you can use the `DownloadFilesAsync` extension method to automatically download all file outputs from skill execution:
+
+```csharp
+using Anthropic.SDK.Extensions;
+
+var response = await client.Messages.GetClaudeMessageAsync(parameters);
+
+// Download all file outputs to a specified directory
+var downloadedFiles = await response.DownloadFilesAsync(
+    client, 
+    @"C:\Output\SkillFiles"
+);
+
+foreach (var filePath in downloadedFiles)
+{
+    Console.WriteLine($"Downloaded: {filePath}");
+}
+
+// Or just get the file IDs if you want to handle downloads manually
+var fileIds = response.GetFileIds();
+foreach (var fileId in fileIds)
+{
+    var metadata = await client.Files.GetFileMetadataAsync(fileId);
+    Console.WriteLine($"File: {metadata.Filename} ({metadata.SizeBytes} bytes)");
+}
+```
+
+**Note:** Skills require the following beta headers:
+- `code-execution-2025-08-25` - Enables code execution (required for Skills)
+- `skills-2025-10-02` - Enables Skills API
+- `files-api-2025-04-14` - For uploading/downloading files (when working with file outputs)
 
 ### Computer Use
 

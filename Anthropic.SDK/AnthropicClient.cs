@@ -7,6 +7,8 @@ using System.Text.Encodings.Web;
 using System.Text.Unicode;
 using Anthropic.SDK.Batches;
 using Anthropic.SDK.Models;
+using Anthropic.SDK.Files;
+using Anthropic.SDK.Skills;
 
 namespace Anthropic.SDK
 {
@@ -33,7 +35,7 @@ namespace Anthropic.SDK
         /// <summary>
         /// Version of the Anthropic Beta API
         /// </summary>
-        public string AnthropicBetaVersion { get; set; } = "prompt-caching-2024-07-31,message-batches-2024-09-24,computer-use-2024-10-22,pdfs-2024-09-25,output-128k-2025-02-19,mcp-client-2025-04-04";
+        public string AnthropicBetaVersion { get; set; } = "prompt-caching-2024-07-31,message-batches-2024-09-24,computer-use-2024-10-22,pdfs-2024-09-25,output-128k-2025-02-19,mcp-client-2025-04-04,code-execution-2025-08-25,skills-2025-10-02,files-api-2025-04-14";
 
         /// <summary>
         /// The API authentication information to use for API calls
@@ -67,6 +69,8 @@ namespace Anthropic.SDK
             Messages = new MessagesEndpoint(this);
             Batches = new BatchesEndpoint(this);
             Models = new ModelsEndpoint(this);
+            Files = new FilesEndpoint(this);
+            Skills = new SkillsEndpoint(this);
         }
 
         internal static JsonSerializerOptions JsonSerializationOptions { get; } = new()
@@ -115,6 +119,16 @@ namespace Anthropic.SDK
         /// Models are a way to manage the models that the API uses to generate completions. You can list models, as well as get information about a specific model.
         /// </summary>
         public ModelsEndpoint Models { get; }
+
+        /// <summary>
+        /// Files API allows you to download, list, and manage Claude-generated files.
+        /// </summary>
+        public FilesEndpoint Files { get; }
+
+        /// <summary>
+        /// Skills API allows you to create, list, retrieve, and delete custom skills that extend Claude's capabilities.
+        /// </summary>
+        public SkillsEndpoint Skills { get; }
 
         #region IDisposable
 

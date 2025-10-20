@@ -50,8 +50,41 @@ namespace Anthropic.SDK.Messaging
 
     public class ServerToolInput
     {
+        /// <summary>
+        /// Query for web_search tool
+        /// </summary>
         [JsonPropertyName("query")]
         public string Query { get; set; }
+
+        /// <summary>
+        /// Command for text_editor_code_execution or bash_code_execution tools
+        /// </summary>
+        [JsonPropertyName("command")]
+        public string Command { get; set; }
+
+        /// <summary>
+        /// File path for text_editor_code_execution tool
+        /// </summary>
+        [JsonPropertyName("path")]
+        public string Path { get; set; }
+
+        /// <summary>
+        /// Old string to replace (for str_replace command)
+        /// </summary>
+        [JsonPropertyName("old_str")]
+        public string OldStr { get; set; }
+
+        /// <summary>
+        /// New string to replace with (for str_replace command)
+        /// </summary>
+        [JsonPropertyName("new_str")]
+        public string NewStr { get; set; }
+
+        /// <summary>
+        /// File text content (for create command)
+        /// </summary>
+        [JsonPropertyName("file_text")]
+        public string FileText { get; set; }
     }
 
 
@@ -492,5 +525,329 @@ namespace Anthropic.SDK.Messaging
         public string EncryptedContent { get; set; }
         [JsonPropertyName("page_age")]
         public string PageAge { get; set; }
+    }
+
+    /// <summary>
+    /// Bash Code Execution Tool Result Content
+    /// </summary>
+    public class BashCodeExecutionToolResultContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (bash_code_execution_tool_result, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.bash_code_execution_tool_result;
+
+        /// <summary>
+        /// Tool Use Id
+        /// </summary>
+        [JsonPropertyName("tool_use_id")]
+        public string ToolUseId { get; set; }
+
+        /// <summary>
+        /// Content - can be either BashCodeExecutionResultContent or BashCodeExecutionToolResultErrorContent
+        /// </summary>
+        [JsonPropertyName("content")]
+        public ContentBase Content { get; set; }
+    }
+
+    /// <summary>
+    /// Bash Code Execution Result Content
+    /// </summary>
+    public class BashCodeExecutionResultContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (bash_code_execution_result, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.bash_code_execution_result;
+
+        /// <summary>
+        /// Standard output from the bash execution
+        /// </summary>
+        [JsonPropertyName("stdout")]
+        public string Stdout { get; set; }
+
+        /// <summary>
+        /// Standard error from the bash execution
+        /// </summary>
+        [JsonPropertyName("stderr")]
+        public string Stderr { get; set; }
+
+        /// <summary>
+        /// Return code from the bash execution
+        /// </summary>
+        [JsonPropertyName("return_code")]
+        public int ReturnCode { get; set; }
+
+        /// <summary>
+        /// Array of output content blocks (files)
+        /// </summary>
+        [JsonPropertyName("content")]
+        public List<BashCodeExecutionOutputContent> Content { get; set; }
+    }
+
+    /// <summary>
+    /// Bash Code Execution Output Content (represents a file)
+    /// </summary>
+    public class BashCodeExecutionOutputContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (bash_code_execution_output, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.bash_code_execution_output;
+
+        /// <summary>
+        /// File ID that can be used to download the file
+        /// </summary>
+        [JsonPropertyName("file_id")]
+        public string FileId { get; set; }
+    }
+
+    /// <summary>
+    /// Bash Code Execution Tool Result Error Content
+    /// </summary>
+    public class BashCodeExecutionToolResultErrorContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (bash_code_execution_tool_result_error, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.bash_code_execution_tool_result_error;
+
+        /// <summary>
+        /// Error code describing the failure
+        /// </summary>
+        [JsonPropertyName("error_code")]
+        public string ErrorCode { get; set; }
+    }
+
+    /// <summary>
+    /// Text Editor Code Execution Tool Result Content
+    /// </summary>
+    public class TextEditorCodeExecutionToolResultContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (text_editor_code_execution_tool_result, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.text_editor_code_execution_tool_result;
+
+        /// <summary>
+        /// Tool Use Id
+        /// </summary>
+        [JsonPropertyName("tool_use_id")]
+        public string ToolUseId { get; set; }
+
+        /// <summary>
+        /// Content - can be either TextEditorCodeExecutionResultContent or TextEditorCodeExecutionToolResultErrorContent
+        /// </summary>
+        [JsonPropertyName("content")]
+        public ContentBase Content { get; set; }
+    }
+
+    /// <summary>
+    /// Text Editor Code Execution Result Content
+    /// </summary>
+    public class TextEditorCodeExecutionResultContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (text_editor_code_execution_result, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.text_editor_code_execution_result;
+
+        /// <summary>
+        /// Whether file already existed (for create operations)
+        /// </summary>
+        [JsonPropertyName("is_file_update")]
+        public bool? IsFileUpdate { get; set; }
+
+        /// <summary>
+        /// File type (for view operations)
+        /// </summary>
+        [JsonPropertyName("file_type")]
+        public string FileType { get; set; }
+
+        /// <summary>
+        /// Content of the file (for view operations)
+        /// </summary>
+        [JsonPropertyName("content")]
+        public string Content { get; set; }
+
+        /// <summary>
+        /// Number of lines (for view operations)
+        /// </summary>
+        [JsonPropertyName("numLines")]
+        public int? NumLines { get; set; }
+
+        /// <summary>
+        /// Start line number (for view operations)
+        /// </summary>
+        [JsonPropertyName("startLine")]
+        public int? StartLine { get; set; }
+
+        /// <summary>
+        /// Total lines in file (for view operations)
+        /// </summary>
+        [JsonPropertyName("totalLines")]
+        public int? TotalLines { get; set; }
+
+        /// <summary>
+        /// Old start line (for edit operations)
+        /// </summary>
+        [JsonPropertyName("oldStart")]
+        public int? OldStart { get; set; }
+
+        /// <summary>
+        /// Old number of lines (for edit operations)
+        /// </summary>
+        [JsonPropertyName("oldLines")]
+        public int? OldLines { get; set; }
+
+        /// <summary>
+        /// New start line (for edit operations)
+        /// </summary>
+        [JsonPropertyName("newStart")]
+        public int? NewStart { get; set; }
+
+        /// <summary>
+        /// New number of lines (for edit operations)
+        /// </summary>
+        [JsonPropertyName("newLines")]
+        public int? NewLines { get; set; }
+
+        /// <summary>
+        /// Diff lines (for edit operations)
+        /// </summary>
+        [JsonPropertyName("lines")]
+        public List<string> Lines { get; set; }
+    }
+
+    /// <summary>
+    /// Text Editor Code Execution Tool Result Error Content
+    /// </summary>
+    public class TextEditorCodeExecutionToolResultErrorContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (text_editor_code_execution_tool_result_error, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.text_editor_code_execution_tool_result_error;
+
+        /// <summary>
+        /// Error code describing the failure
+        /// </summary>
+        [JsonPropertyName("error_code")]
+        public string ErrorCode { get; set; }
+
+        /// <summary>
+        /// Error message providing additional details (nullable)
+        /// </summary>
+        [JsonPropertyName("error_message")]
+        public string ErrorMessage { get; set; }
+    }
+
+    /// <summary>
+    /// Text Editor Code Execution View Result Content
+    /// </summary>
+    public class TextEditorCodeExecutionViewResultContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (text_editor_code_execution_view_result, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.text_editor_code_execution_view_result;
+
+        /// <summary>
+        /// Content of the file
+        /// </summary>
+        [JsonPropertyName("content")]
+        public string Content { get; set; }
+
+        /// <summary>
+        /// File type ('text', 'image', or 'pdf')
+        /// </summary>
+        [JsonPropertyName("file_type")]
+        public string FileType { get; set; }
+
+        /// <summary>
+        /// Number of lines displayed (nullable)
+        /// </summary>
+        [JsonPropertyName("num_lines")]
+        public int? NumLines { get; set; }
+
+        /// <summary>
+        /// Starting line number (nullable)
+        /// </summary>
+        [JsonPropertyName("start_line")]
+        public int? StartLine { get; set; }
+
+        /// <summary>
+        /// Total lines in the file (nullable)
+        /// </summary>
+        [JsonPropertyName("total_lines")]
+        public int? TotalLines { get; set; }
+    }
+
+    /// <summary>
+    /// Text Editor Code Execution Create Result Content
+    /// </summary>
+    public class TextEditorCodeExecutionCreateResultContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (text_editor_code_execution_create_result, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.text_editor_code_execution_create_result;
+
+        /// <summary>
+        /// Whether file already existed (true if update, false if new file)
+        /// </summary>
+        [JsonPropertyName("is_file_update")]
+        public bool IsFileUpdate { get; set; }
+    }
+
+    /// <summary>
+    /// Text Editor Code Execution String Replace Result Content
+    /// </summary>
+    public class TextEditorCodeExecutionStrReplaceResultContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (text_editor_code_execution_str_replace_result, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.text_editor_code_execution_str_replace_result;
+
+        /// <summary>
+        /// Diff lines showing the changes (nullable)
+        /// </summary>
+        [JsonPropertyName("lines")]
+        public List<string> Lines { get; set; }
+
+        /// <summary>
+        /// New number of lines (nullable)
+        /// </summary>
+        [JsonPropertyName("new_lines")]
+        public int? NewLines { get; set; }
+
+        /// <summary>
+        /// New start line (nullable)
+        /// </summary>
+        [JsonPropertyName("new_start")]
+        public int? NewStart { get; set; }
+
+        /// <summary>
+        /// Old number of lines (nullable)
+        /// </summary>
+        [JsonPropertyName("old_lines")]
+        public int? OldLines { get; set; }
+
+        /// <summary>
+        /// Old start line (nullable)
+        /// </summary>
+        [JsonPropertyName("old_start")]
+        public int? OldStart { get; set; }
     }
 }
