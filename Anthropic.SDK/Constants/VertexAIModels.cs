@@ -31,22 +31,27 @@ namespace Anthropic.SDK.Constants
         public const string Claude37Sonnet = "claude-3-7-sonnet@20250219";
 
         /// <summary>
-        /// Claude 4 Sonnet
+        /// Claude 4 Sonnet on Vertex AI
         /// </summary>
         public const string Claude4Sonnet = "claude-sonnet-4@20250514";
 
         /// <summary>
-        /// Claude 4.5 Sonnet
+        /// Claude 4.5 Sonnet on Vertex AI
         /// </summary>
-        public const string Claude45Sonnet = "claude-sonnet-4@20250514";
+        public const string Claude45Sonnet = "claude-sonnet-4-5@20250929";
 
         /// <summary>
-        /// Claude 4 Opus
+        /// Claude 4.5 Haiku on Vertex AI
         /// </summary>
-        public const string Claude4Opus = "claude-sonnet-4-5@20250929";
+        public const string Claude45Haiku = "claude-haiku-4-5@20251001";
 
         /// <summary>
-        /// Claude 4.1 Opus
+        /// Claude 4 Opus on Vertex AI
+        /// </summary>
+        public const string Claude4Opus = "claude-opus-4@20250514";
+
+        /// <summary>
+        /// Claude 4.1 Opus on Vertex AI
         /// </summary>
         public const string Claude41Opus = "claude-opus-4-1@20250805"; 
     }

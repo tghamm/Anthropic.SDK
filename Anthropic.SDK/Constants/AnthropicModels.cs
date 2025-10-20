@@ -51,6 +51,11 @@ namespace Anthropic.SDK.Constants
         public const string Claude35Haiku = "claude-3-5-haiku-20241022";
 
         /// <summary>
+        /// Claude 4.5 Haiku
+        /// </summary>
+        public const string Claude45Haiku = "claude-haiku-4-5-20251001";
+
+        /// <summary>
         /// Claude 3 Haiku
         /// </summary>
         public const string Claude3Haiku = "claude-3-haiku-20240307";
