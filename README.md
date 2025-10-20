@@ -4,6 +4,8 @@
 
 Anthropic.SDK is an unofficial C# client designed for interacting with the Claude AI API. This powerful interface simplifies the integration of the Claude AI into your C# applications.  It targets NetStandard 2.0, .NET 6.0, .NET 8.0, and .NET 9.0.
 
+Note: This package is not affiliated with, endorsed by, or sponsored by Anthropic. Anthropic and Claude are trademarks of Anthropic, PBC.
+
 ## Table of Contents
 
 - [Anthropic.SDK](#anthropicsdk)

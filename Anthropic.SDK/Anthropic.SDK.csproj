@@ -14,12 +14,12 @@
 	  <PackageTags>Claude, AI, ML, API, Anthropic</PackageTags>
 	  <Title>Claude API</Title>
 	  <PackageReleaseNotes>
-		  Update to Microsoft.Extensions.AI.Abstractions, .NET 9.0 Support, Minor Performance/Enhancements.
+		  Skills, Code Execution, File API Support, Haiku 4.5 Constant.
 	  </PackageReleaseNotes>
 	  <PackageId>Anthropic.SDK</PackageId>
-	  <Version>5.6.0</Version>
+	  <Version>5.7.0</Version>
 	  <AssemblyVersion>5.5.0.0</AssemblyVersion>
-	  <FileVersion>5.6.0.0</FileVersion>
+	  <FileVersion>5.7.0.0</FileVersion>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
 	  <PackageReadmeFile>README.md</PackageReadmeFile>
 	  <PackageIcon>icon.png</PackageIcon>
