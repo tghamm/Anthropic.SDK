@@ -14,12 +14,12 @@
 	  <PackageTags>Claude, AI, ML, API, Anthropic</PackageTags>
 	  <Title>Claude API</Title>
 	  <PackageReleaseNotes>
-		  Skills, Code Execution, File API Support, Haiku 4.5 Constant.
+		  Skills, Code Execution, File API Support, Haiku 4.5 Constant, bug fixes.
 	  </PackageReleaseNotes>
 	  <PackageId>Anthropic.SDK</PackageId>
-	  <Version>5.7.0</Version>
+	  <Version>5.7.1</Version>
 	  <AssemblyVersion>5.5.0.0</AssemblyVersion>
-	  <FileVersion>5.7.0.0</FileVersion>
+	  <FileVersion>5.7.1.0</FileVersion>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
 	  <PackageReadmeFile>README.md</PackageReadmeFile>
 	  <PackageIcon>icon.png</PackageIcon>
