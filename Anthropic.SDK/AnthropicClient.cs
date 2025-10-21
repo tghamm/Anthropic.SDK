@@ -35,7 +35,7 @@ namespace Anthropic.SDK
         /// <summary>
         /// Version of the Anthropic Beta API
         /// </summary>
-        public string AnthropicBetaVersion { get; set; } = "prompt-caching-2024-07-31,message-batches-2024-09-24,computer-use-2024-10-22,pdfs-2024-09-25,output-128k-2025-02-19,mcp-client-2025-04-04,code-execution-2025-08-25,skills-2025-10-02,files-api-2025-04-14";
+        public string AnthropicBetaVersion { get; set; } = "prompt-caching-2024-07-31,message-batches-2024-09-24,computer-use-2024-10-22,pdfs-2024-09-25,output-128k-2025-02-19,mcp-client-2025-04-04,code-execution-2025-08-25,files-api-2025-04-14";
 
         /// <summary>
         /// The API authentication information to use for API calls

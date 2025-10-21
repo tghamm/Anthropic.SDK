@@ -87,7 +87,8 @@ namespace Anthropic.SDK.Skills
                 content.Add(fileContent, "files[]", relativePath);
             }
 
-            return await HttpRequestSimple<SkillResponse>(Url, HttpMethod.Post, content, cancellationToken).ConfigureAwait(false);
+            var additionalHeaders = SetSkillsHeaders();
+            return await HttpRequestSimple<SkillResponse>(Url, HttpMethod.Post, content, additionalHeaders, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -132,8 +133,8 @@ namespace Anthropic.SDK.Skills
             var fileContent = new ByteArrayContent(fileBytes);
             fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
             content.Add(fileContent, "files[]", Path.GetFileName(zipFilePath));
-
-            return await HttpRequestSimple<SkillResponse>(Url, HttpMethod.Post, content, cancellationToken).ConfigureAwait(false);
+            var additionalHeaders = SetSkillsHeaders();
+            return await HttpRequestSimple<SkillResponse>(Url, HttpMethod.Post, content, additionalHeaders, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -177,8 +178,8 @@ namespace Anthropic.SDK.Skills
                 streamContent.Headers.ContentType = new MediaTypeHeaderValue(mimeType);
                 content.Add(streamContent, "files[]", filename);
             }
-
-            return await HttpRequestSimple<SkillResponse>(Url, HttpMethod.Post, content, cancellationToken).ConfigureAwait(false);
+            var additionalHeaders = SetSkillsHeaders();
+            return await HttpRequestSimple<SkillResponse>(Url, HttpMethod.Post, content, additionalHeaders, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -242,8 +243,8 @@ namespace Anthropic.SDK.Skills
                 // Use the relative path as the filename in the multipart form
                 content.Add(fileContent, "files[]", relativePath);
             }
-
-            return await HttpRequestSimple<SkillVersionResponse>($"{Endpoint}/{skillId}/versions", HttpMethod.Post, content, cancellationToken).ConfigureAwait(false);
+            var additionalHeaders = SetSkillsHeaders();
+            return await HttpRequestSimple<SkillVersionResponse>($"{Url}/{skillId}/versions", HttpMethod.Post, content, additionalHeaders, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -288,7 +289,8 @@ namespace Anthropic.SDK.Skills
             fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
             content.Add(fileContent, "files[]", Path.GetFileName(zipFilePath));
 
-            return await HttpRequestSimple<SkillVersionResponse>($"{Endpoint}/{skillId}/versions", HttpMethod.Post, content, cancellationToken).ConfigureAwait(false);
+            var additionalHeaders = SetSkillsHeaders();
+            return await HttpRequestSimple<SkillVersionResponse>($"{Url}/{skillId}/versions", HttpMethod.Post, content, additionalHeaders, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -332,7 +334,8 @@ namespace Anthropic.SDK.Skills
                 content.Add(streamContent, "files[]", filename);
             }
 
-            return await HttpRequestSimple<SkillVersionResponse>($"{Endpoint}/{skillId}/versions", HttpMethod.Post, content, cancellationToken).ConfigureAwait(false);
+            var additionalHeaders = SetSkillsHeaders();
+            return await HttpRequestSimple<SkillVersionResponse>($"{Url}/{skillId}/versions", HttpMethod.Post, content, additionalHeaders, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -366,7 +369,9 @@ namespace Anthropic.SDK.Skills
                 queryParams.Add($"page={page}");
 
             var queryString = "?" + string.Join("&", queryParams);
-            return await HttpRequestSimple<SkillVersionListResponse>($"{Endpoint}/{skillId}/versions{queryString}", HttpMethod.Get, null, cancellationToken);
+
+            var additionalHeaders = SetSkillsHeaders();
+            return await HttpRequestSimple<SkillVersionListResponse>($"{Url}/{skillId}/versions{queryString}", HttpMethod.Get, null, additionalHeaders, cancellationToken);
         }
 
         /// <summary>
@@ -392,7 +397,8 @@ namespace Anthropic.SDK.Skills
                 throw new ArgumentNullException(nameof(version), "Version cannot be null or empty.");
             }
 
-            return await HttpRequestSimple<SkillVersionResponse>($"{Endpoint}/{skillId}/versions/{version}", HttpMethod.Get, null, cancellationToken);
+            var additionalHeaders = SetSkillsHeaders();
+            return await HttpRequestSimple<SkillVersionResponse>($"{Url}/{skillId}/versions/{version}", HttpMethod.Get, null, additionalHeaders, cancellationToken);
         }
 
         /// <summary>
@@ -418,7 +424,8 @@ namespace Anthropic.SDK.Skills
                 throw new ArgumentNullException(nameof(version), "Version cannot be null or empty.");
             }
 
-            return await HttpRequestSimple<SkillVersionDeleteResponse>($"{Endpoint}/{skillId}/versions/{version}", HttpMethod.Delete, null, cancellationToken);
+            var additionalHeaders = SetSkillsHeaders();
+            return await HttpRequestSimple<SkillVersionDeleteResponse>($"{Url}/{skillId}/versions/{version}", HttpMethod.Delete, null, additionalHeaders, cancellationToken);
         }
 
         /// <summary>
@@ -447,7 +454,9 @@ namespace Anthropic.SDK.Skills
                 queryParams.Add($"source={source}");
 
             var queryString = "?" + string.Join("&", queryParams);
-            return await HttpRequestSimple<SkillListResponse>($"{Endpoint}{queryString}", HttpMethod.Get, null, cancellationToken);
+
+            var additionalHeaders = SetSkillsHeaders();
+            return await HttpRequestSimple<SkillListResponse>($"{Url}{queryString}", HttpMethod.Get, null, additionalHeaders, cancellationToken);
         }
 
         /// <summary>
@@ -466,7 +475,8 @@ namespace Anthropic.SDK.Skills
                 throw new ArgumentNullException(nameof(skillId), "Skill ID cannot be null or empty.");
             }
 
-            return await HttpRequestSimple<SkillResponse>($"{Endpoint}/{skillId}", HttpMethod.Get, null, cancellationToken);
+            var additionalHeaders = SetSkillsHeaders();
+            return await HttpRequestSimple<SkillResponse>($"{Url}/{skillId}", HttpMethod.Get, null, additionalHeaders, cancellationToken);
         }
 
         /// <summary>
@@ -485,7 +495,8 @@ namespace Anthropic.SDK.Skills
                 throw new ArgumentNullException(nameof(skillId), "Skill ID cannot be null or empty.");
             }
 
-            return await HttpRequestSimple<SkillDeleteResponse>($"{Endpoint}/{skillId}", HttpMethod.Delete, null, cancellationToken);
+            var additionalHeaders = SetSkillsHeaders();
+            return await HttpRequestSimple<SkillDeleteResponse>($"{Url}/{skillId}", HttpMethod.Delete, null, additionalHeaders, cancellationToken);
         }
 
         /// <summary>
@@ -550,6 +561,24 @@ namespace Anthropic.SDK.Skills
 
             // Convert forward slashes to platform-specific separators
             return relativePath.Replace('/', Path.DirectorySeparatorChar);
+        }
+
+        private Dictionary<string, string> SetSkillsHeaders()
+        {
+            // Check if interleaved thinking is needed and add the header
+            Dictionary<string, string> additionalHeaders = new Dictionary<string, string>();
+            var existingBeta = Client.AnthropicBetaVersion;
+            var skillsBeta = "skills-2025-10-02";
+            // Combine with existing beta features if they don't already include skills
+            if (!existingBeta.Contains(skillsBeta))
+            {
+                var combinedBeta = string.IsNullOrWhiteSpace(existingBeta)
+                    ? skillsBeta
+                    : $"{existingBeta},{skillsBeta}";
+                additionalHeaders["anthropic-beta"] = combinedBeta;
+            }
+            
+            return additionalHeaders;
         }
     }
 }

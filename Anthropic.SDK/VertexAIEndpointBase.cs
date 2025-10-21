@@ -186,7 +186,7 @@ namespace Anthropic.SDK
             HttpMethod verb = null,
             object postData = null, [EnumeratorCancellation] CancellationToken ctx = default)
         {
-            var response = await HttpRequestRaw(url, verb, postData, streaming: true, ctx).ConfigureAwait(false);
+            var response = await HttpRequestRaw(url, verb, postData, streaming: true, null, ctx).ConfigureAwait(false);
 #if NET6_0_OR_GREATER
             await using var stream = await response.Content.ReadAsStreamAsync(ctx).ConfigureAwait(false);
 #else
