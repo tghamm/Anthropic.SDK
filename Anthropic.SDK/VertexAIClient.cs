@@ -29,6 +29,11 @@ namespace Anthropic.SDK
         internal HttpClient HttpClient { get; set; }
 
         /// <summary>
+        /// Optional request interceptor for adding custom logic (retry, logging, etc.) to HTTP requests.
+        /// </summary>
+        internal IRequestInterceptor RequestInterceptor { get; set; }
+
+        /// <summary>
         /// Creates a new entry point to the Anthropic API via Google Cloud Vertex AI
         /// </summary>
         /// <param name="auth">
@@ -37,15 +42,19 @@ namespace Anthropic.SDK
         /// potentially loading from environment vars.
         /// </param>
         /// <param name="client">A <see cref="HttpClient"/>.</param>
+        /// <param name="requestInterceptor">
+        /// Optional <see cref="IRequestInterceptor"/> for adding custom logic (retry, logging, circuit breaker, etc.) to HTTP requests.
+        /// </param>
         /// <remarks>
         /// <see cref="VertexAIClient"/> implements <see cref="IDisposable"/> to manage the lifecycle of the resources it uses, including <see cref="HttpClient"/>.
         /// When you initialize <see cref="VertexAIClient"/>, it will create an internal <see cref="HttpClient"/> instance if one is not provided.
         /// This internal HttpClient is disposed of when VertexAIClient is disposed of.
         /// If you provide an external HttpClient instance to VertexAIClient, you are responsible for managing its disposal.
         /// </remarks>
-        public VertexAIClient(VertexAIAuthentication auth = null, HttpClient client = null)
+        public VertexAIClient(VertexAIAuthentication auth = null, HttpClient client = null, IRequestInterceptor requestInterceptor = null)
         {
             HttpClient = SetupClient(client);
+            RequestInterceptor = requestInterceptor;
             this.Auth = auth.ThisOrDefault();
             Messages = new VertexAIMessagesEndpoint(this);
         }

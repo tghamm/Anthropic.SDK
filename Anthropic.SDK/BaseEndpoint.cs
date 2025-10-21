@@ -33,6 +33,11 @@ namespace Anthropic.SDK
         protected abstract HttpClient GetClient();
 
         /// <summary>
+        /// Gets the optional request interceptor for adding custom logic to HTTP requests.
+        /// </summary>
+        protected abstract IRequestInterceptor GetRequestInterceptor();
+
+        /// <summary>
         /// Helper method to read the response content as a string.
         /// </summary>
         protected async Task<string> ReadResponseContentAsync(HttpResponseMessage response, CancellationToken ct)
@@ -152,10 +157,23 @@ namespace Anthropic.SDK
                 }
             }
 
-            response = await GetClient().SendAsync(req,
-                    streaming ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead,
-                    ctx)
-                .ConfigureAwait(false);
+            var interceptor = GetRequestInterceptor();
+            if (interceptor != null)
+            {
+                response = await interceptor.InvokeAsync(req, async () =>
+                {
+                    return await GetClient().SendAsync(req,
+                        streaming ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead,
+                        ctx).ConfigureAwait(false);
+                }).ConfigureAwait(false);
+            }
+            else
+            {
+                response = await GetClient().SendAsync(req,
+                        streaming ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead,
+                        ctx)
+                    .ConfigureAwait(false);
+            }
 
             if (response.IsSuccessStatusCode)
             {

@@ -91,6 +91,14 @@ namespace Anthropic.SDK
             return client;
         }
 
+        /// <summary>
+        /// Gets the optional request interceptor for adding custom logic to HTTP requests.
+        /// </summary>
+        protected override IRequestInterceptor GetRequestInterceptor()
+        {
+            return Client.RequestInterceptor;
+        }
+
         private static void AddHeaderIfNotPresent(HttpRequestHeaders headers, string name, string value)
         {
             if (!headers.Contains(name))
