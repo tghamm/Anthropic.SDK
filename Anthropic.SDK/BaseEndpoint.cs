@@ -157,21 +157,26 @@ namespace Anthropic.SDK
                 }
             }
 
+            // Use interceptor if provided, otherwise make direct HTTP call
             var interceptor = GetRequestInterceptor();
             if (interceptor != null)
             {
-                response = await interceptor.InvokeAsync(req, async () =>
-                {
-                    return await GetClient().SendAsync(req,
+                response = await interceptor.InvokeAsync(
+                    req,
+                    (request, ct) => GetClient().SendAsync(
+                        request,
                         streaming ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead,
-                        ctx).ConfigureAwait(false);
-                }).ConfigureAwait(false);
+                        ct),
+                    ctx)
+                    .ConfigureAwait(false);
             }
             else
             {
-                response = await GetClient().SendAsync(req,
-                        streaming ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead,
-                        ctx)
+                // Default path - no interception
+                response = await GetClient().SendAsync(
+                    req,
+                    streaming ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead,
+                    ctx)
                     .ConfigureAwait(false);
             }
 

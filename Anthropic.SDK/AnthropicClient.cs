@@ -46,9 +46,15 @@ namespace Anthropic.SDK
         internal HttpClient HttpClient { get; set; }
 
         /// <summary>
-        /// Optional request interceptor for adding custom logic (retry, logging, etc.) to HTTP requests.
+        /// Optional request interceptor for custom retry logic, logging, or other cross-cutting concerns.
         /// </summary>
-        internal IRequestInterceptor RequestInterceptor { get; set; }
+        private readonly IRequestInterceptor? _requestInterceptor;
+
+        /// <summary>
+        /// Gets the request interceptor if one was provided.
+        /// Used internally by endpoints to intercept HTTP requests.
+        /// </summary>
+        internal IRequestInterceptor? RequestInterceptor => _requestInterceptor;
 
         /// <summary>
         /// Creates a new entry point to the Anthropic API, handling auth and allowing access to the various API endpoints
@@ -60,18 +66,34 @@ namespace Anthropic.SDK
         /// </param>
         /// <param name="client">A <see cref="HttpClient"/>.</param>
         /// <param name="requestInterceptor">
-        /// Optional <see cref="IRequestInterceptor"/> for adding custom logic (retry, logging, circuit breaker, etc.) to HTTP requests.
+        /// Optional request interceptor for advanced scenarios like custom retry logic, logging, or auditing.
+        /// Most users don't need this - the SDK works perfectly without it.
+        /// Only provide this if you need to intercept and customize HTTP requests before they're sent.
         /// </param>
         /// <remarks>
+        /// <para>
         /// <see cref="AnthropicClient"/> implements <see cref="IDisposable"/> to manage the lifecycle of the resources it uses, including <see cref="HttpClient"/>.
         /// When you initialize <see cref="AnthropicClient"/>, it will create an internal <see cref="HttpClient"/> instance if one is not provided.
         /// This internal HttpClient is disposed of when AnthropicClient is disposed of.
         /// If you provide an external HttpClient instance to AnthropicClient, you are responsible for managing its disposal.
+        /// </para>
+        /// <para>
+        /// <b>Request Interceptor:</b> This is an advanced feature for scenarios requiring custom request handling.
+        /// Common use cases include:
+        /// <list type="bullet">
+        /// <item>Custom retry logic beyond what HttpClient provides</item>
+        /// <item>Special logging/tracing requirements</item>
+        /// <item>Company-specific audit requirements</item>
+        /// <item>Request/response modification or inspection</item>
+        /// </list>
+        /// If you're already handling resilience at the HttpClient level (via Polly, HttpClientFactory policies, etc.),
+        /// you typically don't need a request interceptor.
+        /// </para>
         /// </remarks>
         public AnthropicClient(APIAuthentication apiKeys = null, HttpClient client = null, IRequestInterceptor requestInterceptor = null)
         {
             HttpClient = SetupClient(client);
-            RequestInterceptor = requestInterceptor;
+            _requestInterceptor = requestInterceptor;
             this.Auth = apiKeys.ThisOrDefault();
             Messages = new MessagesEndpoint(this);
             Batches = new BatchesEndpoint(this);

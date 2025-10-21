@@ -38,7 +38,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="9.9.1" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
-    <PackageReference Include="Polly.Extensions.Http" Version="3.0.0" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
