@@ -142,7 +142,7 @@ namespace Anthropic.SDK.Examples
 
             // Retry on specific status codes
             return statusCode == HttpStatusCode.RequestTimeout ||           // 408
-                   statusCode == HttpStatusCode.TooManyRequests ||          // 429
+                   statusCode == (HttpStatusCode)429 ||                     // 429 TooManyRequests (not in netstandard2.0)
                    statusCode == HttpStatusCode.InternalServerError ||      // 500
                    statusCode == HttpStatusCode.BadGateway ||               // 502
                    statusCode == HttpStatusCode.ServiceUnavailable ||       // 503
