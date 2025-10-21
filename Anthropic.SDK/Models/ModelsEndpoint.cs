@@ -40,7 +40,7 @@ namespace Anthropic.SDK.Models
                 url += $"&after_id={afterId}";
             }
 
-            var response = await HttpRequestSimple<ModelList>(url, HttpMethod.Get, null, ctx).ConfigureAwait(false);
+            var response = await HttpRequestSimple<ModelList>(url, HttpMethod.Get, null, null, ctx).ConfigureAwait(false);
 
             return response;
         }
@@ -52,7 +52,7 @@ namespace Anthropic.SDK.Models
         /// <param name="ctx"></param>
         public async Task<ModelResponse> GetModelAsync(string modelId, CancellationToken ctx = default)
         {
-            var response = await HttpRequestSimple<ModelResponse>(Url + $"/{modelId}", HttpMethod.Get, null, ctx).ConfigureAwait(false);
+            var response = await HttpRequestSimple<ModelResponse>(Url + $"/{modelId}", HttpMethod.Get, null, null, ctx).ConfigureAwait(false);
 
             return response;
         }

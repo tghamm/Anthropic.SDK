@@ -112,9 +112,9 @@ namespace Anthropic.SDK
         /// Makes an HTTP request and deserializes the response to the specified type without custom converters.
         /// </summary>
         protected async Task<T> HttpRequestSimple<T>(string url = null, HttpMethod verb = null,
-            object postData = null, CancellationToken ctx = default)
+            object postData = null, Dictionary<string, string> additionalHeaders = null, CancellationToken ctx = default)
         {
-            var response = await HttpRequestRaw(url, verb, postData, false, ctx).ConfigureAwait(false);
+            var response = await HttpRequestRaw(url, verb, postData, false, additionalHeaders, ctx).ConfigureAwait(false);
 
             // Optimization: Deserialize directly from HTTP response stream
             // Avoids intermediate string allocation and UTF8 encoding conversion
@@ -128,14 +128,14 @@ namespace Anthropic.SDK
             return res;
         }
 
-        /// <summary>
-        /// Makes a raw HTTP request and returns the response.
-        /// </summary>
-        protected async Task<HttpResponseMessage> HttpRequestRaw(string url = null, HttpMethod verb = null,
-            object postData = null, bool streaming = false, CancellationToken ctx = default)
-        {
-            return await HttpRequestRaw(url, verb, postData, streaming, null, ctx).ConfigureAwait(false);
-        }
+        ///// <summary>
+        ///// Makes a raw HTTP request and returns the response.
+        ///// </summary>
+        //protected async Task<HttpResponseMessage> HttpRequestRaw(string url = null, HttpMethod verb = null,
+        //    object postData = null, bool streaming = false, CancellationToken ctx = default)
+        //{
+        //    return await HttpRequestRaw(url, verb, postData, streaming, null, ctx).ConfigureAwait(false);
+        //}
 
         /// <summary>
         /// Makes a raw HTTP request and returns the response with additional headers.

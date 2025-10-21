@@ -335,5 +335,13 @@ namespace Anthropic.SDK.Tests
                 bashCodeExecutionToolResultContent.Content is BashCodeExecutionOutputContent bashCodeExecutionOutputContent &&
                 !string.IsNullOrEmpty(bashCodeExecutionOutputContent.FileId)) != null);
         }
+
+        [TestMethod]
+        public async Task GetSkills()
+        {
+            var client = new AnthropicClient();
+            var skills = await client.Skills.ListSkillsAsync();
+            Assert.IsNotNull(skills);
+        }
     }
 }

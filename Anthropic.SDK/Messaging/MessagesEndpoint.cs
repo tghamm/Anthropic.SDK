@@ -31,26 +31,7 @@ namespace Anthropic.SDK.Messaging
             parameters.Stream = false;
 
             // Check if interleaved thinking is needed and add the header
-            Dictionary<string, string> additionalHeaders = null;
-            if (parameters.Thinking?.UseInterleavedThinking == true)
-            {
-                // Add the interleaved thinking beta header to the existing beta features
-                var existingBeta = Client.AnthropicBetaVersion;
-                var interleavedBeta = "interleaved-thinking-2025-05-14";
-                
-                // Combine with existing beta features if they don't already include interleaved thinking
-                if (!existingBeta.Contains(interleavedBeta))
-                {
-                    var combinedBeta = string.IsNullOrWhiteSpace(existingBeta) 
-                        ? interleavedBeta 
-                        : $"{existingBeta},{interleavedBeta}";
-                    
-                    additionalHeaders = new Dictionary<string, string>
-                    {
-                        ["anthropic-beta"] = combinedBeta
-                    };
-                }
-            }
+            var additionalHeaders = SetAdditionalHeaders(parameters);
 
             var response = await HttpRequestMessages<MessageResponse>(Url, HttpMethod.Post, parameters, additionalHeaders, ctx).ConfigureAwait(false);
 
@@ -118,27 +99,7 @@ namespace Anthropic.SDK.Messaging
 
             parameters.Stream = true;
 
-            // Check if interleaved thinking is needed and add the header
-            Dictionary<string, string> additionalHeaders = null;
-            if (parameters.Thinking?.UseInterleavedThinking == true)
-            {
-                // Add the interleaved thinking beta header to the existing beta features
-                var existingBeta = Client.AnthropicBetaVersion;
-                var interleavedBeta = "interleaved-thinking-2025-05-14";
-                
-                // Combine with existing beta features if they don't already include interleaved thinking
-                if (!existingBeta.Contains(interleavedBeta))
-                {
-                    var combinedBeta = string.IsNullOrWhiteSpace(existingBeta) 
-                        ? interleavedBeta 
-                        : $"{existingBeta},{interleavedBeta}";
-                    
-                    additionalHeaders = new Dictionary<string, string>
-                    {
-                        ["anthropic-beta"] = combinedBeta
-                    };
-                }
-            }
+            var additionalHeaders = SetAdditionalHeaders(parameters);
 
             var toolCalls = new List<Function>();
             var arguments = string.Empty;
@@ -178,6 +139,51 @@ namespace Anthropic.SDK.Messaging
                 yield return result;
             }
         }
+
+        private Dictionary<string, string> SetAdditionalHeaders(MessageParameters parameters)
+        {
+            // Check if interleaved thinking is needed and add the header
+            Dictionary<string, string> additionalHeaders = null;
+            if (parameters.Thinking?.UseInterleavedThinking == true)
+            {
+                // Add the interleaved thinking beta header to the existing beta features
+                var existingBeta = Client.AnthropicBetaVersion;
+                var interleavedBeta = "interleaved-thinking-2025-05-14";
+                // Combine with existing beta features if they don't already include interleaved thinking
+                if (!existingBeta.Contains(interleavedBeta))
+                {
+                    var combinedBeta = string.IsNullOrWhiteSpace(existingBeta)
+                        ? interleavedBeta
+                        : $"{existingBeta},{interleavedBeta}";
+
+                    additionalHeaders = new Dictionary<string, string>
+                    {
+                        ["anthropic-beta"] = combinedBeta
+                    };
+                }
+            }
+            if (parameters.Container != null)
+            {
+                if (additionalHeaders == null)
+                {
+                    additionalHeaders = new Dictionary<string, string>();
+                }
+                var existingBeta = Client.AnthropicBetaVersion;
+                var skillsBeta = "skills-2025-10-02";
+                // Combine with existing beta features if they don't already include skills
+                if (!existingBeta.Contains(skillsBeta))
+                {
+                    var combinedBeta = string.IsNullOrWhiteSpace(existingBeta)
+                        ? skillsBeta
+                        : $"{existingBeta},{skillsBeta}";
+                    additionalHeaders["anthropic-beta"] = combinedBeta;
+                }
+            }
+
+            return additionalHeaders;
+        }
+
+
         /// <summary>
         /// Makes a call to count the number of tokens in a request.
         /// </summary>

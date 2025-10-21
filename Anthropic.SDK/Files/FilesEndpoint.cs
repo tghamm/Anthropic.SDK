@@ -48,7 +48,7 @@ namespace Anthropic.SDK.Files
                 queryParams.Add($"after_id={afterId}");
 
             var queryString = "?" + string.Join("&", queryParams);
-            return await HttpRequestSimple<FileListResponse>($"{Endpoint}{queryString}", HttpMethod.Get, null, cancellationToken);
+            return await HttpRequestSimple<FileListResponse>($"{Url}{queryString}", HttpMethod.Get, null, null, cancellationToken);
         }
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace Anthropic.SDK.Files
                 throw new ArgumentNullException(nameof(fileId), "File ID cannot be null or empty.");
             }
 
-            return await HttpRequestSimple<FileMetadata>($"{Endpoint}/{fileId}", HttpMethod.Get, null, cancellationToken);
+            return await HttpRequestSimple<FileMetadata>($"{Url}/{fileId}", HttpMethod.Get, null, null, cancellationToken);
         }
 
         /// <summary>
@@ -86,7 +86,7 @@ namespace Anthropic.SDK.Files
                 throw new ArgumentNullException(nameof(fileId), "File ID cannot be null or empty.");
             }
 
-            return await HttpRequestSimple<FileDeleteResponse>($"{Endpoint}/{fileId}", HttpMethod.Delete, null, cancellationToken);
+            return await HttpRequestSimple<FileDeleteResponse>($"{Url}/{fileId}", HttpMethod.Delete, null, null, cancellationToken);
         }
 
         /// <summary>
@@ -157,7 +157,7 @@ namespace Anthropic.SDK.Files
             fileContent.Headers.ContentType = new MediaTypeHeaderValue(mimeType);
             content.Add(fileContent, "file", fileName);
 
-            var result = await HttpRequestSimple<FileMetadata>(Url, HttpMethod.Post, content, ctx).ConfigureAwait(false);
+            var result = await HttpRequestSimple<FileMetadata>(Url, HttpMethod.Post, content, null, ctx).ConfigureAwait(false);
 
             return result;
         }
@@ -194,7 +194,7 @@ namespace Anthropic.SDK.Files
             streamContent.Headers.ContentType = new MediaTypeHeaderValue(mimeType);
             content.Add(streamContent, "file", fileName);
 
-            var result = await HttpRequestSimple<FileMetadata>(Url, HttpMethod.Post, content, ctx).ConfigureAwait(false);
+            var result = await HttpRequestSimple<FileMetadata>(Url, HttpMethod.Post, content, null, ctx).ConfigureAwait(false);
 
             return result;
         }
@@ -215,7 +215,7 @@ namespace Anthropic.SDK.Files
             }
 
             var url = $"{Url}/{fileId}/content";
-            var response = await HttpRequestRaw(url, HttpMethod.Get, null, streaming: false, ctx).ConfigureAwait(false);
+            var response = await HttpRequestRaw(url, HttpMethod.Get, null, streaming: false, null, ctx).ConfigureAwait(false);
 
 #if NET6_0_OR_GREATER
             var content = await response.Content.ReadAsByteArrayAsync(ctx).ConfigureAwait(false);
@@ -263,7 +263,7 @@ namespace Anthropic.SDK.Files
             }
 
             var url = $"{Url}/{fileId}/content";
-            var response = await HttpRequestRaw(url, HttpMethod.Get, null, streaming: true, ctx).ConfigureAwait(false);
+            var response = await HttpRequestRaw(url, HttpMethod.Get, null, streaming: true, null, ctx).ConfigureAwait(false);
 
 #if NET6_0_OR_GREATER
             await using var stream = await response.Content.ReadAsStreamAsync(ctx).ConfigureAwait(false);
