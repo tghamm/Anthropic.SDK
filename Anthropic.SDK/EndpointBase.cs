@@ -258,7 +258,7 @@ namespace Anthropic.SDK
                         using var ms = new MemoryStream(Encoding.UTF8.GetBytes(currentEvent.Data));
                         var res = await JsonSerializer.DeserializeAsync<MessageResponse>(ms, new JsonSerializerOptions()
                         {
-                            Converters = { ContentConverter.Instance },
+                            Converters = { ContentConverter.Instance, ContentBlockConverter.Instance },
                             // Ensure proper Unicode handling for all characters
                             Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
                         }, cancellationToken: ctx).ConfigureAwait(false);

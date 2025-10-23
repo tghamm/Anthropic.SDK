@@ -152,6 +152,12 @@ namespace Anthropic.SDK.Messaging
         public bool? IsError { get; set; }
     }
 
+    public class BashCodeExecutionToolResultContentBlock : ContentBlock
+    {
+        [JsonPropertyName("content")]
+        public new ContentBase Content { get; set; }
+    }
+
     public class Usage
     {
         [JsonPropertyName("input_tokens")]
