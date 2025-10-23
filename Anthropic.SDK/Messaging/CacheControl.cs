@@ -13,7 +13,7 @@ public class CacheControl
     /// </summary>
     [JsonPropertyName("ttl")]
     [JsonConverter(typeof(CacheDurationConverter))]
-    public CacheDuration TTL { get; set; }
+    public CacheDuration? TTL { get; set; }
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
