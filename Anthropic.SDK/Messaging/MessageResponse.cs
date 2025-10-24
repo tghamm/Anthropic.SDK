@@ -9,6 +9,7 @@ namespace Anthropic.SDK.Messaging
     public class MessageResponse
     {
         [JsonPropertyName("content")]
+        [JsonConverter(typeof(SingleOrArrayConverter<ContentBase>))]
         public List<ContentBase> Content { get; set; }
 
         [JsonPropertyName("id")]
@@ -146,17 +147,14 @@ namespace Anthropic.SDK.Messaging
         [JsonPropertyName("tool_use_id")]
         public string? ToolUseId { get; set; }
         [JsonPropertyName("content")]
+        [JsonConverter(typeof(SingleOrArrayConverter<ContentBase>))]
         public List<ContentBase> Content { get; set; }
 
         [JsonPropertyName("is_error")]
         public bool? IsError { get; set; }
     }
 
-    public class BashCodeExecutionToolResultContentBlock : ContentBlock
-    {
-        [JsonPropertyName("content")]
-        public new ContentBase Content { get; set; }
-    }
+    
 
     public class Usage
     {
