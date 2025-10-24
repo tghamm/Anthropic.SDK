@@ -108,7 +108,7 @@ namespace Anthropic.SDK.Messaging
                             case HostedMcpServerTool mcpt:
                                 MCPServer mcpServer = new()
                                 {
-                                    Url = mcpt.Url.ToString(),
+                                    Url = mcpt.ServerAddress,
                                     Name = mcpt.ServerName,
                                 };
 
@@ -117,17 +117,7 @@ namespace Anthropic.SDK.Messaging
                                     mcpServer.ToolConfiguration.AllowedTools.AddRange(mcpt.AllowedTools);
                                 }
 
-                                if (mcpt.Headers?.TryGetValue("Authorization", out string authHeader) is true)
-                                {
-                                    ReadOnlySpan<char> actual = authHeader.AsSpan().Trim();
-                                    int spacePos = actual.IndexOf(' ');
-                                    if (spacePos > 0)
-                                    {
-                                        authHeader = actual.Slice(spacePos + 1).Trim().ToString();
-                                    }
-
-                                    mcpServer.AuthorizationToken = authHeader;
-                                }
+                                mcpServer.AuthorizationToken = mcpt.AuthorizationToken;
 
                                 (parameters.MCPServers ??= []).Add(mcpServer);
                                 break;
