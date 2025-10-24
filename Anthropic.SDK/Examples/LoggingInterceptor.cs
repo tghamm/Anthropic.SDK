@@ -98,7 +98,11 @@ namespace Anthropic.SDK.Examples
                     // Only log bodies under 10KB to avoid performance issues
                     if (contentLength > 0 && contentLength < 10_000)
                     {
+#if NET6_0_OR_GREATER
+                        var content = await request.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+#else
                         var content = await request.Content.ReadAsStringAsync().ConfigureAwait(false);
+#endif
                         logMessage += Environment.NewLine + $"Request Body ({contentLength} bytes): {content}";
                     }
                     else if (contentLength == 0)

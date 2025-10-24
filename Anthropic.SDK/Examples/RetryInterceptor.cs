@@ -76,7 +76,11 @@ namespace Anthropic.SDK.Examples
             byte[] requestContent = null;
             if (request.Content != null)
             {
+#if NET6_0_OR_GREATER
+                requestContent = await request.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
+#else
                 requestContent = await request.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+#endif
             }
 
             while (attempt <= _maxRetries)
