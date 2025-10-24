@@ -1,9 +1,10 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
 using Anthropic.SDK.Common;
 using Anthropic.SDK.Constants;
 using Anthropic.SDK.Messaging;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text.Json;
 
 namespace Anthropic.SDK.Tests
 {
@@ -331,6 +332,60 @@ namespace Anthropic.SDK.Tests
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
             Assert.IsNotNull(res.Message.ToString());
             Assert.IsNotNull(res.Content.LastOrDefault(c =>
+                c is BashCodeExecutionToolResultContent bashCodeExecutionToolResultContent &&
+                bashCodeExecutionToolResultContent.Content is BashCodeExecutionOutputContent bashCodeExecutionOutputContent &&
+                !string.IsNullOrEmpty(bashCodeExecutionOutputContent.FileId)) != null);
+        }
+
+        [TestMethod]
+        public async Task TestSkillUseMessageStreaming()
+        {
+            var client = new AnthropicClient();
+            var messages = new List<Message>();
+            messages.Add(new Message(RoleType.User, "Please create a one-page PowerPoint presentation with the title 'Testing Skills' and a bullet point list with the items 'Skill 1', 'Skill 2', and 'Skill 3'."));
+
+            var container = new Container
+            {
+                Skills = new List<Skill>
+                {
+                    new Skill
+                    {
+                        Type = "anthropic",
+                        SkillId = "pptx",  // Built-in PowerPoint skill
+                        Version = "latest"
+                    }
+                }
+            };
+
+            var parameters = new MessageParameters()
+            {
+                Messages = messages,
+                MaxTokens = 4096,
+                Model = AnthropicModels.Claude4Sonnet,
+                Stream = true,
+                Temperature = 1.0m,
+                Container = container,
+                Tools = new List<Common.Tool>
+                {
+                    new Function("code_execution", "code_execution_20250825",
+                        new Dictionary<string, object> { { "name", "code_execution" } })
+                }
+            };
+            var outputs = new List<MessageResponse>();
+            await foreach (var res in client.Messages.StreamClaudeMessageAsync(parameters))
+            {
+                if (res.Delta != null)
+                {
+                    Debug.Write(res.Delta.Text);
+                }
+
+                outputs.Add(res);
+            }
+
+            var message = new Message(outputs);
+            
+            Assert.IsNotNull(message.ToString());
+            Assert.IsNotNull(message.Content.LastOrDefault(c =>
                 c is BashCodeExecutionToolResultContent bashCodeExecutionToolResultContent &&
                 bashCodeExecutionToolResultContent.Content is BashCodeExecutionOutputContent bashCodeExecutionOutputContent &&
                 !string.IsNullOrEmpty(bashCodeExecutionOutputContent.FileId)) != null);

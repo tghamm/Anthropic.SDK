@@ -509,7 +509,11 @@ namespace Anthropic.SDK.Tests
                 Model = AnthropicModels.Claude4Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
-                Tools = tools
+                Tools = tools,
+                ToolChoice = new ToolChoice()
+                {
+                    Type = ToolChoiceType.Any
+                }
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
 
@@ -521,6 +525,8 @@ namespace Anthropic.SDK.Tests
 
                 messages.Add(new Message(toolCall, response));
             }
+
+            parameters.ToolChoice = null;
 
             var finalResult = await client.Messages.GetClaudeMessageAsync(parameters);
 

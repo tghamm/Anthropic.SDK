@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
@@ -60,5 +61,11 @@ namespace Anthropic.SDK.Messaging
         /// </summary>
         [JsonPropertyName("id")]
         public string Id { get; set; }
+
+        /// <summary>
+        /// The expiration date for the container
+        /// </summary>
+        [JsonPropertyName("expires_at")]
+        public DateTime? ExpiresAt { get; set; }
     }
 }

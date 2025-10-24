@@ -226,6 +226,8 @@ namespace Anthropic.SDK.Messaging
 
             }
 
+            
+
             var webToolResultFound = false;
             WebSearchToolResultContent webToolUseContent = null;
             var webSearchPartialJson = string.Empty;
@@ -245,7 +247,36 @@ namespace Anthropic.SDK.Messaging
                 
             }
 
+            
+            BashCodeExecutionToolResultContent bashCodeExecutionToolResultContent = null;
+            foreach (var result in asyncResponses)
+            {
+                if (result.ContentBlock != null && result.ContentBlock.Type == "bash_code_execution_tool_result")
+                {
 
+                    bashCodeExecutionToolResultContent = new BashCodeExecutionToolResultContent()
+                    {
+                        ToolUseId = result.ContentBlock.ToolUseId,
+                        Content = result.ContentBlock.Content.FirstOrDefault()
+                    };
+                    Content.Add(bashCodeExecutionToolResultContent);
+                }
+            }
+
+            TextEditorCodeExecutionToolResultContent textEditorCodeExecutionToolResultContent = null;
+            foreach (var result in asyncResponses)
+            {
+                if (result.ContentBlock != null && result.ContentBlock.Type == "text_editor_code_execution_tool_result")
+                {
+
+                    textEditorCodeExecutionToolResultContent = new TextEditorCodeExecutionToolResultContent()
+                    {
+                        ToolUseId = result.ContentBlock.ToolUseId,
+                        Content = result.ContentBlock.Content.FirstOrDefault()
+                    };
+                    Content.Add(textEditorCodeExecutionToolResultContent);
+                }
+            }
 
 
             foreach (var result in asyncResponses)
