@@ -138,6 +138,14 @@ namespace Anthropic.SDK
         }
 
         /// <summary>
+        /// Gets the optional request interceptor for adding custom logic to HTTP requests.
+        /// </summary>
+        protected override IRequestInterceptor GetRequestInterceptor()
+        {
+            return Client.RequestInterceptor;
+        }
+
+        /// <summary>
         /// Handle error responses from the API
         /// </summary>
         protected override async Task<Exception> HandleErrorResponseAsync(HttpResponseMessage response, string resultAsString, string url)

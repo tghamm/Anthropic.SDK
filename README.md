@@ -30,6 +30,8 @@ Note: This package is not affiliated with, endorsed by, or sponsored by Anthropi
     - [Tools](#tools)
     - [Skills](#skills)
     - [Computer Use](#computer-use)
+    - [HTTP Resilience](#http-resilience)
+    - [Custom Retry and Logging with IRequestInterceptor](#custom-retry-and-logging-with-irequestinterceptor)
   - [Vertex AI Support](#vertex-ai-support)
     - [Authentication](#authentication)
       - [1. Environment Variables](#1-environment-variables)
@@ -1389,6 +1391,291 @@ var tools = new List<Common.Tool>()
     })
 };
 ```
+
+### HTTP Resilience
+
+For production applications, it's recommended to add resilience patterns like retries, timeouts, and circuit breakers to handle transient failures when calling the Claude API. The SDK works seamlessly with .NET's standard resilience mechanisms.
+
+#### Using Microsoft.Extensions.Http.Resilience (.NET 8+)
+
+For .NET 8 and later, Microsoft provides a comprehensive resilience package:
+
+```bash
+dotnet add package Microsoft.Extensions.Http.Resilience
+```
+
+**Quick Start: Standard Resilience Handler**
+
+The simplest approach is to use the built-in standard resilience handler with sensible defaults:
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Http.Resilience;
+
+var services = new ServiceCollection();
+
+// Add AnthropicClient with standard resilience (includes retry, circuit breaker, timeouts)
+services.AddHttpClient<AnthropicClient>()
+    .AddStandardResilienceHandler();
+
+var serviceProvider = services.BuildServiceProvider();
+var client = serviceProvider.GetRequiredService<AnthropicClient>();
+
+// Use the client - it now has built-in resilience
+var messages = new List<Message>
+{
+    new Message(RoleType.User, "Hello, Claude!")
+};
+
+var parameters = new MessageParameters
+{
+    Messages = messages,
+    MaxTokens = 1024,
+    Model = AnthropicModels.Claude35Sonnet
+};
+
+var response = await client.Messages.GetClaudeMessageAsync(parameters);
+```
+
+**What you get out of the box:**
+- **Rate Limiter**: Allows up to 1000 concurrent requests
+- **Total Request Timeout**: 30 seconds for the entire request (including retries)
+- **Retry**: Up to 3 attempts with exponential backoff and jitter (2 second base delay)
+- **Circuit Breaker**: Opens if 10% of requests fail within 30 seconds (breaks for 5 seconds)
+- **Attempt Timeout**: 10 seconds per individual request attempt
+
+**Customizing Standard Resilience**
+
+You can customize the default values to better suit the Claude API's rate limits and your application needs:
+
+```csharp
+services.AddHttpClient<AnthropicClient>()
+    .AddStandardResilienceHandler()
+    .Configure(options =>
+    {
+        // Increase total timeout for longer conversations
+        options.TotalRequestTimeout.Timeout = TimeSpan.FromMinutes(2);
+
+        // Customize retry behavior
+        options.Retry.MaxRetryAttempts = 5;
+        options.Retry.Delay = TimeSpan.FromSeconds(1);
+        options.Retry.BackoffType = DelayBackoffType.Exponential;
+        options.Retry.UseJitter = true;
+
+        // Adjust circuit breaker for Claude API
+        options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(60);
+        options.CircuitBreaker.MinimumThroughput = 10;
+        options.CircuitBreaker.FailureRatio = 0.5; // Open circuit if 50% fail
+        options.CircuitBreaker.BreakDuration = TimeSpan.FromSeconds(30);
+
+        // Individual attempt timeout
+        options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(30);
+    });
+```
+
+**Respecting Retry-After Headers**
+
+The standard resilience handler automatically respects `Retry-After` headers that the Claude API may send during rate limiting:
+
+```csharp
+services.AddHttpClient<AnthropicClient>()
+    .AddStandardResilienceHandler()
+    .Configure(options =>
+    {
+        // This is enabled by default
+        options.Retry.ShouldRetryAfterHeader = true;
+    });
+```
+
+**Custom Resilience with AddResilienceHandler**
+
+For more granular control over individual resilience strategies:
+
+```csharp
+services.AddHttpClient<AnthropicClient>()
+    .AddResilienceHandler("anthropic-resilience", builder =>
+    {
+        // Retry with exponential backoff for transient errors
+        builder.AddRetry(new HttpRetryStrategyOptions
+        {
+            MaxRetryAttempts = 5,
+            BackoffType = DelayBackoffType.Exponential,
+            UseJitter = true,
+            Delay = TimeSpan.FromSeconds(1),
+            ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
+                .Handle<HttpRequestException>()
+                .HandleResult(response =>
+                    (int)response.StatusCode == 429 ||  // Rate limit
+                    (int)response.StatusCode >= 500 ||  // Server errors
+                    (int)response.StatusCode == 408)    // Request timeout
+        });
+
+        // Circuit breaker to prevent cascading failures
+        builder.AddCircuitBreaker(new HttpCircuitBreakerStrategyOptions
+        {
+            SamplingDuration = TimeSpan.FromSeconds(30),
+            FailureRatio = 0.2,
+            MinimumThroughput = 5,
+            BreakDuration = TimeSpan.FromSeconds(15)
+        });
+
+        // Timeout for individual attempts
+        builder.AddTimeout(TimeSpan.FromSeconds(30));
+
+        // Concurrency limiter to control outbound requests
+        builder.AddConcurrencyLimiter(100);
+    })
+    .SetHandlerLifetime(TimeSpan.FromMinutes(5));
+```
+
+**For GET-heavy Workloads: Hedging Handler**
+
+If you're primarily making idempotent requests (like retrieving model information), you can use hedging to reduce latency by sending parallel requests:
+
+```csharp
+services.AddHttpClient<AnthropicClient>()
+    .AddStandardHedgingHandler()
+    .Configure(options =>
+    {
+        options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(60);
+
+        // Send another request if no response after 50ms
+        options.Hedging.MaxHedgedAttempts = 3;
+        options.Hedging.Delay = TimeSpan.FromMilliseconds(50);
+
+        options.Endpoint.CircuitBreaker.MinimumThroughput = 5;
+        options.Endpoint.CircuitBreaker.FailureRatio = 0.9;
+        options.Endpoint.Timeout.Timeout = TimeSpan.FromSeconds(10);
+    });
+```
+
+**⚠️ Warning**: Only use hedging for idempotent operations (GET requests). Do not use for message creation or other state-changing operations, as it sends multiple requests in parallel.
+
+### Custom Retry and Logging with IRequestInterceptor
+
+For applications that need custom retry logic, logging, or other cross-cutting concerns without using dependency injection, the SDK provides an `IRequestInterceptor` interface.
+
+**When to use IRequestInterceptor:**
+- You need custom retry logic beyond what HttpClient provides
+- You want to add request/response logging
+- You need to track metrics or implement custom rate limiting
+- You're not using dependency injection or HttpClientFactory
+
+**Note**: Most applications should use the HttpClient-level resilience patterns shown above. Only use `IRequestInterceptor` for advanced scenarios requiring per-request control.
+
+#### Retry Interceptor Example
+
+The SDK includes example implementations in the `Anthropic.SDK.Examples` namespace:
+
+```csharp
+using Anthropic.SDK;
+using Anthropic.SDK.Examples;
+
+// Create a retry interceptor with custom settings
+var retryInterceptor = new RetryInterceptor(
+    maxRetries: 3,
+    initialDelay: TimeSpan.FromSeconds(1),
+    backoffMultiplier: 2.0
+);
+
+// Pass it to the AnthropicClient constructor
+var client = new AnthropicClient(
+    apiKeys: new APIAuthentication("your-api-key"),
+    requestInterceptor: retryInterceptor
+);
+
+// Use the client normally - retries happen automatically
+var messages = new List<Message>
+{
+    new Message(RoleType.User, "Hello, Claude!")
+};
+
+var parameters = new MessageParameters
+{
+    Messages = messages,
+    MaxTokens = 1024,
+    Model = AnthropicModels.Claude35Sonnet
+};
+
+var response = await client.Messages.GetClaudeMessageAsync(parameters);
+```
+
+The `RetryInterceptor` will automatically retry on:
+- HTTP 408 (Request Timeout)
+- HTTP 429 (Too Many Requests)
+- HTTP 500 (Internal Server Error)
+- HTTP 502 (Bad Gateway)
+- HTTP 503 (Service Unavailable)
+- HTTP 504 (Gateway Timeout)
+- Network-level failures (HttpRequestException, TimeoutException)
+
+#### Logging Interceptor Example
+
+You can also log requests and responses for debugging:
+
+```csharp
+using Anthropic.SDK;
+using Anthropic.SDK.Examples;
+
+// Create a logging interceptor
+var loggingInterceptor = new LoggingInterceptor(
+    logRequestBody: true,   // Log request bodies (be careful with sensitive data!)
+    logResponseBody: true   // Log response bodies
+);
+
+var client = new AnthropicClient(
+    apiKeys: new APIAuthentication("your-api-key"),
+    requestInterceptor: loggingInterceptor
+);
+```
+
+**Note**: The logging interceptor only logs bodies under 10KB to avoid performance issues. Override the `LogRequest`, `LogResponse`, and `LogException` methods to customize logging behavior.
+
+#### Custom Interceptor Implementation
+
+You can create your own interceptor by implementing `IRequestInterceptor`:
+
+```csharp
+using System;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
+using Anthropic.SDK;
+
+public class MyCustomInterceptor : IRequestInterceptor
+{
+    public async Task<HttpResponseMessage> InvokeAsync(
+        HttpRequestMessage request,
+        Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> next,
+        CancellationToken cancellationToken = default)
+    {
+        // Custom logic before the request
+        Console.WriteLine($"Sending request to {request.RequestUri}");
+
+        // Execute the request
+        var response = await next(request, cancellationToken);
+
+        // Custom logic after the request
+        Console.WriteLine($"Received response: {response.StatusCode}");
+
+        return response;
+    }
+}
+
+// Use your custom interceptor
+var client = new AnthropicClient(
+    apiKeys: new APIAuthentication("your-api-key"),
+    requestInterceptor: new MyCustomInterceptor()
+);
+```
+
+**Important**: When implementing custom interceptors for retry logic, remember to:
+1. Buffer request content before the first attempt (call `await request.Content.LoadIntoBufferAsync()`)
+2. Clone the request for each retry attempt
+3. Check `cancellationToken.IsCancellationRequested` to avoid retrying user-cancelled requests
+4. Only retry transient failures (network errors, 5xx responses, 429)
+
+See the `RetryInterceptor` and `LoggingInterceptor` source code in `Anthropic.SDK/Examples/` for complete production-ready implementations.
 
 ## Vertex AI Support
 
