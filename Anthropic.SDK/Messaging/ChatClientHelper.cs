@@ -197,7 +197,7 @@ namespace Anthropic.SDK.Messaging
                                 string text = textContent.Text;
                                 if (currentMessage.Role == RoleType.Assistant)
                                 {
-                                    text.TrimEnd();
+                                    text = text.TrimEnd();
                                     if (!string.IsNullOrWhiteSpace(text))
                                     {
                                         currentMessage.Content.Add(new TextContent() { Text = text });
