@@ -114,7 +114,7 @@ public partial class MessagesEndpoint : IChatClient
             
             if (response.Delta is not null)
             {
-                if (!string.IsNullOrEmpty(response.Delta.Text))
+                if (response.Delta.Type == "text_delta" && !string.IsNullOrEmpty(response.Delta.Text))
                 {
                     update.Contents.Add(new Microsoft.Extensions.AI.TextContent(response.Delta.Text));
                 }
