@@ -132,6 +132,9 @@ namespace Anthropic.SDK.Messaging
 
         [JsonPropertyName("id")]
         public string? Id { get; set; }
+        
+        [JsonPropertyName("index")]
+        public int? Index { get; set; }
 
         [JsonPropertyName("text")]
         public string? Text { get; set; }
