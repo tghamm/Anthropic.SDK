@@ -353,7 +353,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = AnthropicModels.Claude37Sonnet,
+                ModelId = AnthropicModels.Claude45Sonnet,
                 MaxOutputTokens = 5000,
                 Tools = [new HostedCodeInterpreterTool()]
             };
