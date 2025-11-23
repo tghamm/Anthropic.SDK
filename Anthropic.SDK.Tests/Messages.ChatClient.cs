@@ -344,6 +344,28 @@ namespace Anthropic.SDK.Tests
         }
 
         [TestMethod]
+        public async Task TestNonStreamingCodeExecutionCalls()
+        {
+            IChatClient client = new AnthropicClient().Messages
+                .AsBuilder()
+                .UseFunctionInvocation()
+                .Build();
+
+            ChatOptions options = new()
+            {
+                ModelId = AnthropicModels.Claude37Sonnet,
+                MaxOutputTokens = 5000,
+                Tools = [new HostedCodeInterpreterTool()]
+            };
+
+            var res = await client.GetResponseAsync("What is 12345 * 67890?", options);
+
+            Assert.IsTrue(
+                res.Text.Contains("838102050") is true,
+                res.Text);
+        }
+
+        [TestMethod]
         public async Task TestStreamingFunctionCalls()
         {
             IChatClient client = new AnthropicClient().Messages

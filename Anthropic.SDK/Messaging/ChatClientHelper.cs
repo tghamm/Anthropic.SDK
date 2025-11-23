@@ -97,7 +97,7 @@ namespace Anthropic.SDK.Messaging
                                 break;
 
                             case HostedCodeInterpreterTool:
-                                tools.Add(Common.Tool.CodeInterpreter);
+                                tools.Add(ServerTools.GetCodeExecutionTool());
                                 break;
 
                             case HostedWebSearchTool:

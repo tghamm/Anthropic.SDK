@@ -29,6 +29,12 @@ namespace Anthropic.SDK.Messaging
             
             return new Function("web_search", "web_search_20250305", dict);
         }
+
+        public static Common.Tool GetCodeExecutionTool()
+        {
+            var dict = new Dictionary<string, object>();
+            return new Function("code_execution", "code_execution_20250825", dict);
+        }
     }
 
 

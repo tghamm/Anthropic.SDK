@@ -25,8 +25,6 @@ namespace Anthropic.SDK.Common
 
         public static Tool Retrieval { get; } = new() { Type = "retrieval" };
 
-        public static Tool CodeInterpreter { get; } = new() { Type = "code_interpreter" };
-
         [JsonInclude]
         [JsonPropertyName("id")]
         public string Id { get; private set; }
@@ -107,8 +105,7 @@ namespace Anthropic.SDK.Common
 
         private static readonly List<Tool> toolCache = new()
         {
-            Retrieval,
-            CodeInterpreter
+            Retrieval
         };
 
         /// <summary>
@@ -117,7 +114,6 @@ namespace Anthropic.SDK.Common
         public static void ClearRegisteredTools()
         {
             toolCache.Clear();
-            toolCache.Add(CodeInterpreter);
             toolCache.Add(Retrieval);
         }
 
