@@ -180,7 +180,30 @@ namespace Anthropic.SDK.Messaging
                 }
             }
 
+            // Add structured outputs beta header when output_format is set or strict tools are used
+            if (parameters.OutputFormat != null || HasStrictTools(parameters))
+            {
+                additionalHeaders ??= new Dictionary<string, string>();
+                var existingBeta = additionalHeaders.TryGetValue("anthropic-beta", out var beta)
+                    ? beta
+                    : Client.AnthropicBetaVersion;
+                var structuredOutputsBeta = "structured-outputs-2025-11-13";
+
+                if (!existingBeta.Contains(structuredOutputsBeta))
+                {
+                    var combinedBeta = string.IsNullOrWhiteSpace(existingBeta)
+                        ? structuredOutputsBeta
+                        : $"{existingBeta},{structuredOutputsBeta}";
+                    additionalHeaders["anthropic-beta"] = combinedBeta;
+                }
+            }
+
             return additionalHeaders;
+        }
+
+        private static bool HasStrictTools(MessageParameters parameters)
+        {
+            return parameters.Tools?.Any(t => t.Function?.Strict == true) == true;
         }
 
 

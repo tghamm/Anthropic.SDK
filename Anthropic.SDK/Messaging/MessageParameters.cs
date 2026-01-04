@@ -43,6 +43,13 @@ namespace Anthropic.SDK.Messaging
         [JsonPropertyName("thinking")]
         public ThinkingParameters Thinking { get; set; }
 
+        /// <summary>
+        /// Output format configuration for structured JSON output.
+        /// Requires the structured-outputs-2025-11-13 beta header.
+        /// </summary>
+        [JsonPropertyName("output_format")]
+        public OutputFormat OutputFormat { get; set; }
+
         [JsonPropertyName("mcp_servers")]
         public List<MCPServer> MCPServers { get; set; }
 
