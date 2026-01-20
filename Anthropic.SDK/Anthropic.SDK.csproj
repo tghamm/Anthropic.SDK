@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-      <TargetFrameworks>netstandard2.0;net6.0;net8.0;net9.0</TargetFrameworks>
+      <TargetFrameworks>netstandard2.0;net6.0;net8.0;net10.0</TargetFrameworks>
 	  <LangVersion>latest</LangVersion>
 	  <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	  <Authors>Grant Hamm</Authors>
@@ -17,9 +17,9 @@
 		  Skills, Code Execution, File API Support, Haiku 4.5 Constant, Resilience/Logging, bug fixes.
 	  </PackageReleaseNotes>
 	  <PackageId>Anthropic.SDK</PackageId>
-	  <Version>5.8.0</Version>
-	  <AssemblyVersion>5.5.0.0</AssemblyVersion>
-	  <FileVersion>5.8.0.0</FileVersion>
+	  <Version>5.10.0</Version>
+	  <AssemblyVersion>5.10.0.0</AssemblyVersion>
+	  <FileVersion>5.10.0.0</FileVersion>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
 	  <PackageReadmeFile>README.md</PackageReadmeFile>
 	  <PackageIcon>icon.png</PackageIcon>
