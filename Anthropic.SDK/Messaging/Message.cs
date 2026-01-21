@@ -165,12 +165,12 @@ namespace Anthropic.SDK.Messaging
                         Id = result.ContentBlock.Id
                     };
                 }
-                if (serverToolUseFound && !string.IsNullOrWhiteSpace(result.Delta?.PartialJson))
+                if (serverToolUseFound && !string.IsNullOrEmpty(result.Delta?.PartialJson))
                 {
                     serverPartialJson += result.Delta.PartialJson;
-                    
+
                 }
-                else if (serverToolUseFound && string.IsNullOrWhiteSpace(result.Delta?.PartialJson) && !string.IsNullOrWhiteSpace(serverPartialJson))
+                else if (serverToolUseFound && string.IsNullOrEmpty(result.Delta?.PartialJson) && !string.IsNullOrEmpty(serverPartialJson))
                 {
                     var input = JsonSerializer.Deserialize<ServerToolInput>(serverPartialJson);
                     serverToolUseContent.Input = input;
@@ -194,12 +194,12 @@ namespace Anthropic.SDK.Messaging
                         ServerName = result.ContentBlock.ServerName
                     };
                 }
-                if (mcpToolUseFound && !string.IsNullOrWhiteSpace(result.Delta?.PartialJson))
+                if (mcpToolUseFound && !string.IsNullOrEmpty(result.Delta?.PartialJson))
                 {
                     mcpPartialJson += result.Delta.PartialJson;
 
                 }
-                else if (mcpToolUseFound && string.IsNullOrWhiteSpace(result.Delta?.PartialJson) && !string.IsNullOrWhiteSpace(mcpPartialJson))
+                else if (mcpToolUseFound && string.IsNullOrEmpty(result.Delta?.PartialJson) && !string.IsNullOrEmpty(mcpPartialJson))
                 {
                     var input = JsonNode.Parse(mcpPartialJson);
                     mcpToolUseContent.Input = input;
@@ -289,7 +289,7 @@ namespace Anthropic.SDK.Messaging
                     id = result.ContentBlock.Id;
                 }
 
-                if (!string.IsNullOrWhiteSpace(result.Delta?.PartialJson))
+                if (!string.IsNullOrEmpty(result.Delta?.PartialJson))
                 {
                     arguments += result.Delta.PartialJson;
                 }
