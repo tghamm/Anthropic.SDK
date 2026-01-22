@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Anthropic.SDK.Common;
 using Anthropic.SDK.Extensions;
@@ -77,6 +78,10 @@ namespace Anthropic.SDK.Messaging
                     parameters.StopSequences = options.StopSequences.ToArray();
                 }
 
+                // Determine if strict mode should be enabled for tools (when ResponseFormat has a schema)
+                bool useStrictTools = options.ResponseFormat is ChatResponseFormatJson { Schema: not null } ||
+                                      options.GetStrictToolsEnabled();
+
                 if (options.Tools is { Count: > 0 })
                 {
                     parameters.ToolChoice ??= new();
@@ -93,7 +98,14 @@ namespace Anthropic.SDK.Messaging
                         switch (tool)
                         {
                             case AIFunctionDeclaration f:
-                                tools.Add(new Common.Tool(new Function(f.Name, f.Description, JsonSerializer.SerializeToNode(JsonSerializer.Deserialize<FunctionParameters>(f.JsonSchema)))));
+                                // Only process tool schema when strict mode is enabled (requires additionalProperties: false)
+                                var toolSchema = useStrictTools
+                                    ? ProcessToolSchema(f.JsonSchema)
+                                    : JsonSerializer.SerializeToNode(JsonSerializer.Deserialize<FunctionParameters>(f.JsonSchema));
+                                tools.Add(new Common.Tool(new Function(f.Name, f.Description, toolSchema)
+                                {
+                                    Strict = useStrictTools ? true : null
+                                }));
                                 break;
 
                             case HostedCodeInterpreterTool:
@@ -131,6 +143,19 @@ namespace Anthropic.SDK.Messaging
                 if (thinkingParameters != null)
                 {
                     parameters.Thinking = thinkingParameters;
+                }
+
+                // Map response format from ChatOptions for structured JSON output
+                if (options.ResponseFormat is ChatResponseFormatJson jsonFormat && jsonFormat.Schema is JsonElement schema)
+                {
+                    // Anthropic requires additionalProperties: false on all object types
+                    var processedSchema = EnsureAdditionalPropertiesFalse(schema);
+
+                    parameters.OutputFormat = new OutputFormat
+                    {
+                        Type = "json_schema",
+                        Schema = processedSchema
+                    };
                 }
             }
 
@@ -322,6 +347,94 @@ namespace Anthropic.SDK.Messaging
             }
 
             return contents;
+        }
+
+        /// <summary>
+        /// Processes a tool's JSON schema to ensure all object types have additionalProperties: false,
+        /// as required by Anthropic's structured output API.
+        /// </summary>
+        private static JsonNode ProcessToolSchema(JsonElement schema)
+        {
+            var node = JsonNode.Parse(schema.GetRawText());
+            if (node is JsonObject obj)
+            {
+                ProcessSchemaNode(obj);
+            }
+            return node;
+        }
+
+        /// <summary>
+        /// Processes a JSON schema to ensure all object types have additionalProperties: false,
+        /// as required by Anthropic's structured output API.
+        /// </summary>
+        private static JsonElement EnsureAdditionalPropertiesFalse(JsonElement schema)
+        {
+            var node = JsonNode.Parse(schema.GetRawText());
+            if (node is JsonObject obj)
+            {
+                ProcessSchemaNode(obj);
+            }
+            return JsonDocument.Parse(node.ToJsonString()).RootElement;
+        }
+
+        private static void ProcessSchemaNode(JsonNode node)
+        {
+            if (node is not JsonObject obj)
+                return;
+
+            // If this is an object type, ensure additionalProperties is false
+            if (obj.TryGetPropertyValue("type", out var typeNode) &&
+                typeNode?.GetValue<string>() == "object")
+            {
+                obj["additionalProperties"] = false;
+            }
+
+            // Process nested properties
+            if (obj.TryGetPropertyValue("properties", out var propsNode) && propsNode is JsonObject props)
+            {
+                foreach (var prop in props)
+                {
+                    if (prop.Value is JsonObject propObj)
+                    {
+                        ProcessSchemaNode(propObj);
+                    }
+                }
+            }
+
+            // Process array items
+            if (obj.TryGetPropertyValue("items", out var itemsNode))
+            {
+                ProcessSchemaNode(itemsNode);
+            }
+
+            // Process $defs / definitions
+            if (obj.TryGetPropertyValue("$defs", out var defsNode) && defsNode is JsonObject defs)
+            {
+                foreach (var def in defs)
+                {
+                    ProcessSchemaNode(def.Value);
+                }
+            }
+
+            if (obj.TryGetPropertyValue("definitions", out var definitionsNode) && definitionsNode is JsonObject definitions)
+            {
+                foreach (var def in definitions)
+                {
+                    ProcessSchemaNode(def.Value);
+                }
+            }
+
+            // Process anyOf/oneOf/allOf
+            foreach (var keyword in new[] { "anyOf", "oneOf", "allOf" })
+            {
+                if (obj.TryGetPropertyValue(keyword, out var arrayNode) && arrayNode is JsonArray arr)
+                {
+                    foreach (var item in arr)
+                    {
+                        ProcessSchemaNode(item);
+                    }
+                }
+            }
         }
 
         /// <summary>

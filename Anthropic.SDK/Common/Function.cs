@@ -168,6 +168,16 @@ namespace Anthropic.SDK.Common
         [JsonPropertyName("cache_control")]
         public CacheControl CacheControl { get; set; }
 
+        /// <summary>
+        /// When set to true, enables strict mode for structured outputs.
+        /// The tool input will strictly adhere to the input_schema.
+        /// Requires the structured-outputs-2025-11-13 beta header.
+        /// </summary>
+        [JsonInclude]
+        [JsonPropertyName("strict")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? Strict { get; set; }
+
         [JsonExtensionData]
         public Dictionary<string, JsonElement> AdditionalData { get; set; } = new Dictionary<string, JsonElement>();
 
@@ -284,6 +294,11 @@ namespace Anthropic.SDK.Common
             if (other.Type != null)
             {
                 Type = other.Type;
+            }
+
+            if (other.Strict != null)
+            {
+                Strict = other.Strict;
             }
         }
 

@@ -10,6 +10,7 @@ namespace Anthropic.SDK.Extensions
     public static class ChatOptionsExtensions
     {
         private const string ThinkingParametersKey = "Anthropic.ThinkingParameters";
+        private const string StrictToolsKey = "Anthropic.StrictTools";
 
         /// <summary>
         /// Sets thinking parameters for extended thinking support in compatible models like Claude 3.7 Sonnet
@@ -112,6 +113,39 @@ namespace Anthropic.SDK.Extensions
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Enables strict mode for tool use, which guarantees that tool inputs conform exactly to the schema.
+        /// Requires the structured-outputs-2025-11-13 beta header (automatically added).
+        /// Note: Strict tools are automatically enabled when using ResponseFormat with a JSON schema.
+        /// </summary>
+        /// <param name="options">The ChatOptions instance</param>
+        /// <param name="strict">Whether to enable strict mode (default: true)</param>
+        /// <returns>The ChatOptions instance for fluent chaining</returns>
+        public static ChatOptions WithStrictTools(this ChatOptions options, bool strict = true)
+        {
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
+
+            (options.AdditionalProperties ??= new())[StrictToolsKey] = strict;
+
+            return options;
+        }
+
+        /// <summary>
+        /// Gets whether strict tools mode is enabled from ChatOptions
+        /// </summary>
+        /// <param name="options">The ChatOptions instance</param>
+        /// <returns>True if strict tools mode is enabled, false otherwise</returns>
+        public static bool GetStrictToolsEnabled(this ChatOptions options)
+        {
+            if (options?.AdditionalProperties?.TryGetValue(StrictToolsKey, out var value) == true)
+            {
+                return value is bool b && b;
+            }
+
+            return false;
         }
     }
 }
