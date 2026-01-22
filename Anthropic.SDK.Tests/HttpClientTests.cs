@@ -46,7 +46,7 @@ namespace Anthropic.SDK.Tests
                 Stream = false,
                 Temperature = 1.0m,
             };
-            await Assert.ThrowsExceptionAsync<TaskCanceledException>(async () =>
+            await Assert.ThrowsAsync<TaskCanceledException>(async () =>
             {
                 var res = await client.Messages.GetClaudeMessageAsync(parameters);
             });

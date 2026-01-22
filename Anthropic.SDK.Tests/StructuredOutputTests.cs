@@ -50,7 +50,7 @@ namespace Anthropic.SDK.Tests
             ChatOptions options = null;
 
             // Act & Assert
-            Assert.ThrowsException<ArgumentNullException>(() => options.WithStrictTools());
+            Assert.Throws<ArgumentNullException>(() => options.WithStrictTools());
         }
 
         [TestMethod]
