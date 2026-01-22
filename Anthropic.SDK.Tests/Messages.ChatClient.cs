@@ -361,7 +361,7 @@ namespace Anthropic.SDK.Tests
             var res = await client.GetResponseAsync("What is 12345 * 67890?", options);
 
             Assert.IsTrue(
-                res.Text.Contains("838102050") is true,
+                (res.Text.Contains("838102050") is true) || (res.Text.Contains("838,102,050")),
                 res.Text);
         }
 
