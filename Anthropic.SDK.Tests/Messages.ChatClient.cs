@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using Anthropic.SDK.Constants;
 using Anthropic.SDK.Extensions;
 using Anthropic.SDK.Messaging;
@@ -29,6 +30,35 @@ namespace Anthropic.SDK.Tests
             var res = await client.GetResponseAsync("Write a sonnet about the Statue of Liberty. The response must include the word green.", options);
 
             Assert.IsTrue(res.Text.Contains("green") is true, res.Text);
+        }
+
+        [TestMethod]
+        public async Task TestStructuredOutputMessage()
+        {
+            IChatClient client = new AnthropicClient().Messages;
+
+            ChatOptions options = new()
+            {
+                ModelId = AnthropicModels.Claude45Sonnet,
+                MaxOutputTokens = 4096,
+                Temperature = 1.0f,
+                ResponseFormat = ChatResponseFormat.ForJsonSchema(
+                    JsonSerializer.SerializeToElement(new
+                    {
+                        type = "object",
+                        properties = new
+                        {
+                            name = new { type = "string" },
+                            age = new { type = "integer" }
+                        },
+                        required = new[] { "name", "age" }
+                    })
+                )
+            };
+
+            var res = await client.GetResponseAsync("Extract: John is 30 years old", options);
+
+            Assert.IsTrue(res.Text.Contains("John") is true, res.Text);
         }
 
         [TestMethod]
