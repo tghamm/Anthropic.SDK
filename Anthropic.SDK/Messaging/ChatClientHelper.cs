@@ -195,10 +195,67 @@ namespace Anthropic.SDK.Messaging
                         switch (content)
                         {
                             case Microsoft.Extensions.AI.FunctionResultContent frc:
+                                var toolResultContent = new List<ContentBase>();
+                                
+                                // Handle different result types
+                                if (frc.Result is string stringResult)
+                                {
+                                    // Simple string result
+                                    toolResultContent.Add(new TextContent() { Text = stringResult });
+                                }
+                                else if (frc.Result is JsonElement jsonElement && jsonElement.ValueKind == JsonValueKind.Object)
+                                {
+                                    // Check if it's a content array structure
+                                    if (jsonElement.TryGetProperty("content", out JsonElement contentArray) && 
+                                        contentArray.ValueKind == JsonValueKind.Array)
+                                    {
+                                        foreach (JsonElement item in contentArray.EnumerateArray())
+                                        {
+                                            if (item.TryGetProperty("type", out JsonElement typeElement))
+                                            {
+                                                string itemType = typeElement.GetString();
+                                                
+                                                if (itemType == "text" && item.TryGetProperty("text", out JsonElement textElement))
+                                                {
+                                                    toolResultContent.Add(new TextContent() { Text = textElement.GetString() ?? string.Empty });
+                                                }
+                                                else if (itemType == "image" && 
+                                                         item.TryGetProperty("data", out JsonElement dataElement) &&
+                                                         item.TryGetProperty("mimeType", out JsonElement mimeTypeElement))
+                                                {
+                                                    toolResultContent.Add(new ImageContent()
+                                                    {
+                                                        Source = new()
+                                                        {
+                                                            Data = dataElement.GetString() ?? string.Empty,
+                                                            MediaType = mimeTypeElement.GetString() ?? "image/png"
+                                                        }
+                                                    });
+                                                }
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        // Not a content array, serialize as string
+                                        toolResultContent.Add(new TextContent() { Text = jsonElement.ToString() });
+                                    }
+                                }
+                                else if (frc.Result != null)
+                                {
+                                    // Fallback for other types
+                                    toolResultContent.Add(new TextContent() { Text = frc.Result.ToString() ?? string.Empty });
+                                }
+                                else
+                                {
+                                    // Null result
+                                    toolResultContent.Add(new TextContent() { Text = string.Empty });
+                                }
+                                
                                 currentMessage.Content.Add(new ToolResultContent()
                                 {
                                     ToolUseId = frc.CallId,
-                                    Content = new List<ContentBase>() { new TextContent () { Text = frc.Result?.ToString() ?? string.Empty } },
+                                    Content = toolResultContent,
                                     IsError = frc.Exception is not null,
                                 });
                                 break;
