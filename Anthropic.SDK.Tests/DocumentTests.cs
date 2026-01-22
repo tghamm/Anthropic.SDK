@@ -46,7 +46,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 1024,
-                Model = AnthropicModels.Claude35Sonnet,
+                Model = AnthropicModels.Claude45Sonnet,
                 Stream = false,
                 Temperature = 0m,
                 PromptCaching = PromptCacheType.FineGrained
@@ -88,7 +88,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 1024,
-                Model = AnthropicModels.Claude35Sonnet,
+                Model = AnthropicModels.Claude45Sonnet,
                 Stream = false,
                 Temperature = 0m,
                 PromptCaching = PromptCacheType.FineGrained
@@ -126,7 +126,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 1024,
-                Model = AnthropicModels.Claude35Sonnet,
+                Model = AnthropicModels.Claude45Sonnet,
                 Stream = false,
                 Temperature = 0m,
                 PromptCaching = PromptCacheType.FineGrained
@@ -176,7 +176,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 1024,
-                Model = AnthropicModels.Claude35Sonnet,
+                Model = AnthropicModels.Claude45Sonnet,
                 Stream = false,
                 Temperature = 0m
             };

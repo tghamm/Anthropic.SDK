@@ -92,7 +92,7 @@ namespace Anthropic.SDK.Tests
             ChatOptions options = null;
 
             // Act & Assert
-            Assert.ThrowsException<ArgumentNullException>(() => options.WithThinking(4000));
+            Assert.Throws<ArgumentNullException>(() => options.WithThinking(4000));
         }
 
         [TestMethod]
@@ -102,7 +102,7 @@ namespace Anthropic.SDK.Tests
             ChatOptions options = null;
 
             // Act & Assert
-            Assert.ThrowsException<ArgumentNullException>(() => options.WithInterleavedThinking(8000));
+            Assert.Throws<ArgumentNullException>(() => options.WithInterleavedThinking(8000));
         }
 
         [TestMethod]
@@ -112,7 +112,7 @@ namespace Anthropic.SDK.Tests
             var options = new ChatOptions();
 
             // Act & Assert
-            Assert.ThrowsException<ArgumentNullException>(() => options.WithThinking(null));
+            Assert.Throws<ArgumentNullException>(() => options.WithThinking(null));
         }
 
         [TestMethod]
@@ -122,7 +122,7 @@ namespace Anthropic.SDK.Tests
             var options = new ChatOptions();
 
             // Act & Assert
-            Assert.ThrowsException<ArgumentNullException>(() => options.WithInterleavedThinking(null));
+            Assert.Throws<ArgumentNullException>(() => options.WithInterleavedThinking(null));
         }
 
         [TestMethod]
@@ -132,7 +132,7 @@ namespace Anthropic.SDK.Tests
             var options = new ChatOptions();
 
             // Act & Assert
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => options.WithThinking(0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => options.WithThinking(0));
         }
 
         [TestMethod]
@@ -142,7 +142,7 @@ namespace Anthropic.SDK.Tests
             var options = new ChatOptions();
 
             // Act & Assert
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => options.WithInterleavedThinking(0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => options.WithInterleavedThinking(0));
         }
 
         [TestMethod]
@@ -152,7 +152,7 @@ namespace Anthropic.SDK.Tests
             var options = new ChatOptions();
 
             // Act & Assert
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => options.WithThinking(-1000));
+            Assert.Throws<ArgumentOutOfRangeException>(() => options.WithThinking(-1000));
         }
 
         [TestMethod]
@@ -162,7 +162,7 @@ namespace Anthropic.SDK.Tests
             var options = new ChatOptions();
 
             // Act & Assert
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => options.WithInterleavedThinking(-1000));
+            Assert.Throws<ArgumentOutOfRangeException>(() => options.WithInterleavedThinking(-1000));
         }
 
         [TestMethod]

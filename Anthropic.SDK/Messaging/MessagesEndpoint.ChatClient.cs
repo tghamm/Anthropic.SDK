@@ -37,21 +37,6 @@ public partial class MessagesEndpoint : IChatClient
             Dictionary<string, object> d = new();
             (message.AdditionalProperties ??= [])[nameof(response.RateLimits)] = d;
 
-            if (rateLimits.RequestsLimit is { } requestLimit)
-            {
-                d[nameof(rateLimits.RequestsLimit)] = requestLimit;
-            }
-
-            if (rateLimits.RequestsRemaining is { } requestsRemaining)
-            {
-                d[nameof(rateLimits.RequestsRemaining)] = requestsRemaining;
-            }
-
-            if (rateLimits.RequestsReset is { } requestsReset)
-            {
-                d[nameof(rateLimits.RequestsReset)] = requestsReset;
-            }
-
             if (rateLimits.RetryAfter is { } retryAfter)
             {
                 d[nameof(rateLimits.RetryAfter)] = retryAfter;
@@ -70,6 +55,36 @@ public partial class MessagesEndpoint : IChatClient
             if (rateLimits.TokensReset is { } tokensReset)
             {
                 d[nameof(rateLimits.TokensReset)] = tokensReset;
+            }
+
+            if (rateLimits.InputTokensLimit is { } inputTokensLimit)
+            {
+                d[nameof(rateLimits.InputTokensLimit)] = inputTokensLimit;
+            }
+
+            if (rateLimits.InputTokensRemaining is { } inputTokensRemaining)
+            {
+                d[nameof(rateLimits.InputTokensRemaining)] = inputTokensRemaining;
+            }
+
+            if (rateLimits.InputTokensReset is { } inputTokensReset)
+            {
+                d[nameof(rateLimits.InputTokensReset)] = inputTokensReset;
+            }
+
+            if (rateLimits.OutputTokensLimit is { } outputTokensLimit)
+            {
+                d[nameof(rateLimits.OutputTokensLimit)] = outputTokensLimit;
+            }
+
+            if (rateLimits.OutputTokensRemaining is { } outputTokensRemaining)
+            {
+                d[nameof(rateLimits.OutputTokensRemaining)] = outputTokensRemaining;
+            }
+
+            if (rateLimits.OutputTokensReset is { } outputTokensReset)
+            {
+                d[nameof(rateLimits.OutputTokensReset)] = outputTokensReset;
             }
         }
 

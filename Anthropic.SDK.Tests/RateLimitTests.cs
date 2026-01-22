@@ -16,17 +16,16 @@ public class RateLimitTests
         {
             Messages = messages,
             MaxTokens = 512,
-            Model = AnthropicModels.Claude35Sonnet,
+            Model = AnthropicModels.Claude45Sonnet,
             Stream = false,
             Temperature = 1.0m,
         };
         var res = await client.Messages.GetClaudeMessageAsync(parameters);
         Assert.IsNotNull(res.Message.ToString());
-        Assert.IsTrue(res.RateLimits.RequestsLimit > 0);
-        Assert.IsTrue(res.RateLimits.RequestsRemaining > 0);
+        
         Assert.IsTrue(res.RateLimits.TokensLimit.GetValueOrDefault() > 0);
         Assert.IsTrue(res.RateLimits.TokensRemaining.GetValueOrDefault() > 0);
-        Assert.IsTrue(res.RateLimits.RequestsReset.HasValue);
+        
 
     }
 

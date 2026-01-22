@@ -50,7 +50,7 @@ namespace Anthropic.SDK.Tests
             ChatOptions options = null;
 
             // Act & Assert
-            Assert.ThrowsException<ArgumentNullException>(() => options.WithStrictTools());
+            Assert.Throws<ArgumentNullException>(() => options.WithStrictTools());
         }
 
         [TestMethod]
@@ -85,12 +85,12 @@ namespace Anthropic.SDK.Tests
             // Arrange & Act
             var options = new ChatOptions
             {
-                ModelId = AnthropicModels.Claude35Sonnet,
+                ModelId = AnthropicModels.Claude45Sonnet,
                 MaxOutputTokens = 4096,
             }.WithStrictTools();
 
             // Assert
-            Assert.AreEqual(AnthropicModels.Claude35Sonnet, options.ModelId);
+            Assert.AreEqual(AnthropicModels.Claude45Sonnet, options.ModelId);
             Assert.AreEqual(4096, options.MaxOutputTokens);
             Assert.IsTrue(options.GetStrictToolsEnabled());
         }
@@ -123,7 +123,7 @@ namespace Anthropic.SDK.Tests
 
             var options = new ChatOptions
             {
-                ModelId = AnthropicModels.Claude35Sonnet,
+                ModelId = AnthropicModels.Claude45Sonnet,
                 ResponseFormat = ChatResponseFormat.ForJsonSchema(schema, "PersonInfo", "Information about a person")
             };
 
@@ -148,7 +148,7 @@ namespace Anthropic.SDK.Tests
 
             var options = new ChatOptions
             {
-                ModelId = AnthropicModels.Claude35Sonnet,
+                ModelId = AnthropicModels.Claude45Sonnet,
                 ResponseFormat = ChatResponseFormat.Text
             };
 
@@ -171,7 +171,7 @@ namespace Anthropic.SDK.Tests
 
             var options = new ChatOptions
             {
-                ModelId = AnthropicModels.Claude35Sonnet,
+                ModelId = AnthropicModels.Claude45Sonnet,
                 ResponseFormat = ChatResponseFormat.Json
             };
 
@@ -194,7 +194,7 @@ namespace Anthropic.SDK.Tests
 
             var options = new ChatOptions
             {
-                ModelId = AnthropicModels.Claude35Sonnet
+                ModelId = AnthropicModels.Claude45Sonnet
             };
 
             // Act
@@ -228,7 +228,7 @@ namespace Anthropic.SDK.Tests
             var testFunction = AIFunctionFactory.Create(() => "test", "test_function", "A test function");
             var options = new ChatOptions
             {
-                ModelId = AnthropicModels.Claude35Sonnet,
+                ModelId = AnthropicModels.Claude45Sonnet,
                 ResponseFormat = ChatResponseFormat.ForJsonSchema(schema, "Test"),
                 Tools = new List<AITool> { testFunction }
             };
@@ -255,7 +255,7 @@ namespace Anthropic.SDK.Tests
             var testFunction = AIFunctionFactory.Create(() => "test", "test_function", "A test function");
             var options = new ChatOptions
             {
-                ModelId = AnthropicModels.Claude35Sonnet,
+                ModelId = AnthropicModels.Claude45Sonnet,
                 Tools = new List<AITool> { testFunction }
             }.WithStrictTools();
 
@@ -281,7 +281,7 @@ namespace Anthropic.SDK.Tests
             var testFunction = AIFunctionFactory.Create(() => "test", "test_function", "A test function");
             var options = new ChatOptions
             {
-                ModelId = AnthropicModels.Claude35Sonnet,
+                ModelId = AnthropicModels.Claude45Sonnet,
                 Tools = new List<AITool> { testFunction }
             };
 

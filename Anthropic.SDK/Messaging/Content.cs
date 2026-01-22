@@ -850,4 +850,28 @@ namespace Anthropic.SDK.Messaging
         [JsonPropertyName("old_start")]
         public int? OldStart { get; set; }
     }
+
+    /// <summary>
+    /// Unknown content type - used as fallback for forward compatibility when the API returns new content types
+    /// </summary>
+    public class UnknownContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (Unknown, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.unknown;
+
+        /// <summary>
+        /// The original type string from the API
+        /// </summary>
+        [JsonIgnore]
+        public string OriginalType { get; set; }
+
+        /// <summary>
+        /// The raw JSON content for this unknown type
+        /// </summary>
+        [JsonIgnore]
+        public string RawJson { get; set; }
+    }
 }

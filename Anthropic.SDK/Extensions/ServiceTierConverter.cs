@@ -11,9 +11,15 @@ namespace Anthropic.SDK.Extensions
     {
         public override ServiceTier Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
+            if (reader.TokenType == JsonTokenType.Null)
+            {
+                return ServiceTier.Standard; // Default value for null
+            }
+            
             string value = reader.GetString();
             return value switch
             {
+                null => ServiceTier.Standard, // Default value for null string
                 "standard" => ServiceTier.Standard,
                 "priority" => ServiceTier.Priority,
                 "batch" => ServiceTier.Batch,

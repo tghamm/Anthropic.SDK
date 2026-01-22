@@ -2,7 +2,7 @@
 
 [![.NET](https://github.com/tghamm/Anthropic.SDK/actions/workflows/dotnet.yml/badge.svg)](https://github.com/tghamm/Anthropic.SDK/actions/workflows/dotnet.yml) [![Nuget](https://img.shields.io/nuget/v/Anthropic.SDK)](https://www.nuget.org/packages/Anthropic.SDK/) [![Nuget](https://img.shields.io/nuget/dt/Anthropic.SDK)](https://www.nuget.org/packages/Anthropic.SDK/)
 
-Anthropic.SDK is an unofficial C# client designed for interacting with the Claude AI API. This powerful interface simplifies the integration of the Claude AI into your C# applications.  It targets NetStandard 2.0, .NET 6.0, .NET 8.0, and .NET 9.0.
+Anthropic.SDK is an unofficial C# client designed for interacting with the Claude AI API. This powerful interface simplifies the integration of the Claude AI into your C# applications.  It targets NetStandard 2.0, .NET 8.0, and .NET 10.0.
 
 Note: This package is not affiliated with, endorsed by, or sponsored by Anthropic. Anthropic and Claude are trademarks of Anthropic, PBC.
 
@@ -24,6 +24,7 @@ Note: This package is not affiliated with, endorsed by, or sponsored by Anthropi
     - [Document Support](#document-support)
     - [Citations](#citations)
     - [MCP Connector](#mcp-connector)
+    - [MCP Client Integration](#mcp-client-integration)
     - [Web Search](#web-search)
     - [List Models](#list-models)
     - [Batching](#batching)
@@ -647,6 +648,116 @@ Console.WriteLine(res.Content.OfType<TextContent>().Last().Text);
 ```
 
 See the integration tests for more examples.
+
+### MCP Client Integration
+
+In addition to server-side MCP via the connector, the SDK also supports client-side MCP integration using the [Model Context Protocol C# SDK](https://github.com/modelcontextprotocol/csharp-sdk). This allows you to connect to MCP servers directly from your application and use their tools with `IChatClient`.
+
+**Install the MCP package:**
+
+```bash
+dotnet add package ModelContextProtocol --prerelease
+```
+
+**Basic Usage:**
+
+```csharp
+using Microsoft.Extensions.AI;
+using ModelContextProtocol.Client;
+
+// Create the Anthropic chat client with function invocation
+IChatClient chatClient = new AnthropicClient()
+    .Messages
+    .AsBuilder()
+    .UseFunctionInvocation()
+    .Build();
+
+// Connect to an MCP server using HTTP transport
+await using McpClient mcpServer = await McpClient.CreateAsync(
+    new HttpClientTransport(new HttpClientTransportOptions 
+    { 
+        Endpoint = new Uri("https://learn.microsoft.com/api/mcp") 
+    }));
+
+// Get tools from MCP server - McpClientTool inherits from AIFunction
+var mcpTools = await mcpServer.ListToolsAsync();
+
+// Configure chat options with MCP tools
+ChatOptions options = new()
+{
+    ModelId = AnthropicModels.Claude45Haiku,
+    MaxOutputTokens = 2048,
+    Tools = [.. mcpTools]  // McpClientTool can be used directly as AITool
+};
+
+// Make the request - MCP tools are invoked automatically
+var response = await chatClient.GetResponseAsync(
+    "Tell me about the IChatClient interface",
+    options);
+
+Console.WriteLine(response.Text);
+```
+
+**Combining MCP Tools with Local Functions:**
+
+```csharp
+// Create a local function
+var localFunction = AIFunctionFactory.Create(
+    (string topic) => $"User is interested in: {topic}",
+    "log_interest",
+    "Logs what topic the user is interested in");
+
+// Combine MCP tools with local functions
+ChatOptions options = new()
+{
+    ModelId = AnthropicModels.Claude45Haiku,
+    MaxOutputTokens = 2048,
+    Tools = new List<AITool> { localFunction }
+};
+
+// Add MCP tools to existing tools
+foreach (var tool in mcpTools)
+{
+    options.Tools.Add(tool);
+}
+
+var response = await chatClient.GetResponseAsync(
+    "I'm interested in dependency injection. Tell me about it.",
+    options);
+```
+
+**Using Stdio Transport for Local MCP Servers:**
+
+```csharp
+// Connect to a local MCP server via stdio
+var transport = new StdioClientTransport(new StdioClientTransportOptions
+{
+    Command = "npx",
+    Arguments = ["-y", "@modelcontextprotocol/server-everything"],
+    Name = "Everything"
+});
+
+await using var mcpClient = await McpClient.CreateAsync(transport);
+var tools = await mcpClient.ListToolsAsync();
+```
+
+**Working with MCP Prompts and Resources:**
+
+The MCP SDK provides built-in extension methods for converting MCP types to `Microsoft.Extensions.AI` types:
+
+```csharp
+// List and use prompts
+var prompts = await mcpClient.ListPromptsAsync();
+var promptResult = await prompts.First().GetAsync();
+IList<ChatMessage> messages = promptResult.ToChatMessages();
+
+// List and read resources
+var resources = await mcpClient.ListResourcesAsync();
+var resourceResult = await mcpClient.ReadResourceAsync(resources.First().Uri);
+IList<AIContent> contents = resourceResult.Contents.ToAIContents();
+```
+
+See the `McpClientTests.cs` in the test project for comprehensive examples.
 
 ### Web Search
 

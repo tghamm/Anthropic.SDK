@@ -10,16 +10,10 @@ namespace Anthropic.SDK.Constants
     public static class AnthropicModels
     {
         /// <summary>
-        /// Claude 3 Opus
+        /// Claude 4.5 Opus
         /// </summary>
-        [Obsolete ("This Model will be retired on January 5th 2026")]
-        public const string Claude3Opus = "claude-3-opus-20240229";
-        
-        /// <summary>
-        /// Claude 3.5 Sonnet
-        /// </summary>
-        public const string Claude35Sonnet = "claude-3-5-sonnet-20241022";
-        
+        public const string Claude45Opus = "claude-opus-4-5-20251101";
+
         /// <summary>
         /// Claude 3.7 Sonnet
         /// </summary>
@@ -55,9 +49,5 @@ namespace Anthropic.SDK.Constants
         /// </summary>
         public const string Claude45Haiku = "claude-haiku-4-5-20251001";
 
-        /// <summary>
-        /// Claude 3 Haiku
-        /// </summary>
-        public const string Claude3Haiku = "claude-3-haiku-20240307";
     }
 }

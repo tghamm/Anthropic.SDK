@@ -336,7 +336,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = AnthropicModels.Claude3Haiku,
+                ModelId = AnthropicModels.Claude45Haiku,
                 MaxOutputTokens = 512,
                 Tools = [AIFunctionFactory.Create((string personName) => personName switch {
                     "Alice" => "25",
@@ -405,7 +405,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = AnthropicModels.Claude3Haiku,
+                ModelId = AnthropicModels.Claude45Haiku,
                 MaxOutputTokens = 512,
                 Tools = [AIFunctionFactory.Create((string personName) => personName switch {
                     "Alice" => "25",

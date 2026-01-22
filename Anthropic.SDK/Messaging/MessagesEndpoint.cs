@@ -66,26 +66,36 @@ namespace Anthropic.SDK.Messaging
             }
             else if (parameters.PromptCaching == PromptCacheType.AutomaticToolsAndSystem)
             {
-
+                // Set ephemeral cache control on the last system message if any exist
                 if (parameters.System != null && parameters.System.Any())
                 {
-                    parameters.System.Last().CacheControl = new CacheControl()
+                    var lastSystemMessage = parameters.System.Last();
+                    
+                    // Only set cache control if not already set
+                    if (lastSystemMessage.CacheControl == null)
                     {
-                        Type = CacheControlType.ephemeral
-                    };
+                        lastSystemMessage.CacheControl = new CacheControl()
+                        {
+                            Type = CacheControlType.ephemeral
+                        };
+                    }
                 }
                 
+                // Set ephemeral cache control on the last tool if any exist
                 if (parameters.Tools != null && parameters.Tools.Any())
                 {
-                    parameters.Tools.Last().Function.CacheControl = new CacheControl()
+                    var lastTool = parameters.Tools.Last();
+                    
+                    // Only set cache control if not already set
+                    if (lastTool.Function.CacheControl == null)
                     {
-                        Type = CacheControlType.ephemeral
-                    };
+                        lastTool.Function.CacheControl = new CacheControl()
+                        {
+                            Type = CacheControlType.ephemeral
+                        };
+                    }
                 }
-                
-
             }
-            
         }
 
         /// <summary>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace Anthropic.SDK
 {
@@ -29,7 +30,8 @@ namespace Anthropic.SDK
             this.ApiKey = apiKey;
         }
 
-        private static APIAuthentication _cachedDefault = null;
+        private static volatile APIAuthentication _cachedDefault;
+        private static readonly object _defaultLock = new object();
 
         /// <summary>
         /// The default authentication to use when no other auth is specified.  This can be set manually, or automatically loaded via environment variables.  <seealso cref="LoadFromEnv"/>
@@ -41,14 +43,21 @@ namespace Anthropic.SDK
                 if (_cachedDefault != null)
                     return _cachedDefault;
 
-                APIAuthentication auth = LoadFromEnv();
-                
-                _cachedDefault = auth;
-                return auth;
+                lock (_defaultLock)
+                {
+                    if (_cachedDefault != null)
+                        return _cachedDefault;
+                    
+                    _cachedDefault = LoadFromEnv();
+                    return _cachedDefault;
+                }
             }
             set
             {
-                _cachedDefault = value;
+                lock (_defaultLock)
+                {
+                    _cachedDefault = value;
+                }
             }
         }
 

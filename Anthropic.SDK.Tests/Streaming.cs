@@ -29,7 +29,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 512,
-                Model = AnthropicModels.Claude35Sonnet,
+                Model = AnthropicModels.Claude45Sonnet,
                 Stream = true,
                 Temperature = 1.0m,
                 Tools = tools.ToList(),
@@ -66,7 +66,6 @@ namespace Anthropic.SDK.Tests
                 }
             }
 
-            Assert.IsTrue(outputs.First().RateLimits.RequestsLimit > 0);
 
             parameters.ToolChoice = null;
 
@@ -169,7 +168,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 512,
-                Model = AnthropicModels.Claude35Sonnet,
+                Model = AnthropicModels.Claude45Sonnet,
                 Stream = true,
                 Temperature = 1.0m,
                 Tools = tools.ToList(),
