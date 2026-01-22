@@ -18,8 +18,9 @@ namespace Anthropic.SDK.Messaging
         /// <summary>
         /// Create usage details from usage
         /// </summary>
-        public static UsageDetails CreateUsageDetails(Usage usage) =>
-            new()
+        public static UsageDetails CreateUsageDetails(Usage usage)
+        {
+            var details = new UsageDetails
             {
                 InputTokenCount = usage.InputTokens,
                 OutputTokenCount = usage.OutputTokens,
@@ -29,6 +30,14 @@ namespace Anthropic.SDK.Messaging
                     [nameof(usage.CacheReadInputTokens)] = usage.CacheReadInputTokens,
                 }
             };
+
+            if (usage.ServerToolUse?.WebSearchRequests is { } webSearchRequests)
+            {
+                details.AdditionalCounts[nameof(ServerToolUse.WebSearchRequests)] = webSearchRequests;
+            }
+
+            return details;
+        }
 
         /// <summary>
         /// Create message parameters from chat messages and options

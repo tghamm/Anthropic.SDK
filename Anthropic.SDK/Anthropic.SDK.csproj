@@ -17,9 +17,9 @@
 		  Skills, Code Execution, File API Support, Haiku 4.5 Constant, Resilience/Logging, bug fixes.
 	  </PackageReleaseNotes>
 	  <PackageId>Anthropic.SDK</PackageId>
-	  <Version>5.8.0</Version>
+	  <Version>5.8.2</Version>
 	  <AssemblyVersion>5.5.0.0</AssemblyVersion>
-	  <FileVersion>5.8.0.0</FileVersion>
+	  <FileVersion>5.8.2.0</FileVersion>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
 	  <PackageReadmeFile>README.md</PackageReadmeFile>
 	  <PackageIcon>icon.png</PackageIcon>
