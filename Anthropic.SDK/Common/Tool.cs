@@ -107,14 +107,18 @@ namespace Anthropic.SDK.Common
         {
             Retrieval
         };
+        private static readonly object _toolCacheLock = new object();
 
         /// <summary>
         /// Clears the tool cache of all previously registered tools.
         /// </summary>
         public static void ClearRegisteredTools()
         {
-            toolCache.Clear();
-            toolCache.Add(Retrieval);
+            lock (_toolCacheLock)
+            {
+                toolCache.Clear();
+                toolCache.Add(Retrieval);
+            }
         }
 
         /// <summary>
@@ -123,10 +127,15 @@ namespace Anthropic.SDK.Common
         /// <param name="tool">The tool to check.</param>
         /// <returns>True, if the tool is already registered in the tool cache.</returns>
         public static bool IsToolRegistered(Tool tool)
-            => toolCache.Any(knownTool =>
-                knownTool.Type == "function" &&
-                knownTool.Function.Name == tool.Function.Name &&
-                ReferenceEquals(knownTool.Function.Instance, tool.Function.Instance));
+        {
+            lock (_toolCacheLock)
+            {
+                return toolCache.Any(knownTool =>
+                    knownTool.Type == "function" &&
+                    knownTool.Function.Name == tool.Function.Name &&
+                    ReferenceEquals(knownTool.Function.Instance, tool.Function.Instance));
+            }
+        }
 
         /// <summary>
         /// Tries to register a tool into the Tool cache.
@@ -135,34 +144,43 @@ namespace Anthropic.SDK.Common
         /// <returns>True, if the tool was added to the cache.</returns>
         public static bool TryRegisterTool(Tool tool)
         {
-            if (IsToolRegistered(tool))
-            {
-                return false;
-            }
-
             if (tool.Type != "function")
             {
                 throw new InvalidOperationException("Only function tools can be registered.");
             }
 
-            toolCache.Add(tool);
-            return true;
+            lock (_toolCacheLock)
+            {
+                // Check again inside lock to prevent race conditions
+                if (toolCache.Any(knownTool =>
+                    knownTool.Type == "function" &&
+                    knownTool.Function.Name == tool.Function.Name &&
+                    ReferenceEquals(knownTool.Function.Instance, tool.Function.Instance)))
+                {
+                    return false;
+                }
 
+                toolCache.Add(tool);
+                return true;
+            }
         }
 
         private static bool TryGetTool(string name, object instance, out Tool tool)
         {
-            foreach (var knownTool in toolCache.Where(knownTool =>
-                         knownTool.Type == "function" &&
-                         knownTool.Function.Name == name &&
-                         ReferenceEquals(knownTool, instance)))
+            lock (_toolCacheLock)
             {
-                tool = knownTool;
-                return true;
-            }
+                foreach (var knownTool in toolCache.Where(knownTool =>
+                             knownTool.Type == "function" &&
+                             knownTool.Function.Name == name &&
+                             ReferenceEquals(knownTool.Function.Instance, instance)))
+                {
+                    tool = knownTool;
+                    return true;
+                }
 
-            tool = null;
-            return false;
+                tool = null;
+                return false;
+            }
         }
 
         private static IEnumerable<Type> GetAssemblyTypes(Assembly assembly)
@@ -200,33 +218,36 @@ namespace Anthropic.SDK.Common
                 ClearRegisteredTools();
             }
 
-            if (forceUpdate || toolCache.All(tool => tool.Type != "function"))
+            lock (_toolCacheLock)
             {
-                var tools = new List<Tool>();
-                tools.AddRange(
-                    from assembly in AppDomain.CurrentDomain.GetAssemblies()
-                    from type in GetAssemblyTypes(assembly)
-                    from method in type.GetMethods()
-                    where method.IsStatic
-                    let functionAttribute = method.GetCustomAttribute<FunctionAttribute>()
-                    where functionAttribute != null
-                    let name = $"{type.FullName}.{method.Name}".Replace('.', '_')
-                    let description = functionAttribute.Description
-                    select new Function(name, description, method)
-                    into function
-                    select new Tool(function));
-
-                foreach (var newTool in tools.Where(tool =>
-                             !toolCache.Any(knownTool =>
-                                 knownTool.Type == "function" && knownTool.Function.Name == tool.Function.Name && knownTool.Function.Instance == null)))
+                if (forceUpdate || toolCache.All(tool => tool.Type != "function"))
                 {
-                    toolCache.Add(newTool);
-                }
-            }
+                    var tools = new List<Tool>();
+                    tools.AddRange(
+                        from assembly in AppDomain.CurrentDomain.GetAssemblies()
+                        from type in GetAssemblyTypes(assembly)
+                        from method in type.GetMethods()
+                        where method.IsStatic
+                        let functionAttribute = method.GetCustomAttribute<FunctionAttribute>()
+                        where functionAttribute != null
+                        let name = $"{type.FullName}.{method.Name}".Replace('.', '_')
+                        let description = functionAttribute.Description
+                        select new Function(name, description, method)
+                        into function
+                        select new Tool(function));
 
-            return !includeDefaults
-                ? toolCache.Where(tool => tool.Type == "function").ToList()
-                : toolCache;
+                    foreach (var newTool in tools.Where(tool =>
+                                 !toolCache.Any(knownTool =>
+                                     knownTool.Type == "function" && knownTool.Function.Name == tool.Function.Name && knownTool.Function.Instance == null)))
+                    {
+                        toolCache.Add(newTool);
+                    }
+                }
+
+                return !includeDefaults
+                    ? toolCache.Where(tool => tool.Type == "function").ToList()
+                    : toolCache.ToList();
+            }
         }
 
         /// <summary>
@@ -252,14 +273,21 @@ namespace Anthropic.SDK.Common
 
             var functionName = $"{type.FullName}.{method.Name}".Replace('.', '_').Replace("+", "__");
 
-            if (TryGetTool(functionName, null, out var tool))
+            lock (_toolCacheLock)
             {
+                // Check inside lock
+                foreach (var knownTool in toolCache.Where(knownTool =>
+                             knownTool.Type == "function" &&
+                             knownTool.Function.Name == functionName &&
+                             ReferenceEquals(knownTool.Function.Instance, null)))
+                {
+                    return knownTool;
+                }
+
+                var tool = new Tool(new Function(functionName, description ?? string.Empty, method));
+                toolCache.Add(tool);
                 return tool;
             }
-
-            tool = new Tool(new Function(functionName, description ?? string.Empty, method));
-            toolCache.Add(tool);
-            return tool;
         }
 
         /// <summary>
@@ -279,165 +307,79 @@ namespace Anthropic.SDK.Common
             var method = type.GetMethod(methodName) ??
                 throw new InvalidOperationException($"Failed to find a valid method for {type.FullName}.{methodName}()");
 
-            var functionName = $"{type.FullName}.{method.Name}".Replace('.', '_').Replace("+", "__"); ;
+            var functionName = $"{type.FullName}.{method.Name}".Replace('.', '_').Replace("+", "__");
 
-            if (TryGetTool(functionName, instance, out var tool))
+            lock (_toolCacheLock)
             {
+                // Check inside lock
+                foreach (var knownTool in toolCache.Where(knownTool =>
+                             knownTool.Type == "function" &&
+                             knownTool.Function.Name == functionName &&
+                             ReferenceEquals(knownTool.Function.Instance, instance)))
+                {
+                    return knownTool;
+                }
+
+                var tool = new Tool(new Function(functionName, description ?? string.Empty, method, instance));
+                toolCache.Add(tool);
                 return tool;
             }
-
-            tool = new Tool(new Function(functionName, description ?? string.Empty, method, instance));
-            toolCache.Add(tool);
-            return tool;
         }
 
         #region Func<,> Overloads
 
         public static Tool FromFunc<TResult>(string name, Func<TResult> function, string description = null)
-        {
-            if (TryGetTool(name, function, out var tool))
-            {
-                return tool;
-            }
-
-            tool = new Tool(Function.FromFunc(name, function, description));
-            toolCache.Add(tool);
-            return tool;
-        }
+            => GetOrCreateFromFunc(name, function, () => Function.FromFunc(name, function, description));
 
         public static Tool FromFunc<T1, TResult>(string name, Func<T1, TResult> function, string description = null)
-        {
-            if (TryGetTool(name, function, out var tool))
-            {
-                return tool;
-            }
+            => GetOrCreateFromFunc(name, function, () => Function.FromFunc(name, function, description));
 
-            tool = new Tool(Function.FromFunc(name, function, description));
-            toolCache.Add(tool);
-            return tool;
-        }
+        public static Tool FromFunc<T1, T2, TResult>(string name, Func<T1, T2, TResult> function, string description = null)
+            => GetOrCreateFromFunc(name, function, () => Function.FromFunc(name, function, description));
 
-        public static Tool FromFunc<T1, T2, TResult>(string name, Func<T1, T2, TResult> function,
-            string description = null)
-        {
-            if (TryGetTool(name, function, out var tool))
-            {
-                return tool;
-            }
-
-            tool = new Tool(Function.FromFunc(name, function, description));
-            toolCache.Add(tool);
-            return tool;
-        }
-
-        public static Tool FromFunc<T1, T2, T3, TResult>(string name, Func<T1, T2, T3, TResult> function,
-            string description = null)
-        {
-            if (TryGetTool(name, function, out var tool))
-            {
-                return tool;
-            }
-
-            tool = new Tool(Function.FromFunc(name, function, description));
-            toolCache.Add(tool);
-            return tool;
-        }
+        public static Tool FromFunc<T1, T2, T3, TResult>(string name, Func<T1, T2, T3, TResult> function, string description = null)
+            => GetOrCreateFromFunc(name, function, () => Function.FromFunc(name, function, description));
 
         public static Tool FromFunc<T1, T2, T3, T4, TResult>(string name, Func<T1, T2, T3, T4, TResult> function, string description = null)
-        {
-            if (TryGetTool(name, function, out var tool))
-            {
-                return tool;
-            }
-
-            tool = new Tool(Function.FromFunc(name, function, description));
-            toolCache.Add(tool);
-            return tool;
-        }
+            => GetOrCreateFromFunc(name, function, () => Function.FromFunc(name, function, description));
 
         public static Tool FromFunc<T1, T2, T3, T4, T5, TResult>(string name, Func<T1, T2, T3, T4, T5, TResult> function, string description = null)
-        {
-            if (TryGetTool(name, function, out var tool))
-            {
-                return tool;
-            }
-
-            tool = new Tool(Function.FromFunc(name, function, description));
-            toolCache.Add(tool);
-            return tool;
-        }
+            => GetOrCreateFromFunc(name, function, () => Function.FromFunc(name, function, description));
 
         public static Tool FromFunc<T1, T2, T3, T4, T5, T6, TResult>(string name, Func<T1, T2, T3, T4, T5, T6, TResult> function, string description = null)
-        {
-            if (TryGetTool(name, function, out var tool))
-            {
-                return tool;
-            }
-
-            tool = new Tool(Function.FromFunc(name, function, description));
-            toolCache.Add(tool);
-            return tool;
-        }
+            => GetOrCreateFromFunc(name, function, () => Function.FromFunc(name, function, description));
 
         public static Tool FromFunc<T1, T2, T3, T4, T5, T6, T7, TResult>(string name, Func<T1, T2, T3, T4, T5, T6, T7, TResult> function, string description = null)
-        {
-            if (TryGetTool(name, function, out var tool))
-            {
-                return tool;
-            }
-
-            tool = new Tool(Function.FromFunc(name, function, description));
-            toolCache.Add(tool);
-            return tool;
-        }
+            => GetOrCreateFromFunc(name, function, () => Function.FromFunc(name, function, description));
 
         public static Tool FromFunc<T1, T2, T3, T4, T5, T6, T7, T8, TResult>(string name, Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> function, string description = null)
-        {
-            if (TryGetTool(name, function, out var tool))
-            {
-                return tool;
-            }
-
-            tool = new Tool(Function.FromFunc(name, function, description));
-            toolCache.Add(tool);
-            return tool;
-        }
+            => GetOrCreateFromFunc(name, function, () => Function.FromFunc(name, function, description));
 
         public static Tool FromFunc<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult>(string name, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult> function, string description = null)
-        {
-            if (TryGetTool(name, function, out var tool))
-            {
-                return tool;
-            }
-
-            tool = new Tool(Function.FromFunc(name, function, description));
-            toolCache.Add(tool);
-            return tool;
-        }
+            => GetOrCreateFromFunc(name, function, () => Function.FromFunc(name, function, description));
 
         public static Tool FromFunc<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult>(string name, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult> function, string description = null)
-        {
-            if (TryGetTool(name, function, out var tool))
-            {
-                return tool;
-            }
-
-            tool = new Tool(Function.FromFunc(name, function, description));
-            toolCache.Add(tool);
-            return tool;
-        }
-
+            => GetOrCreateFromFunc(name, function, () => Function.FromFunc(name, function, description));
 
         public static Tool FromFunc<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult>(string name, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult> function, string description = null)
+            => GetOrCreateFromFunc(name, function, () => Function.FromFunc(name, function, description));
+
+        private static Tool GetOrCreateFromFunc(string name, object function, Func<Function> createFunction)
         {
-            if (TryGetTool(name, function, out var tool))
+            lock (_toolCacheLock)
             {
+                foreach (var knownTool in toolCache.Where(knownTool =>
+                             knownTool.Type == "function" &&
+                             knownTool.Function.Name == name &&
+                             ReferenceEquals(knownTool.Function.Instance, function)))
+                {
+                    return knownTool;
+                }
+
+                var tool = new Tool(createFunction());
+                toolCache.Add(tool);
                 return tool;
             }
-
-            tool = new Tool(Function.FromFunc(name, function, description));
-            toolCache.Add(tool);
-            return tool;
         }
 
         #endregion Func<,> Overloads

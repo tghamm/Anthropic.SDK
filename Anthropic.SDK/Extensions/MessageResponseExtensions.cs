@@ -130,7 +130,7 @@ namespace Anthropic.SDK.Extensions
         /// </example>
         public static List<string> GetFileIds(this MessageResponse response)
         {
-            if (response == null)
+            if (response?.Content == null)
             {
                 return new List<string>();
             }
@@ -141,7 +141,7 @@ namespace Anthropic.SDK.Extensions
             {
                 if (content is BashCodeExecutionToolResultContent bashResult)
                 {
-                    if (bashResult.Content is BashCodeExecutionResultContent result)
+                    if (bashResult.Content is BashCodeExecutionResultContent result && result.Content != null)
                     {
                         fileIds.AddRange(result.Content
                             .Where(o => !string.IsNullOrWhiteSpace(o.FileId))

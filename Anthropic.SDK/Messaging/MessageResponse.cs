@@ -47,7 +47,7 @@ namespace Anthropic.SDK.Messaging
         public List<Function> ToolCalls { get; set; } = new List<Function>();
 
         [JsonIgnore]
-        public TextContent FirstMessage => Content[0] as TextContent;
+        public TextContent FirstMessage => Content?.Count > 0 ? Content[0] as TextContent : null;
 
         [JsonIgnore]
         public Message Message => Content.AsAssistantMessages();
@@ -89,12 +89,15 @@ namespace Anthropic.SDK.Messaging
 
     public class RateLimits
     {
-        public long? RequestsLimit { get; set; }
-        public long? RequestsRemaining { get; set; }
-        public DateTime? RequestsReset { get; set; }
         public long? TokensLimit { get; set; }
         public long? TokensRemaining { get; set; }
         public DateTime? TokensReset { get; set; }
+        public long? InputTokensLimit { get; set; }
+        public long? InputTokensRemaining { get; set; }
+        public DateTime? InputTokensReset { get; set; }
+        public long? OutputTokensLimit { get; set; }
+        public long? OutputTokensRemaining { get; set; }
+        public DateTime? OutputTokensReset { get; set; }
         public TimeSpan? RetryAfter { get; set; }
     }
 
@@ -116,7 +119,7 @@ namespace Anthropic.SDK.Messaging
         [JsonPropertyName("usage")]
         public Usage Usage { get; set; }
         
-        [JsonPropertyName("name ")]
+        [JsonPropertyName("name")]
         public string Name { get; set; } 
         
         [JsonPropertyName("partial_json")]

@@ -57,6 +57,11 @@ namespace Anthropic.SDK.Messaging
 
         text_editor_code_execution_create_result,
 
-        text_editor_code_execution_str_replace_result
+        text_editor_code_execution_str_replace_result,
+
+        /// <summary>
+        /// Unknown content type - used as fallback for forward compatibility
+        /// </summary>
+        unknown
     }
 }

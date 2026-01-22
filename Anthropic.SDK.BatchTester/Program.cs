@@ -27,7 +27,7 @@ namespace Anthropic.SDK.BatchTester
             {
                 Messages = messages,
                 MaxTokens = 512,
-                Model = AnthropicModels.Claude35Sonnet,
+                Model = AnthropicModels.Claude45Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
             };
@@ -77,7 +77,7 @@ namespace Anthropic.SDK.BatchTester
                     {
                         Messages = messages,
                         MaxTokens = 512,
-                        Model = AnthropicModels.Claude35Sonnet,
+                        Model = AnthropicModels.Claude45Sonnet,
                         Stream = false,
                         Temperature = 1.0m,
                     };

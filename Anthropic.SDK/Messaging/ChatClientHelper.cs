@@ -222,7 +222,7 @@ namespace Anthropic.SDK.Messaging
                                 string text = textContent.Text;
                                 if (currentMessage.Role == RoleType.Assistant)
                                 {
-                                    text.TrimEnd();
+                                    text = text.TrimEnd();
                                     if (!string.IsNullOrWhiteSpace(text))
                                     {
                                         currentMessage.Content.Add(new TextContent() { Text = text });
@@ -310,9 +310,10 @@ namespace Anthropic.SDK.Messaging
                         var textContent = new Microsoft.Extensions.AI.TextContent(tc.Text);
                         if (tc.Citations != null && tc.Citations.Any())
                         {
+                            textContent.Annotations ??= new List<AIAnnotation>();
                             foreach (var tau in tc.Citations)
                             {
-                                (textContent.Annotations ?? []).Add(new CitationAnnotation
+                                textContent.Annotations.Add(new CitationAnnotation
                                 {
                                     RawRepresentation = tau,
                                     AnnotatedRegions =

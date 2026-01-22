@@ -24,7 +24,7 @@ public class SerializationTests
         {
             Messages = messages,
             MaxTokens = 1024,
-            Model = AnthropicModels.Claude35Sonnet,
+            Model = AnthropicModels.Claude45Sonnet,
             Stream = false,
             Temperature = 1.0m,
         };

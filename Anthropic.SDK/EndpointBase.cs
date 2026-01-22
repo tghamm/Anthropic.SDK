@@ -107,9 +107,9 @@ namespace Anthropic.SDK
             }
         }
 
-        private string GetErrorMessage(string resultAsString, HttpResponseMessage response, string name, string description = "")
+        private static string GetErrorMessage(string resultAsString)
         {
-            return $"{resultAsString ?? "<no content>"}";
+            return resultAsString ?? "<no content>";
         }
 
         
@@ -180,7 +180,7 @@ namespace Anthropic.SDK
             {
                 return new RateLimitsExceeded(
                     "Anthropic has rate limited your request. Please wait and retry your request. " +
-                    GetErrorMessage(resultAsString, response, url, url), GetRateLimits(response), response.StatusCode);
+                    GetErrorMessage(resultAsString), GetRateLimits(response), response.StatusCode);
             }
             else if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
@@ -192,11 +192,11 @@ namespace Anthropic.SDK
             {
                 return GetHttpRequestException(
                     "Anthropic had an internal server error, which can happen occasionally. Please retry your request. " +
-                    GetErrorMessage(resultAsString, response, url, url));
+                    GetErrorMessage(resultAsString));
             }
             else
             {
-                return GetHttpRequestException(GetErrorMessage(resultAsString, response, url, url));
+                return GetHttpRequestException(GetErrorMessage(resultAsString));
             }
 
             HttpRequestException GetHttpRequestException(string message)

@@ -1,6 +1,7 @@
 using Anthropic.SDK.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -93,12 +94,18 @@ namespace Anthropic.SDK
         {
             var rateLimits = new RateLimits();
 
-            TryParseHeaderValue(message, "anthropic-ratelimit-requests-limit", long.Parse, value => rateLimits.RequestsLimit = value);
-            TryParseHeaderValue(message, "anthropic-ratelimit-requests-remaining", long.Parse, value => rateLimits.RequestsRemaining = value);
-            TryParseHeaderValue(message, "anthropic-ratelimit-requests-reset", DateTime.Parse, value => rateLimits.RequestsReset = value);
+            
             TryParseHeaderValue(message, "anthropic-ratelimit-tokens-limit", long.Parse, value => rateLimits.TokensLimit = value);
             TryParseHeaderValue(message, "anthropic-ratelimit-tokens-remaining", long.Parse, value => rateLimits.TokensRemaining = value);
-            TryParseHeaderValue(message, "anthropic-ratelimit-tokens-reset", DateTime.Parse, value => rateLimits.TokensReset = value);
+            TryParseHeaderValue(message, "anthropic-ratelimit-tokens-reset", s => DateTime.Parse(s, CultureInfo.InvariantCulture), value => rateLimits.TokensReset = value);
+
+            TryParseHeaderValue(message, "anthropic-ratelimit-input-tokens-limit", long.Parse, value => rateLimits.InputTokensLimit = value);
+            TryParseHeaderValue(message, "anthropic-ratelimit-input-tokens-remaining", long.Parse, value => rateLimits.InputTokensRemaining = value);
+            TryParseHeaderValue(message, "anthropic-ratelimit-input-tokens-reset", s => DateTime.Parse(s, CultureInfo.InvariantCulture), value => rateLimits.InputTokensReset = value);
+
+            TryParseHeaderValue(message, "anthropic-ratelimit-output-tokens-limit", long.Parse, value => rateLimits.OutputTokensLimit = value);
+            TryParseHeaderValue(message, "anthropic-ratelimit-output-tokens-remaining", long.Parse, value => rateLimits.OutputTokensRemaining = value);
+            TryParseHeaderValue(message, "anthropic-ratelimit-output-tokens-reset", s => DateTime.Parse(s, CultureInfo.InvariantCulture), value => rateLimits.OutputTokensReset = value);
 
             return rateLimits;
         }
@@ -153,7 +160,7 @@ namespace Anthropic.SDK
 
             HttpResponseMessage response;
             string resultAsString = null;
-            var req = new HttpRequestMessage(verb, url);
+            using var req = new HttpRequestMessage(verb, url);
 
             // Add additional headers if provided
             if (additionalHeaders != null)

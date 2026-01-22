@@ -68,9 +68,13 @@ namespace Anthropic.SDK.Extensions
                         return JsonSerializer.Deserialize<TextEditorCodeExecutionCreateResultContent>(root.GetRawText(), options);
                     case "text_editor_code_execution_str_replace_result":
                         return JsonSerializer.Deserialize<TextEditorCodeExecutionStrReplaceResultContent>(root.GetRawText(), options);
-                    // Add cases for other types as necessary
+                    // Fallback for unknown content types - provides forward compatibility
                     default:
-                        throw new JsonException($"Unknown type {type}");
+                        return new UnknownContent
+                        {
+                            OriginalType = type,
+                            RawJson = root.GetRawText()
+                        };
                 }
             }
         }

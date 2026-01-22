@@ -5,26 +5,13 @@ namespace Anthropic.SDK.Constants
     /// </summary>
     public static class VertexAIModels
     {
-        /// <summary>
-        /// Claude 3 Opus on Vertex AI - Powerful model for complex tasks
-        /// </summary>
-        public const string Claude3Opus = "claude-3-opus@20240229";
-        
+               
         /// <summary>
         /// Claude 3 Haiku on Vertex AI - Fastest and most compact model for near-instant responsiveness
         /// </summary>
         public const string Claude3Haiku = "claude-3-haiku@20240307";
 
-        /// <summary>
-        /// Claude 3.5 Sonnet on Vertex AI - High level of intelligence and capability
-        /// </summary>
-        public const string Claude35Sonnet = "claude-3-5-sonnet-v2@20241022";
-        
-        /// <summary>
-        /// Claude 3.5 Haiku on Vertex AI - Intelligence at blazing speeds
-        /// </summary>
-        public const string Claude35Haiku = "claude-3-5-haiku@20241022";
-        
+                
         /// <summary>
         /// Claude 3.7 Sonnet on Vertex AI - Highest level of intelligence and capability with toggleable extended thinking
         /// </summary>
@@ -53,6 +40,11 @@ namespace Anthropic.SDK.Constants
         /// <summary>
         /// Claude 4.1 Opus on Vertex AI
         /// </summary>
-        public const string Claude41Opus = "claude-opus-4-1@20250805"; 
+        public const string Claude41Opus = "claude-opus-4-1@20250805";
+
+        /// <summary>
+        /// Claude 4.5 Opus on Vertex AI
+        /// </summary>
+        public const string Claude45Opus = "claude-opus-4-5@20251101";
     }
 }

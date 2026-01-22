@@ -44,7 +44,8 @@ namespace Anthropic.SDK
             this.AccessToken = accessToken;
         }
 
-        private static VertexAIAuthentication _cachedDefault = null;
+        private static volatile VertexAIAuthentication _cachedDefault;
+        private static readonly object _defaultLock = new object();
 
         /// <summary>
         /// The default authentication to use when no other auth is specified. This can be set manually, or automatically loaded via environment variables.
@@ -56,14 +57,21 @@ namespace Anthropic.SDK
                 if (_cachedDefault != null)
                     return _cachedDefault;
 
-                VertexAIAuthentication auth = LoadFromEnv();
-                
-                _cachedDefault = auth;
-                return auth;
+                lock (_defaultLock)
+                {
+                    if (_cachedDefault != null)
+                        return _cachedDefault;
+                    
+                    _cachedDefault = LoadFromEnv();
+                    return _cachedDefault;
+                }
             }
             set
             {
-                _cachedDefault = value;
+                lock (_defaultLock)
+                {
+                    _cachedDefault = value;
+                }
             }
         }
 

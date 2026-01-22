@@ -36,13 +36,12 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 512,
-                Model = AnthropicModels.Claude35Sonnet,
+                Model = AnthropicModels.Claude45Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
             };
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
             Assert.IsNotNull(res.Message.ToString());
-            Assert.IsTrue(res.RateLimits.RequestsLimit > 0);
         }
 
         [TestMethod]
@@ -55,7 +54,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 512,
-                Model = AnthropicModels.Claude3Haiku,
+                Model = AnthropicModels.Claude45Haiku,
                 Stream = false,
                 Temperature = 1.0m,
             };
@@ -106,7 +105,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 512,
-                Model = AnthropicModels.Claude3Haiku,
+                Model = AnthropicModels.Claude45Haiku,
                 Stream = true,
                 Temperature = 1.0m,
             };
