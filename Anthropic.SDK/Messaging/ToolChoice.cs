@@ -13,5 +13,7 @@ namespace Anthropic.SDK.Messaging
         public ToolChoiceType Type { get; set; } = ToolChoiceType.Auto;
         [JsonPropertyName("name")]
         public string Name { get; set; }
+        [JsonPropertyName("disable_parallel_tool_use")]
+        public bool? DisableParallelToolUse { get; set; }
     }
 }
