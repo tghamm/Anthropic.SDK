@@ -130,7 +130,8 @@ namespace Anthropic.SDK.Messaging
                     arguments += result.Delta.PartialJson;
                 }
 
-                if (captureTool && result.Delta?.StopReason == "tool_use")
+                // Finalize tool when content_block_stop is received (supports multiple parallel tool calls)
+                if (captureTool && result.Type == "content_block_stop")
                 {
                     var tool = parameters.Tools?.FirstOrDefault(t => t.Function.Name == name);
 
@@ -143,6 +144,11 @@ namespace Anthropic.SDK.Messaging
                         toolCalls.Add(copiedTool.Function);
                     }
                     captureTool = false;
+                }
+                
+                // Always set ToolCalls on result (accumulates across stream)
+                if (toolCalls.Count > 0)
+                {
                     result.ToolCalls = toolCalls;
                 }
                 
