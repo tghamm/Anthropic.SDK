@@ -184,7 +184,10 @@ namespace Anthropic.SDK
                         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                         Converters = { ContentConverter.Instance },
                         // Ensure proper Unicode handling for all characters
-                        Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
+                        Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
+#if DEBUG
+                        WriteIndented = true,
+#endif
                     };
                     string jsonContent = JsonSerializer.Serialize(postData, options);
                     req.Content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
