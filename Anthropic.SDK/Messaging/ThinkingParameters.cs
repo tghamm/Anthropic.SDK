@@ -5,13 +5,14 @@ using System.Text.Json.Serialization;
 
 namespace Anthropic.SDK.Messaging
 {
-    
+
     public class ThinkingParameters
     {
         [JsonPropertyName("type")]
-        public string Type => "enabled";
+        public ThinkingType Type { get; set; } = ThinkingType.enabled;
+
         [JsonPropertyName("budget_tokens")]
-        public int BudgetTokens { get; set; }
+        public int? BudgetTokens { get; set; }
 
         /// <summary>
         /// Indicates whether to use interleaved thinking mode which allows thinking tokens to exceed max_tokens

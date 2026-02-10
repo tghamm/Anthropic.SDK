@@ -26,7 +26,7 @@ namespace Anthropic.SDK.Tests
             var thinkingParams = options.GetThinkingParameters();
             Assert.IsNotNull(thinkingParams);
             Assert.AreEqual(budgetTokens, thinkingParams.BudgetTokens);
-            Assert.AreEqual("enabled", thinkingParams.Type);
+            Assert.AreEqual(ThinkingType.enabled, thinkingParams.Type);
             Assert.IsFalse(thinkingParams.UseInterleavedThinking);
         }
 
@@ -63,7 +63,7 @@ namespace Anthropic.SDK.Tests
             var thinkingParams = options.GetThinkingParameters();
             Assert.IsNotNull(thinkingParams);
             Assert.AreEqual(budgetTokens, thinkingParams.BudgetTokens);
-            Assert.AreEqual("enabled", thinkingParams.Type);
+            Assert.AreEqual(ThinkingType.enabled, thinkingParams.Type);
             Assert.IsTrue(thinkingParams.UseInterleavedThinking);
         }
 
@@ -291,7 +291,7 @@ namespace Anthropic.SDK.Tests
             // Assert
             Assert.IsNotNull(messageParams.Thinking);
             Assert.AreEqual(3000, messageParams.Thinking.BudgetTokens);
-            Assert.AreEqual("enabled", messageParams.Thinking.Type);
+            Assert.AreEqual(ThinkingType.enabled, messageParams.Thinking.Type);
             Assert.IsFalse(messageParams.Thinking.UseInterleavedThinking);
             Assert.AreEqual(AnthropicModels.Claude37Sonnet, messageParams.Model);
             Assert.AreEqual(4096, messageParams.MaxTokens);
@@ -319,7 +319,7 @@ namespace Anthropic.SDK.Tests
             // Assert
             Assert.IsNotNull(messageParams.Thinking);
             Assert.AreEqual(8000, messageParams.Thinking.BudgetTokens);
-            Assert.AreEqual("enabled", messageParams.Thinking.Type);
+            Assert.AreEqual(ThinkingType.enabled, messageParams.Thinking.Type);
             Assert.IsTrue(messageParams.Thinking.UseInterleavedThinking);
             Assert.AreEqual(AnthropicModels.Claude37Sonnet, messageParams.Model);
             Assert.AreEqual(4096, messageParams.MaxTokens);
