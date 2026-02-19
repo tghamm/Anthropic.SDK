@@ -105,6 +105,56 @@ namespace Anthropic.SDK.Tests
         }
 
         [TestMethod]
+        public async Task TestNonStreamingThinkingAdaptiveWithExtensionMethods()
+        {
+            IChatClient client = new AnthropicClient().Messages;
+
+            List<ChatMessage> messages = new()
+            {
+                new ChatMessage(ChatRole.User, "How many r's are in the word strawberry?")
+            };
+
+            ChatOptions options = new ChatOptions()
+            {
+                ModelId = AnthropicModels.Claude46Sonnet,
+                MaxOutputTokens = 20000,
+                Temperature = 1.0f,
+            }.WithAdaptiveThinking(ThinkingEffort.high);
+
+            var res = await client.GetResponseAsync(messages, options);
+            Assert.IsTrue(res.Text.Contains("3") is true, res.Text);
+            messages.AddMessages(res);
+            messages.Add(new ChatMessage(ChatRole.User, "and how many letters total?"));
+            res = await client.GetResponseAsync(messages, options);
+            Assert.IsTrue(res.Text?.Contains("10") is true, res.Text);
+        }
+
+        [TestMethod]
+        public async Task TestNonStreamingThinkingAdaptive()
+        {
+            IChatClient client = new AnthropicClient().Messages;
+
+            List<ChatMessage> messages = new()
+            {
+                new ChatMessage(ChatRole.User, "How many r's are in the word strawberry?")
+            };
+
+            ChatOptions options = new ChatOptions()
+            {
+                ModelId = AnthropicModels.Claude46Sonnet,
+                MaxOutputTokens = 20000,
+                Temperature = 1.0f,
+                Reasoning = new ReasoningOptions()
+                {
+                    Effort = ReasoningEffort.High,
+                }
+            };
+
+            var res = await client.GetResponseAsync(messages, options);
+            Assert.IsTrue(res.Text.Contains("3") is true, res.Text);
+        }
+
+        [TestMethod]
         public async Task TestThinkingStreamingWithExtensionMethods()
         {
             IChatClient client = new AnthropicClient().Messages;

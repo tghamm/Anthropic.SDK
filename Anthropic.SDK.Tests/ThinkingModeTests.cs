@@ -44,6 +44,34 @@ namespace Anthropic.SDK.Tests
         }
 
         [TestMethod]
+        public async Task TestBasicClaude46ThinkingMessage()
+        {
+            var client = new AnthropicClient();
+            var messages = new List<Message>();
+            messages.Add(new Message(RoleType.User, "How many r's are in the word strawberry?"));
+            var parameters = new MessageParameters()
+            {
+                Messages = messages,
+                MaxTokens = 20000,
+                Model = AnthropicModels.Claude46Sonnet,
+                Stream = false,
+                Temperature = 1.0m,
+                Thinking = new ThinkingParameters()
+                {
+                    UseInterleavedThinking = true,
+                    Type = ThinkingType.adaptive,
+                    Effort = ThinkingEffort.high,
+                }
+            };
+            var res = await client.Messages.GetClaudeMessageAsync(parameters);
+            Assert.IsTrue(res.Content.OfType<ThinkingContent>().Any());
+            var response = res.Message.ToString();
+            var thoughts = res.Message.ThinkingContent;
+            Assert.IsNotNull(thoughts);
+            Assert.IsNotNull(response);
+        }
+
+        [TestMethod]
         public async Task TestRedactedClaude37ThinkingMessage()
         {
             var client = new AnthropicClient();

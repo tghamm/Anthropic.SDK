@@ -324,5 +324,249 @@ namespace Anthropic.SDK.Tests
             Assert.AreEqual(AnthropicModels.Claude37Sonnet, messageParams.Model);
             Assert.AreEqual(4096, messageParams.MaxTokens);
         }
+
+        [TestMethod]
+        public void WithAdaptiveThinking_SetsAdaptiveType()
+        {
+            // Arrange
+            var options = new ChatOptions();
+
+            // Act
+            var result = options.WithAdaptiveThinking();
+
+            // Assert
+            Assert.AreSame(options, result);
+            var thinkingParams = options.GetThinkingParameters();
+            Assert.IsNotNull(thinkingParams);
+            Assert.AreEqual(ThinkingType.adaptive, thinkingParams.Type);
+            Assert.IsNull(thinkingParams.BudgetTokens);
+            Assert.IsNull(thinkingParams.Effort);
+        }
+
+        [TestMethod]
+        public void WithAdaptiveThinking_WithEffort_SetsEffortAndAdaptiveType()
+        {
+            // Arrange
+            var options = new ChatOptions();
+
+            // Act
+            var result = options.WithAdaptiveThinking(ThinkingEffort.medium);
+
+            // Assert
+            Assert.AreSame(options, result);
+            var thinkingParams = options.GetThinkingParameters();
+            Assert.IsNotNull(thinkingParams);
+            Assert.AreEqual(ThinkingType.adaptive, thinkingParams.Type);
+            Assert.AreEqual(ThinkingEffort.medium, thinkingParams.Effort);
+            Assert.IsNull(thinkingParams.BudgetTokens);
+        }
+
+        [TestMethod]
+        public void WithAdaptiveThinking_NullOptions_ThrowsArgumentNullException()
+        {
+            // Arrange
+            ChatOptions options = null;
+
+            // Act & Assert
+            Assert.Throws<ArgumentNullException>(() => options.WithAdaptiveThinking());
+            Assert.Throws<ArgumentNullException>(() => options.WithAdaptiveThinking(ThinkingEffort.high));
+        }
+
+        [TestMethod]
+        public void WithAdaptiveThinking_FluentChaining_Works()
+        {
+            // Arrange & Act
+            var options = new ChatOptions
+            {
+                ModelId = AnthropicModels.Claude46Sonnet,
+                MaxOutputTokens = 16000,
+                Temperature = 1.0f
+            }.WithAdaptiveThinking(ThinkingEffort.high);
+
+            // Assert
+            Assert.AreEqual(AnthropicModels.Claude46Sonnet, options.ModelId);
+            Assert.AreEqual(16000, options.MaxOutputTokens);
+            Assert.AreEqual(1.0f, options.Temperature);
+
+            var thinkingParams = options.GetThinkingParameters();
+            Assert.IsNotNull(thinkingParams);
+            Assert.AreEqual(ThinkingType.adaptive, thinkingParams.Type);
+            Assert.AreEqual(ThinkingEffort.high, thinkingParams.Effort);
+        }
+
+        [TestMethod]
+        public void WithAdaptiveThinking_OverwritesPreviousThinkingParameters()
+        {
+            // Arrange
+            var options = new ChatOptions();
+            options.WithThinking(3000);
+
+            // Act
+            options.WithAdaptiveThinking(ThinkingEffort.medium);
+
+            // Assert
+            var thinkingParams = options.GetThinkingParameters();
+            Assert.IsNotNull(thinkingParams);
+            Assert.AreEqual(ThinkingType.adaptive, thinkingParams.Type);
+            Assert.AreEqual(ThinkingEffort.medium, thinkingParams.Effort);
+            Assert.IsNull(thinkingParams.BudgetTokens);
+        }
+
+        [TestMethod]
+        public void ChatClientHelper_MapsAdaptiveThinkingCorrectly()
+        {
+            // Arrange
+            var client = new AnthropicClient().Messages;
+            var messages = new List<ChatMessage>
+            {
+                new ChatMessage(ChatRole.User, "Test message")
+            };
+            var options = new ChatOptions
+            {
+                ModelId = AnthropicModels.Claude46Sonnet,
+                MaxOutputTokens = 16000,
+            }.WithAdaptiveThinking(ThinkingEffort.medium);
+
+            // Act
+            var messageParams = ChatClientHelper.CreateMessageParameters(client, messages, options);
+
+            // Assert
+            Assert.IsNotNull(messageParams.Thinking);
+            Assert.AreEqual(ThinkingType.adaptive, messageParams.Thinking.Type);
+            Assert.IsNull(messageParams.Thinking.BudgetTokens);
+            Assert.IsNotNull(messageParams.OutputConfig);
+            Assert.AreEqual(ThinkingEffort.medium, messageParams.OutputConfig.Effort);
+        }
+
+        [TestMethod]
+        public void ChatClientHelper_MapsAdaptiveThinkingWithoutEffort()
+        {
+            // Arrange
+            var client = new AnthropicClient().Messages;
+            var messages = new List<ChatMessage>
+            {
+                new ChatMessage(ChatRole.User, "Test message")
+            };
+            var options = new ChatOptions
+            {
+                ModelId = AnthropicModels.Claude46Sonnet,
+                MaxOutputTokens = 16000,
+            }.WithAdaptiveThinking();
+
+            // Act
+            var messageParams = ChatClientHelper.CreateMessageParameters(client, messages, options);
+
+            // Assert
+            Assert.IsNotNull(messageParams.Thinking);
+            Assert.AreEqual(ThinkingType.adaptive, messageParams.Thinking.Type);
+            Assert.IsNull(messageParams.Thinking.BudgetTokens);
+            Assert.IsNull(messageParams.OutputConfig);
+        }
+
+        [TestMethod]
+        public void ChatClientHelper_MapsReasoningOptionsToAdaptiveThinking()
+        {
+            // Arrange
+            var client = new AnthropicClient().Messages;
+            var messages = new List<ChatMessage>
+            {
+                new ChatMessage(ChatRole.User, "Test message")
+            };
+            var options = new ChatOptions
+            {
+                ModelId = AnthropicModels.Claude46Sonnet,
+                MaxOutputTokens = 16000,
+                Reasoning = new ReasoningOptions { Effort = ReasoningEffort.Medium }
+            };
+
+            // Act
+            var messageParams = ChatClientHelper.CreateMessageParameters(client, messages, options);
+
+            // Assert
+            Assert.IsNotNull(messageParams.Thinking);
+            Assert.AreEqual(ThinkingType.adaptive, messageParams.Thinking.Type);
+            Assert.IsNull(messageParams.Thinking.BudgetTokens);
+            Assert.IsNotNull(messageParams.OutputConfig);
+            Assert.AreEqual(ThinkingEffort.medium, messageParams.OutputConfig.Effort);
+        }
+
+        [TestMethod]
+        [DataRow(ReasoningEffort.Low, ThinkingEffort.low)]
+        [DataRow(ReasoningEffort.Medium, ThinkingEffort.medium)]
+        [DataRow(ReasoningEffort.High, ThinkingEffort.high)]
+        [DataRow(ReasoningEffort.ExtraHigh, ThinkingEffort.max)]
+        public void ChatClientHelper_MapsAllReasoningEffortLevels(ReasoningEffort reasoningEffort, ThinkingEffort expectedEffort)
+        {
+            // Arrange
+            var client = new AnthropicClient().Messages;
+            var messages = new List<ChatMessage>
+            {
+                new ChatMessage(ChatRole.User, "Test message")
+            };
+            var options = new ChatOptions
+            {
+                ModelId = AnthropicModels.Claude46Sonnet,
+                MaxOutputTokens = 16000,
+                Reasoning = new ReasoningOptions { Effort = reasoningEffort }
+            };
+
+            // Act
+            var messageParams = ChatClientHelper.CreateMessageParameters(client, messages, options);
+
+            // Assert
+            Assert.IsNotNull(messageParams.Thinking);
+            Assert.AreEqual(ThinkingType.adaptive, messageParams.Thinking.Type);
+            Assert.IsNotNull(messageParams.OutputConfig);
+            Assert.AreEqual(expectedEffort, messageParams.OutputConfig.Effort);
+        }
+
+        [TestMethod]
+        public void ChatClientHelper_ReasoningOptionsNone_ClearsThinking()
+        {
+            // Arrange
+            var client = new AnthropicClient().Messages;
+            var messages = new List<ChatMessage>
+            {
+                new ChatMessage(ChatRole.User, "Test message")
+            };
+            var options = new ChatOptions
+            {
+                ModelId = AnthropicModels.Claude46Sonnet,
+                MaxOutputTokens = 16000,
+                Reasoning = new ReasoningOptions { Effort = ReasoningEffort.None }
+            };
+
+            // Act
+            var messageParams = ChatClientHelper.CreateMessageParameters(client, messages, options);
+
+            // Assert
+            Assert.IsNull(messageParams.Thinking);
+        }
+
+        [TestMethod]
+        public void ChatClientHelper_ExplicitThinkingTakesPrecedenceOverReasoningOptions()
+        {
+            // Arrange
+            var client = new AnthropicClient().Messages;
+            var messages = new List<ChatMessage>
+            {
+                new ChatMessage(ChatRole.User, "Test message")
+            };
+            var options = new ChatOptions
+            {
+                ModelId = AnthropicModels.Claude46Sonnet,
+                MaxOutputTokens = 16000,
+                Reasoning = new ReasoningOptions { Effort = ReasoningEffort.Low }
+            }.WithAdaptiveThinking(ThinkingEffort.max);
+
+            // Act
+            var messageParams = ChatClientHelper.CreateMessageParameters(client, messages, options);
+
+            // Assert - WithAdaptiveThinking should win over ReasoningOptions
+            Assert.IsNotNull(messageParams.Thinking);
+            Assert.AreEqual(ThinkingType.adaptive, messageParams.Thinking.Type);
+            Assert.IsNotNull(messageParams.OutputConfig);
+            Assert.AreEqual(ThinkingEffort.max, messageParams.OutputConfig.Effort);
+        }
     }
 }
