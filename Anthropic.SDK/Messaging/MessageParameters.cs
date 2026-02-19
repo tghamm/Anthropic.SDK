@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
@@ -45,10 +46,27 @@ namespace Anthropic.SDK.Messaging
 
         /// <summary>
         /// Output format configuration for structured JSON output.
-        /// Requires the structured-outputs-2025-11-13 beta header.
+        /// Obsolete and will be removed in the future.
         /// </summary>
-        [JsonPropertyName("output_format")]
-        public OutputFormat OutputFormat { get; set; }
+        [Obsolete]
+        [JsonIgnore]
+        public OutputFormat OutputFormat
+        {
+            get
+            {
+                return OutputConfig?.OutputFormat;
+            }
+            set
+            {
+                if (OutputConfig == null)
+                    OutputConfig = new OutputConfig();
+
+                OutputConfig.OutputFormat = value;
+            }
+        }
+
+        [JsonPropertyName("output_config")]
+        public OutputConfig OutputConfig { get; set; }
 
         [JsonPropertyName("mcp_servers")]
         public List<MCPServer> MCPServers { get; set; }

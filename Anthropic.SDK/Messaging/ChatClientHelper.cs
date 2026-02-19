@@ -143,6 +143,37 @@ namespace Anthropic.SDK.Messaging
                 if (thinkingParameters != null)
                 {
                     parameters.Thinking = thinkingParameters;
+
+                    if (thinkingParameters.Effort is { } effort)
+                    {
+                        (parameters.OutputConfig ??= new OutputConfig()).Effort = effort;
+                    }
+                }
+
+                // Map MEAI ReasoningOptions when the Anthropic-specific extension wasn't used
+                if (options.Reasoning is { } reasoning && thinkingParameters == null)
+                {
+                    if (reasoning.Effort is { } reasoningEffort && reasoningEffort != ReasoningEffort.None)
+                    {
+                        parameters.Thinking = new ThinkingParameters
+                        {
+                            Type = ThinkingType.adaptive
+                        };
+
+                        var mapped = reasoningEffort switch
+                        {
+                            ReasoningEffort.Low => ThinkingEffort.low,
+                            ReasoningEffort.Medium => ThinkingEffort.medium,
+                            ReasoningEffort.High => ThinkingEffort.high,
+                            ReasoningEffort.ExtraHigh => ThinkingEffort.max,
+                            _ => (ThinkingEffort?)null
+                        };
+
+                        if (mapped is not null)
+                        {
+                            (parameters.OutputConfig ??= new OutputConfig()).Effort = mapped;
+                        }
+                    }
                 }
 
                 // Map response format from ChatOptions for structured JSON output

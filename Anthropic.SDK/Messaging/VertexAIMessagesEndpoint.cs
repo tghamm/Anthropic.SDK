@@ -325,7 +325,8 @@ namespace Anthropic.SDK.Messaging
                 stream = parameters.Stream,
                 tools = parameters.Tools?.Select(t => t.Function).ToList(),
                 tool_choice = parameters.ToolChoice,
-                thinking = parameters.Thinking
+                thinking = parameters.Thinking,
+                output_config = parameters.OutputConfig
                 // Note: We don't need to include model here as it's part of the URL for Vertex AI
             };
             

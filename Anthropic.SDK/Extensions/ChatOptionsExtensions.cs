@@ -101,6 +101,46 @@ namespace Anthropic.SDK.Extensions
         }
 
         /// <summary>
+        /// Sets adaptive thinking mode, which lets Claude dynamically determine when and how much to use extended thinking.
+        /// Recommended for Claude Opus 4.6 and Sonnet 4.6. Interleaved thinking is automatically enabled.
+        /// </summary>
+        /// <param name="options">The ChatOptions instance</param>
+        /// <returns>The ChatOptions instance for fluent chaining</returns>
+        public static ChatOptions WithAdaptiveThinking(this ChatOptions options)
+        {
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
+
+            (options.AdditionalProperties ??= new())[ThinkingParametersKey] = new ThinkingParameters
+            {
+                Type = ThinkingType.adaptive
+            };
+
+            return options;
+        }
+
+        /// <summary>
+        /// Sets adaptive thinking mode with a specific effort level. The effort level is mapped to output_config.effort
+        /// to guide how much thinking Claude does. Recommended for Claude Opus 4.6 and Sonnet 4.6.
+        /// </summary>
+        /// <param name="options">The ChatOptions instance</param>
+        /// <param name="effort">The effort level (low, medium, high, or max) to guide thinking allocation</param>
+        /// <returns>The ChatOptions instance for fluent chaining</returns>
+        public static ChatOptions WithAdaptiveThinking(this ChatOptions options, ThinkingEffort effort)
+        {
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
+
+            (options.AdditionalProperties ??= new())[ThinkingParametersKey] = new ThinkingParameters
+            {
+                Type = ThinkingType.adaptive,
+                Effort = effort
+            };
+
+            return options;
+        }
+
+        /// <summary>
         /// Gets the thinking parameters from ChatOptions
         /// </summary>
         /// <param name="options">The ChatOptions instance</param>
