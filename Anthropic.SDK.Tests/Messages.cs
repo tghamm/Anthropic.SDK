@@ -72,7 +72,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 512,
-                Model = AnthropicModels.Claude35Haiku,
+                Model = AnthropicModels.Claude45Haiku,
                 Stream = false,
                 Temperature = 1.0m,
             };
@@ -89,7 +89,7 @@ namespace Anthropic.SDK.Tests
             var parameters = new MessageCountTokenParameters
             {
                 Messages = messages,
-                Model = AnthropicModels.Claude35Haiku
+                Model = AnthropicModels.Claude45Haiku
             };
             var res = await client.Messages.CountMessageTokensAsync(parameters);
             Assert.IsTrue(res.InputTokens > 0);

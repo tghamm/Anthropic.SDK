@@ -225,7 +225,7 @@ var parameters = new MessageParameters()
 {
     Messages = messages,
     MaxTokens = 4096,
-    Model = AnthropicModels.Claude37Sonnet,
+    Model = AnthropicModels.Claude46Sonnet,
     Stream = false,
     Temperature = 1.0m,
     Thinking = new ThinkingParameters()
@@ -351,7 +351,7 @@ List<ChatMessage> messages = new()
 // Using the extension method for thinking parameters
 ChatOptions options = new()
 {
-    ModelId = AnthropicModels.Claude37Sonnet,
+    ModelId = AnthropicModels.Claude46Sonnet,
     MaxOutputTokens = 4096,
     Temperature = 1.0f,
 }.WithThinking(4000); // Enable thinking with 4,000 budget tokens
@@ -388,7 +388,7 @@ You can also set thinking parameters using a `ThinkingParameters` object:
 var thinkingParams = new ThinkingParameters { BudgetTokens = 3000 };
 ChatOptions options = new()
 {
-    ModelId = AnthropicModels.Claude37Sonnet,
+    ModelId = AnthropicModels.Claude46Sonnet,
     MaxOutputTokens = 4096,
     Temperature = 1.0f,
 }.WithThinking(thinkingParams);
@@ -402,7 +402,7 @@ For enhanced thinking capabilities that allow thinking tokens to exceed max_toke
 // Enable interleaved thinking with budget tokens exceeding max_tokens
 ChatOptions options = new()
 {
-    ModelId = AnthropicModels.Claude37Sonnet,
+    ModelId = AnthropicModels.Claude46Sonnet,
     MaxOutputTokens = 4096,
     Temperature = 1.0f,
 }.WithInterleavedThinking(8000); // 8,000 thinking tokens with 4,096 max output tokens
@@ -618,7 +618,7 @@ The `AnthropicClient` supports the new MCP connector, allowing for server-side c
 var client = new AnthropicClient();
 var parameters = new MessageParameters()
 {
-    Model = AnthropicModels.Claude37Sonnet,
+    Model = AnthropicModels.Claude46Sonnet,
     MaxTokens = 5000,
     Temperature = 1,
     MCPServers = new List<MCPServer>()
@@ -1983,7 +1983,7 @@ var parameters = new MessageParameters
     Messages = messages,
     MaxTokens = 1000,
     Temperature = 0.7m,
-    Model = Constants.VertexAIModels.Claude37Sonnet
+    Model = Constants.VertexAIModels.Claude46Sonnet
 };
 
 // Get a response from Claude via Vertex AI
@@ -2004,7 +2004,7 @@ Vertex AI provides access to the following Claude models:
 - `VertexAIModels.Claude3Haiku`: Fastest and most compact model for near-instant responsiveness
 - `VertexAIModels.Claude35Sonnet`: High level of intelligence and capability
 - `VertexAIModels.Claude35Haiku`: Intelligence at blazing speeds
-- `VertexAIModels.Claude37Sonnet`: Highest level of intelligence and capability with toggleable extended thinking
+- `VertexAIModels.Claude46Sonnet`: Highest level of intelligence and capability with toggleable extended thinking
 - `VertexAIModels.Claude4Sonnet`: Sonnet model with toggleable extended thinking
 - `VertexAIModels.Claude45Sonnet`: Newest Sonnet model with toggleable extended thinking
 - `VertexAIModels.Claude4Opus`: Previous Opus Model and powerful thinking model

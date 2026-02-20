@@ -39,7 +39,7 @@ namespace Anthropic.SDK.Tests
             var skExecutionSettings = new OpenAIPromptExecutionSettings()
             {
                 FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(),
-                ModelId = AnthropicModels.Claude35Haiku,
+                ModelId = AnthropicModels.Claude45Haiku,
                 MaxTokens = 512
             };
 
@@ -73,7 +73,7 @@ namespace Anthropic.SDK.Tests
             IChatCompletionService skChatService = new ChatClientBuilder(client.Messages)
                 .ConfigureOptions(opt =>
                 {
-                    opt.ModelId = AnthropicModels.Claude37Sonnet;
+                    opt.ModelId = AnthropicModels.Claude46Sonnet;
                     opt.MaxOutputTokens = 1024;
                 })
                 .UseFunctionInvocation()
@@ -116,7 +116,7 @@ namespace Anthropic.SDK.Tests
             OpenAIPromptExecutionSettings promptExecutionSettings = new()
             {
                 FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(),
-                ModelId = AnthropicModels.Claude35Haiku,
+                ModelId = AnthropicModels.Claude45Haiku,
                 MaxTokens = 512
             };
             // Get the response from the AI
@@ -147,7 +147,7 @@ namespace Anthropic.SDK.Tests
             OpenAIPromptExecutionSettings promptExecutionSettings = new()
             {
                 FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(),
-                ModelId = AnthropicModels.Claude35Haiku,
+                ModelId = AnthropicModels.Claude45Haiku,
                 MaxTokens = 512
             };
             // Get the response from the AI

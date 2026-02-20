@@ -22,7 +22,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var parameters = new MessageParameters()
             {
-                Model = AnthropicModels.Claude37Sonnet,
+                Model = AnthropicModels.Claude46Sonnet,
                 MaxTokens = 3000,
                 Temperature = 1,
                 Tools = new List<Common.Tool>(){ServerTools.GetWebSearchTool()},
@@ -56,7 +56,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var parameters = new MessageParameters()
             {
-                Model = AnthropicModels.Claude37Sonnet,
+                Model = AnthropicModels.Claude46Sonnet,
                 MaxTokens = 3000,
                 Temperature = 1,
                 Tools = new List<Common.Tool>()
@@ -104,7 +104,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var parameters = new MessageParameters()
             {
-                Model = AnthropicModels.Claude37Sonnet,
+                Model = AnthropicModels.Claude46Sonnet,
                 MaxTokens = 3000,
                 Temperature = 1,
                 Stream = true,

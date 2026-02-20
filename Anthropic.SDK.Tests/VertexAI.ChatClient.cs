@@ -22,7 +22,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = Constants.VertexAIModels.Claude37Sonnet,
+                ModelId = Constants.VertexAIModels.Claude46Sonnet,
                 MaxOutputTokens = 512,
                 Temperature = 1.0f,
             };
@@ -44,7 +44,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = Constants.VertexAIModels.Claude37Sonnet,
+                ModelId = Constants.VertexAIModels.Claude46Sonnet,
                 MaxOutputTokens = 20000,
                 Temperature = 1.0f,
             };
@@ -70,7 +70,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = Constants.VertexAIModels.Claude37Sonnet,
+                ModelId = Constants.VertexAIModels.Claude46Sonnet,
                 MaxOutputTokens = 20000,
                 Temperature = 1.0f,
             };
@@ -111,7 +111,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = Constants.VertexAIModels.Claude37Sonnet,
+                ModelId = Constants.VertexAIModels.Claude46Sonnet,
                 MaxOutputTokens = 20000,
                 Temperature = 1.0f,
                 RawRepresentationFactory = static _ => new MessageParameters()
@@ -141,7 +141,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = Constants.VertexAIModels.Claude37Sonnet,
+                ModelId = Constants.VertexAIModels.Claude46Sonnet,
                 MaxOutputTokens = 20000,
                 Temperature = 1.0f,
                 RawRepresentationFactory = static _ => new MessageParameters()
@@ -187,7 +187,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = Constants.VertexAIModels.Claude37Sonnet,
+                ModelId = Constants.VertexAIModels.Claude46Sonnet,
                 MaxOutputTokens = 512,
                 Tools = [AIFunctionFactory.Create((string personName) => personName switch {
                     "Alice" => "25",
@@ -212,7 +212,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = Constants.VertexAIModels.Claude37Sonnet,
+                ModelId = Constants.VertexAIModels.Claude46Sonnet,
                 MaxOutputTokens = 512,
                 Tools = [AIFunctionFactory.Create((string personName) => personName switch {
                     "Alice" => "25",
@@ -243,7 +243,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = Constants.VertexAIModels.Claude37Sonnet,
+                ModelId = Constants.VertexAIModels.Claude46Sonnet,
                 MaxOutputTokens = 20000,
                 Temperature = 1.0f,
                 RawRepresentationFactory = static _ => new MessageParameters()
@@ -283,7 +283,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = Constants.VertexAIModels.Claude37Sonnet,
+                ModelId = Constants.VertexAIModels.Claude46Sonnet,
                 MaxOutputTokens = 512,
                 Temperature = 1.0f,
             };
@@ -313,7 +313,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = Constants.VertexAIModels.Claude37Sonnet,
+                ModelId = Constants.VertexAIModels.Claude46Sonnet,
                 MaxOutputTokens = 20000,
                 Tools = [AIFunctionFactory.Create((string personName) => personName switch {
                     "Alice" => "25",
@@ -342,7 +342,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = Constants.VertexAIModels.Claude37Sonnet,
+                ModelId = Constants.VertexAIModels.Claude46Sonnet,
                 MaxOutputTokens = 20000,
                 Tools = [AIFunctionFactory.Create((string personName) => personName switch {
                     "Alice" => "25",
@@ -390,7 +390,7 @@ namespace Anthropic.SDK.Tests
                 ])
             ], new()
             {
-                ModelId = Constants.VertexAIModels.Claude37Sonnet,
+                ModelId = Constants.VertexAIModels.Claude46Sonnet,
                 MaxOutputTokens = 512,
                 Temperature = 0f,
             });

@@ -27,7 +27,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 20000,
-                Model = AnthropicModels.Claude37Sonnet,
+                Model = AnthropicModels.Claude46Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Thinking = new ThinkingParameters()
@@ -81,7 +81,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 20000,
-                Model = AnthropicModels.Claude37Sonnet,
+                Model = AnthropicModels.Claude46Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Thinking = new ThinkingParameters()
@@ -105,7 +105,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 20000,
-                Model = AnthropicModels.Claude37Sonnet,
+                Model = AnthropicModels.Claude46Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
                 Thinking = new ThinkingParameters()
@@ -138,7 +138,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 20000,
-                Model = AnthropicModels.Claude37Sonnet,
+                Model = AnthropicModels.Claude46Sonnet,
                 Stream = true,
                 Temperature = 1.0m,
                 Thinking = new ThinkingParameters()
@@ -184,7 +184,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 20000,
-                Model = AnthropicModels.Claude37Sonnet,
+                Model = AnthropicModels.Claude46Sonnet,
                 Stream = true,
                 Temperature = 1.0m,
                 Thinking = new ThinkingParameters()
@@ -303,7 +303,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 20000,
-                Model = AnthropicModels.Claude37Sonnet,
+                Model = AnthropicModels.Claude46Sonnet,
                 Stream = true,
                 Temperature = 1.0m,
                 Tools = tools.ToList(),
