@@ -18,15 +18,15 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var parameters = new MessageParameters()
             {
-                Model = AnthropicModels.Claude37Sonnet,
+                Model = AnthropicModels.Claude46Sonnet,
                 MaxTokens = 5000,
                 Temperature = 1,
                 MCPServers = new List<MCPServer>()
                 {
                     new MCPServer()
                     {
-                        Url = "https://mcp.deepwiki.com/sse",
-                        Name = "DeepWiki",
+                        Url = "https://learn.microsoft.com/api/mcp",
+                        Name = "MSFT",
                     }
                 }
             };
@@ -37,7 +37,7 @@ namespace Anthropic.SDK.Tests
                     Role = RoleType.User,
                     Content = new List<ContentBase>
                     {
-                        new TextContent { Text = "Tell me about the repo tghamm/Anthropic.SDK" }
+                        new TextContent { Text = "Tell me about the Latest Microsoft.Extensions.AI Library" }
                     }
                 }
             };
@@ -55,7 +55,7 @@ namespace Anthropic.SDK.Tests
             var client = new AnthropicClient();
             var parameters = new MessageParameters()
             {
-                Model = AnthropicModels.Claude37Sonnet,
+                Model = AnthropicModels.Claude46Sonnet,
                 MaxTokens = 3000,
                 Temperature = 1,
                 Stream = true,
@@ -63,8 +63,8 @@ namespace Anthropic.SDK.Tests
                 {
                     new MCPServer()
                     {
-                        Url = "https://mcp.deepwiki.com/sse",
-                        Name = "DeepWiki",
+                        Url = "https://learn.microsoft.com/api/mcp",
+                        Name = "MSFT",
                     }
                 }
             };
@@ -75,7 +75,7 @@ namespace Anthropic.SDK.Tests
                     Role = RoleType.User,
                     Content = new List<ContentBase>
                     {
-                        new TextContent { Text = "Tell me about the repo tghamm/Anthropic.SDK" }
+                        new TextContent { Text = "Tell me about the latest Microsoft.Extensions.AI Library" }
                     }
                 }
             };
