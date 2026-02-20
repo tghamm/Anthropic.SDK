@@ -26,6 +26,7 @@ Note: This package is not affiliated with, endorsed by, or sponsored by Anthropi
     - [MCP Connector](#mcp-connector)
     - [MCP Client Integration](#mcp-client-integration)
     - [Web Search](#web-search)
+    - [Cost Calculation](#cost-calculation)
     - [List Models](#list-models)
     - [Batching](#batching)
     - [Tools](#tools)
@@ -810,6 +811,56 @@ Console.WriteLine(res.Content.OfType<TextContent>().Last().Text);
 ```
 See integration tests for more examples like streaming.
 
+### Cost Calculation
+
+The SDK includes a client-side cost estimation utility that calculates the estimated USD cost of a request from its token usage data and built-in model pricing. Pricing is sourced from the [Anthropic pricing page](https://docs.anthropic.com/en/docs/about-claude/pricing) and batch-tier discounts are applied automatically.
+
+```csharp
+using Anthropic.SDK.Extensions;
+
+var client = new AnthropicClient();
+var parameters = new MessageParameters()
+{
+    Messages = new List<Message> { new Message(RoleType.User, "Hello!") },
+    MaxTokens = 1024,
+    Model = AnthropicModels.Claude46Sonnet,
+};
+var response = await client.Messages.GetClaudeMessageAsync(parameters);
+
+// Calculate estimated cost directly from the response
+var cost = response.CalculateCost();
+Console.WriteLine($"Total cost: ${cost.TotalCostUsd:F6}");
+Console.WriteLine($"  Input tokens:    ${cost.InputTokenCost:F6}");
+Console.WriteLine($"  Output tokens:   ${cost.OutputTokenCost:F6}");
+Console.WriteLine($"  Cache read:      ${cost.CacheReadCost:F6}");
+Console.WriteLine($"  Cache creation:  ${cost.CacheCreationCost:F6}");
+Console.WriteLine($"  Web search:      ${cost.WebSearchCost:F6}");
+
+// Or calculate from a Usage object directly with a model ID
+var breakdown = response.Usage.CalculateCost(AnthropicModels.Claude46Sonnet);
+```
+
+**Custom / Enterprise Pricing**
+
+If you have negotiated pricing or need to add support for a model not yet in the built-in table, you can register custom pricing at runtime:
+
+```csharp
+using Anthropic.SDK.Messaging;
+
+// Register custom pricing for a model prefix
+ModelPricing.Register("claude-sonnet-4-6", new ModelPricing(
+    inputTokenCostPerMillion: 2.5m,
+    outputTokenCostPerMillion: 12.5m));
+
+// Or pass override pricing directly
+var customPricing = new ModelPricing(
+    inputTokenCostPerMillion: 4m,
+    outputTokenCostPerMillion: 20m);
+var cost = response.CalculateCost(overridePricing: customPricing);
+
+// Clear all custom registrations to revert to built-in pricing
+ModelPricing.ClearCustomPricing();
+```
 
 ### List Models
 

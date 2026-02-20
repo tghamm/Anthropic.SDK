@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Anthropic.SDK.Common;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
@@ -57,6 +57,8 @@ namespace Anthropic.SDK.Messaging
 
         [JsonPropertyName("container")]
         public ContainerResponse Container { get; set; }
+
+        
     }
 
     public class StreamMessage
@@ -182,6 +184,9 @@ namespace Anthropic.SDK.Messaging
         [JsonPropertyName("service_tier")]
         [JsonConverter(typeof(ServiceTierConverter))]
         public ServiceTier ServiceTier { get; set; }
+
+        [JsonPropertyName("inference_geo")]
+        public string InferenceGeo { get; set; }
     }
 
     public class CacheCreation
@@ -197,5 +202,11 @@ namespace Anthropic.SDK.Messaging
     {
         [JsonPropertyName("web_search_requests")]
         public int? WebSearchRequests { get; set; }
+
+        [JsonPropertyName("code_execution_requests")]
+        public int? CodeExecutionRequests { get; set; }
+
+        [JsonPropertyName("web_fetch_requests")]
+        public int? WebFetchRequests { get; set; }
     }
 }
