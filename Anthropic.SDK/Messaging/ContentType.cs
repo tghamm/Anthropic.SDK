@@ -45,6 +45,10 @@ namespace Anthropic.SDK.Messaging
 
         mcp_tool_result,
 
+        code_execution_tool_result,
+
+        code_execution_tool_result_error,
+
         bash_code_execution_tool_result,
 
         bash_code_execution_result,

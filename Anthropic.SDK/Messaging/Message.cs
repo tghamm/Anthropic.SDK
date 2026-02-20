@@ -66,260 +66,252 @@ namespace Anthropic.SDK.Messaging
             Role = RoleType.User;
         }
 
+        /// <summary>
+        /// Reconstructs a single Message from a list of streaming MessageResponse events.
+        /// Uses a single ordered pass to preserve the natural stream order of content blocks,
+        /// which is required for multi-turn conversations where the API validates that every
+        /// server_tool_use has its corresponding result block in the correct position.
+        /// </summary>
         public Message(List<MessageResponse> asyncResponses)
         {
             Content = [];
-            var arguments = string.Empty;
-            var text = string.Empty;
-            var thinking = string.Empty;
-            var signature = string.Empty;
-            var data = string.Empty;
-            var name = string.Empty;
-            bool captureTool = false;
-            var id = string.Empty;
+
+            string currentBlockType = null;
+
+            var textAccum = string.Empty;
+            CitationResult citationAccum = null;
+            var thinkingAccum = string.Empty;
+            var signatureAccum = string.Empty;
+            var partialJsonAccum = string.Empty;
+            string blockName = null;
+            string blockId = null;
+            string blockServerName = null;
+
+            ContentBlock pendingImmediateBlock = null;
 
             foreach (var result in asyncResponses)
             {
-                if (result.ContentBlock?.Type == "redacted_thinking")
+                // --- content_block_start: initialize state for this block ---
+                if (result.ContentBlock != null && result.Type == "content_block_start")
                 {
-                    data = result.ContentBlock.Data;
-                }
-            }
-            if (!string.IsNullOrWhiteSpace(data))
-            {
-                Content.Add(new RedactedThinkingContent()
-                {
-                    Data = data
-                });
-            }
+                    currentBlockType = result.ContentBlock.Type;
+                    textAccum = string.Empty;
+                    citationAccum = null;
+                    thinkingAccum = string.Empty;
+                    signatureAccum = string.Empty;
+                    partialJsonAccum = string.Empty;
+                    blockName = result.ContentBlock.Name;
+                    blockId = result.ContentBlock.Id;
+                    blockServerName = result.ContentBlock.ServerName;
+                    pendingImmediateBlock = null;
 
-            foreach (var result in asyncResponses)
-            {
-                if (!string.IsNullOrWhiteSpace(result.Delta?.Thinking))
-                {
-                    thinking += result.Delta.Thinking;
-                }
-                if (!string.IsNullOrWhiteSpace(result.Delta?.Signature))
-                {
-                    signature += result.Delta.Signature;
-                }
-            }
-            if (!string.IsNullOrWhiteSpace(thinking))
-            {
-                Content.Add(new ThinkingContent()
-                {
-                    Thinking = thinking,
-                    Signature = signature
-                });
-            }
-
-            var innerText = string.Empty;
-            CitationResult citation = null; 
-            foreach (var result in asyncResponses)
-            {
-                if ((result.Type != "content_block_stop"))
-                {
-                    if (result.Delta?.Type == "text_delta")
+                    switch (currentBlockType)
                     {
-                        innerText += result.Delta?.Text ?? string.Empty;
+                        case "redacted_thinking":
+                            if (!string.IsNullOrWhiteSpace(result.ContentBlock.Data))
+                            {
+                                Content.Add(new RedactedThinkingContent { Data = result.ContentBlock.Data });
+                            }
+                            currentBlockType = null;
+                            break;
+
+                        case "code_execution_tool_result":
+                        case "mcp_tool_result":
+                        case "web_search_tool_result":
+                        case "web_fetch_tool_result":
+                        case "bash_code_execution_tool_result":
+                        case "text_editor_code_execution_tool_result":
+                        default:
+                            pendingImmediateBlock = result.ContentBlock;
+                            break;
                     }
 
-                    citation ??= result.Delta?.Citation;
+                    continue;
                 }
-                else if (result.Type == "content_block_stop")
+
+                // --- content_block_delta: accumulate data ---
+                if (result.Delta != null && currentBlockType != null)
                 {
-                    if (!string.IsNullOrEmpty(innerText))
+                    if (!string.IsNullOrEmpty(result.Delta.Text))
+                        textAccum += result.Delta.Text;
+
+                    if (!string.IsNullOrEmpty(result.Delta.Thinking))
+                        thinkingAccum += result.Delta.Thinking;
+
+                    if (!string.IsNullOrEmpty(result.Delta.Signature))
+                        signatureAccum += result.Delta.Signature;
+
+                    if (!string.IsNullOrEmpty(result.Delta.PartialJson))
+                        partialJsonAccum += result.Delta.PartialJson;
+
+                    citationAccum ??= result.Delta.Citation;
+                }
+
+                // --- content_block_stop: finalize and emit ---
+                if (result.Type == "content_block_stop" && currentBlockType != null)
+                {
+                    switch (currentBlockType)
                     {
-                        Content.Add(new TextContent()
-                        {
-                            Text = innerText,
-                            Citations = citation != null ? [citation] : null
-                        });
+                        case "text":
+                            if (!string.IsNullOrEmpty(textAccum))
+                            {
+                                Content.Add(new TextContent
+                                {
+                                    Text = textAccum,
+                                    Citations = citationAccum != null ? [citationAccum] : null
+                                });
+                            }
+                            break;
+
+                        case "thinking":
+                            if (!string.IsNullOrWhiteSpace(thinkingAccum))
+                            {
+                                Content.Add(new ThinkingContent
+                                {
+                                    Thinking = thinkingAccum,
+                                    Signature = signatureAccum
+                                });
+                            }
+                            break;
+
+                        case "server_tool_use":
+                            var serverContent = new ServerToolUseContent
+                            {
+                                Name = blockName,
+                                Id = blockId,
+                                Input = !string.IsNullOrWhiteSpace(partialJsonAccum)
+                                    ? JsonSerializer.Deserialize<ServerToolInput>(partialJsonAccum)
+                                    : new ServerToolInput()
+                            };
+                            Content.Add(serverContent);
+                            break;
+
+                        case "tool_use":
+                            if (!string.IsNullOrWhiteSpace(partialJsonAccum))
+                            {
+                                Content.Add(new ToolUseContent
+                                {
+                                    Name = blockName,
+                                    Id = blockId,
+                                    Input = JsonNode.Parse(partialJsonAccum)
+                                });
+                            }
+                            break;
+
+                        case "mcp_tool_use":
+                            var mcpContent = new MCPToolUseContent
+                            {
+                                Name = blockName,
+                                Id = blockId,
+                                ServerName = blockServerName
+                            };
+                            if (!string.IsNullOrWhiteSpace(partialJsonAccum))
+                            {
+                                mcpContent.Input = JsonNode.Parse(partialJsonAccum);
+                            }
+                            Content.Add(mcpContent);
+                            break;
+
+                        case "mcp_tool_result":
+                            if (pendingImmediateBlock != null)
+                            {
+                                Content.Add(new MCPToolResultContent
+                                {
+                                    ToolUseId = pendingImmediateBlock.ToolUseId,
+                                    Content = pendingImmediateBlock.Content,
+                                    IsError = pendingImmediateBlock.IsError
+                                });
+                            }
+                            break;
+
+                        case "web_search_tool_result":
+                            if (pendingImmediateBlock != null)
+                            {
+                                Content.Add(new WebSearchToolResultContent
+                                {
+                                    ToolUseId = pendingImmediateBlock.ToolUseId,
+                                    Content = pendingImmediateBlock.Content,
+                                    IsError = pendingImmediateBlock.IsError
+                                });
+                            }
+                            break;
+
+                        case "web_fetch_tool_result":
+                            if (pendingImmediateBlock != null)
+                            {
+                                Content.Add(new WebFetchToolResultContent
+                                {
+                                    ToolUseId = pendingImmediateBlock.ToolUseId,
+                                    Content = pendingImmediateBlock.Content?.FirstOrDefault()
+                                });
+                            }
+                            break;
+
+                        case "code_execution_tool_result":
+                            if (pendingImmediateBlock != null)
+                            {
+                                Content.Add(new CodeExecutionToolResultContent
+                                {
+                                    ToolUseId = pendingImmediateBlock.ToolUseId,
+                                    Content = pendingImmediateBlock.Content?.FirstOrDefault()
+                                });
+                            }
+                            break;
+
+                        case "bash_code_execution_tool_result":
+                            if (pendingImmediateBlock != null)
+                            {
+                                Content.Add(new BashCodeExecutionToolResultContent
+                                {
+                                    ToolUseId = pendingImmediateBlock.ToolUseId,
+                                    Content = pendingImmediateBlock.Content?.FirstOrDefault()
+                                });
+                            }
+                            break;
+
+                        case "text_editor_code_execution_tool_result":
+                            if (pendingImmediateBlock != null)
+                            {
+                                Content.Add(new TextEditorCodeExecutionToolResultContent
+                                {
+                                    ToolUseId = pendingImmediateBlock.ToolUseId,
+                                    Content = pendingImmediateBlock.Content?.FirstOrDefault()
+                                });
+                            }
+                            break;
+
+                        default:
+                            if (pendingImmediateBlock != null)
+                            {
+                                Content.Add(new UnknownContent
+                                {
+                                    OriginalType = currentBlockType,
+                                    RawJson = JsonSerializer.Serialize(pendingImmediateBlock)
+                                });
+                            }
+                            break;
                     }
 
-                    innerText = string.Empty;
-                    citation = null;
+                    currentBlockType = null;
+                    pendingImmediateBlock = null;
+                    continue;
                 }
 
-            }
-
-            //if (!string.IsNullOrEmpty(innerText))
-            //{
-            //    Content.Add(new TextContent()
-            //    {
-            //        Text = innerText
-            //    });
-            //}
-            //find server_tool_use
-            var serverToolUseFound = false;
-            ServerToolUseContent serverToolUseContent = null;
-            var serverPartialJson = string.Empty;
-            foreach (var result in asyncResponses)
-            {
-                if (result.ContentBlock != null && result.ContentBlock.Type == "server_tool_use")
+                // Fallback: tool_use blocks may also finalize via stop_reason in message_delta
+                if (currentBlockType == "tool_use" && result.Delta?.StopReason == "tool_use"
+                    && !string.IsNullOrWhiteSpace(partialJsonAccum))
                 {
-                    serverToolUseFound = true;
-                    serverToolUseContent = new ServerToolUseContent()
+                    Content.Add(new ToolUseContent
                     {
-                        Name = result.ContentBlock.Name,
-                        Id = result.ContentBlock.Id
-                    };
-                }
-                if (serverToolUseFound && !string.IsNullOrWhiteSpace(result.Delta?.PartialJson))
-                {
-                    serverPartialJson += result.Delta.PartialJson;
-                    
-                }
-                else if (serverToolUseFound && string.IsNullOrWhiteSpace(result.Delta?.PartialJson) && !string.IsNullOrWhiteSpace(serverPartialJson))
-                {
-                    var input = JsonSerializer.Deserialize<ServerToolInput>(serverPartialJson);
-                    serverToolUseContent.Input = input;
-                    serverToolUseFound = false; // reset for next tool use
-                    Content.Add(serverToolUseContent);
-                }
-            }
-
-            var mcpToolUseFound = false;
-            MCPToolUseContent mcpToolUseContent = null;
-            var mcpPartialJson = string.Empty;
-            foreach (var result in asyncResponses)
-            {
-                if (result.ContentBlock != null && result.ContentBlock.Type == "mcp_tool_use")
-                {
-                    mcpToolUseFound = true;
-                    mcpToolUseContent = new MCPToolUseContent()
-                    {
-                        Name = result.ContentBlock.Name,
-                        Id = result.ContentBlock.Id,
-                        ServerName = result.ContentBlock.ServerName
-                    };
-                }
-                if (mcpToolUseFound && !string.IsNullOrWhiteSpace(result.Delta?.PartialJson))
-                {
-                    mcpPartialJson += result.Delta.PartialJson;
-
-                }
-                else if (mcpToolUseFound && string.IsNullOrWhiteSpace(result.Delta?.PartialJson) && !string.IsNullOrWhiteSpace(mcpPartialJson))
-                {
-                    var input = JsonNode.Parse(mcpPartialJson);
-                    mcpToolUseContent.Input = input;
-                    mcpToolUseFound = false; // reset for next tool use
-                    Content.Add(mcpToolUseContent);
-                }
-            }
-
-            var mcpToolResultFound = false;
-            MCPToolResultContent mcpToolResultContent = null;
-            foreach (var result in asyncResponses)
-            {
-                if (result.ContentBlock != null && result.ContentBlock.Type == "mcp_tool_result")
-                {
-                    mcpToolResultFound = true;
-                    mcpToolResultContent = new MCPToolResultContent()
-                    {
-                        ToolUseId = result.ContentBlock.ToolUseId,
-                        Content = result.ContentBlock.Content,
-                        IsError = result.ContentBlock.IsError
-                    };
-                    Content.Add(mcpToolResultContent);
-                }
-
-            }
-
-            
-
-            var webToolResultFound = false;
-            WebSearchToolResultContent webToolUseContent = null;
-            var webSearchPartialJson = string.Empty;
-            foreach (var result in asyncResponses)
-            {
-                if (result.ContentBlock != null && result.ContentBlock.Type == "web_search_tool_result")
-                {
-                    webToolResultFound = true;
-                    webToolUseContent = new WebSearchToolResultContent()
-                    {
-                        ToolUseId = result.ContentBlock.ToolUseId,
-                        Content = result.ContentBlock.Content,
-                        IsError = result.ContentBlock.IsError
-                    };
-                    Content.Add(webToolUseContent);
-                }
-                
-            }
-
-            foreach (var result in asyncResponses)
-            {
-                if (result.ContentBlock != null && result.ContentBlock.Type == "web_fetch_tool_result")
-                {
-                    var webFetchContent = new WebFetchToolResultContent()
-                    {
-                        ToolUseId = result.ContentBlock.ToolUseId,
-                        Content = result.ContentBlock.Content?.FirstOrDefault()
-                    };
-                    Content.Add(webFetchContent);
-                }
-            }
-
-            BashCodeExecutionToolResultContent bashCodeExecutionToolResultContent = null;
-            foreach (var result in asyncResponses)
-            {
-                if (result.ContentBlock != null && result.ContentBlock.Type == "bash_code_execution_tool_result")
-                {
-
-                    bashCodeExecutionToolResultContent = new BashCodeExecutionToolResultContent()
-                    {
-                        ToolUseId = result.ContentBlock.ToolUseId,
-                        Content = result.ContentBlock.Content.FirstOrDefault()
-                    };
-                    Content.Add(bashCodeExecutionToolResultContent);
-                }
-            }
-
-            TextEditorCodeExecutionToolResultContent textEditorCodeExecutionToolResultContent = null;
-            foreach (var result in asyncResponses)
-            {
-                if (result.ContentBlock != null && result.ContentBlock.Type == "text_editor_code_execution_tool_result")
-                {
-
-                    textEditorCodeExecutionToolResultContent = new TextEditorCodeExecutionToolResultContent()
-                    {
-                        ToolUseId = result.ContentBlock.ToolUseId,
-                        Content = result.ContentBlock.Content.FirstOrDefault()
-                    };
-                    Content.Add(textEditorCodeExecutionToolResultContent);
-                }
-            }
-
-
-            foreach (var result in asyncResponses)
-            {
-                if (result.ContentBlock != null && result.ContentBlock.Type == "tool_use")
-                {
-                    arguments = string.Empty;
-                    captureTool = true;
-                    name = result.ContentBlock.Name;
-                    id = result.ContentBlock.Id;
-                }
-
-                if (!string.IsNullOrWhiteSpace(result.Delta?.PartialJson))
-                {
-                    arguments += result.Delta.PartialJson;
-                }
-
-                if (captureTool && result.Delta?.StopReason == "tool_use")
-                {
-                    Content.Add(new ToolUseContent()
-                    {
-                        Name = name,
-                        Id = id,
-                        Input = JsonNode.Parse(arguments)
+                        Name = blockName,
+                        Id = blockId,
+                        Input = JsonNode.Parse(partialJsonAccum)
                     });
-                    captureTool = false;
+                    currentBlockType = null;
                 }
             }
 
             Role = RoleType.Assistant;
-
         }
 
         /// <summary>

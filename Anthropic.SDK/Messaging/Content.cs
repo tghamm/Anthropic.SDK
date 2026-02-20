@@ -534,6 +534,33 @@ namespace Anthropic.SDK.Messaging
     }
 
     /// <summary>
+    /// Code Execution Tool Result Content (used by dynamic filtering web search/fetch)
+    /// </summary>
+    public class CodeExecutionToolResultContent : ContentBase
+    {
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.code_execution_tool_result;
+
+        [JsonPropertyName("tool_use_id")]
+        public string ToolUseId { get; set; }
+
+        [JsonPropertyName("content")]
+        public ContentBase Content { get; set; }
+    }
+
+    /// <summary>
+    /// Code Execution Tool Result Error Content
+    /// </summary>
+    public class CodeExecutionToolResultErrorContent : ContentBase
+    {
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.code_execution_tool_result_error;
+
+        [JsonPropertyName("error_code")]
+        public string ErrorCode { get; set; }
+    }
+
+    /// <summary>
     /// Bash Code Execution Tool Result Content
     /// </summary>
     public class BashCodeExecutionToolResultContent : ContentBase
