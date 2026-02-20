@@ -92,7 +92,7 @@ See integration tests for a more complete example.
 
 ### Non-Streaming Call
 
-Here's an example of a non-streaming call to the Claude AI API to the new Claude 3.5 Sonnet model:
+Here's an example of a non-streaming call to the Claude AI API to the Claude Sonnet 4.6 model:
 
 ```csharp
 var client = new AnthropicClient();
@@ -107,7 +107,7 @@ var parameters = new MessageParameters()
 {
     Messages = messages,
     MaxTokens = 1024,
-    Model = AnthropicModels.Claude35Sonnet,
+    Model = AnthropicModels.Claude46Sonnet,
     Stream = false,
     Temperature = 1.0m,
 };
@@ -133,7 +133,7 @@ Console.WriteLine(finalResult.Message.ToString());
 
 ### Streaming Call
 
-The following is an example of a streaming call to the Claude AI API Model 3 Opus that provides an image for analysis:
+The following is an example of a streaming call to the Claude AI API Claude Opus 4.6 that provides an image for analysis:
 
 ```csharp
 string resourceName = "Anthropic.SDK.Tests.Red_Apple.jpg";
@@ -179,7 +179,7 @@ var parameters = new MessageParameters()
 {
     Messages = messages,
     MaxTokens = 512,
-    Model = AnthropicModels.Claude3Opus,
+    Model = AnthropicModels.Claude46Opus,
     Stream = true,
     Temperature = 1.0m,
 };
@@ -208,14 +208,14 @@ The `AnthropicClient` has support for the [message token count endpoint](https:/
  var parameters = new MessageCountTokenParameters
  {
      Messages = messages,
-     Model = AnthropicModels.Claude35Haiku
+     Model = AnthropicModels.Claude45Haiku
  };
  var response = await client.Messages.CountMessageTokensAsync(parameters);
  Assert.IsTrue(res.InputTokens > 0);
 ```
 
 ### Extended Thinking
-The `AnthropicClient` has support for the [Sonnet 3.7 with extended thinking support](https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking). Below is an example of how to use it. Streaming is supported similarly.
+The `AnthropicClient` has support for [extended thinking](https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking) in compatible models like Claude Opus 4.6 and Sonnet 4.6. Below is an example of how to use it. Streaming is supported similarly.
 
 ```csharp
 var client = new AnthropicClient();
@@ -254,7 +254,7 @@ IChatClient client = new AnthropicClient().Messages
 
 ChatOptions options = new()
 {
-    ModelId = AnthropicModels.Claude3Haiku,
+    ModelId = AnthropicModels.Claude45Haiku,
     MaxOutputTokens = 512,
     Tools = [AIFunctionFactory.Create((string personName) => personName switch {
         "Alice" => "25",
@@ -273,7 +273,7 @@ IChatClient client = new AnthropicClient().Messages;
 
 ChatOptions options = new()
 {
-    ModelId = AnthropicModels.Claude_v2_1,
+    ModelId = AnthropicModels.Claude46Sonnet,
     MaxOutputTokens = 512,
     Temperature = 1.0f,
 };
@@ -287,7 +287,7 @@ IChatClient client = new AnthropicClient().Messages;
 
 ChatOptions options = new()
 {
-    ModelId = AnthropicModels.Claude_v2_1,
+    ModelId = AnthropicModels.Claude46Sonnet,
     MaxOutputTokens = 512,
     Temperature = 1.0f,
 };
@@ -324,7 +324,7 @@ var res = await client.GetResponseAsync(
     ])
 ], new()
 {
-    ModelId = AnthropicModels.Claude3Opus,
+    ModelId = AnthropicModels.Claude46Opus,
     MaxOutputTokens = 512,
     Temperature = 0f,
 });
@@ -336,7 +336,7 @@ Please see the unit tests for even more examples.
 
 #### Extended Thinking with IChatClient
 
-The `IChatClient` supports extended thinking through the ChatOptions extension methods. This provides a clean and fluent API for enabling thinking in compatible models like Claude 3.7 Sonnet:
+The `IChatClient` supports extended thinking through the ChatOptions extension methods. This provides a clean and fluent API for enabling thinking in compatible models like Claude Opus 4.6 and Sonnet 4.6:
 
 ```csharp
 using Anthropic.SDK.Extensions;
@@ -416,6 +416,53 @@ var response = await client.GetResponseAsync("Complex reasoning task", options);
 - With interleaved thinking enabled, thinking tokens can exceed the max_tokens limit
 - Developers are responsible for ensuring compatibility with their chosen platform and model
 
+### Adaptive Thinking
+
+For Claude Opus 4.6 and Sonnet 4.6, adaptive thinking lets Claude dynamically determine when and how much extended thinking to use. This is the recommended approach for these models:
+
+```csharp
+using Anthropic.SDK.Extensions;
+
+// Adaptive thinking - Claude decides when and how much to think
+ChatOptions options = new()
+{
+    ModelId = AnthropicModels.Claude46Sonnet,
+    MaxOutputTokens = 4096,
+}.WithAdaptiveThinking();
+
+var response = await client.GetResponseAsync("Solve this complex problem...", options);
+```
+
+You can also guide the effort level with `ThinkingEffort`:
+
+```csharp
+// With a specific effort level (low, medium, high, or max)
+ChatOptions options = new()
+{
+    ModelId = AnthropicModels.Claude46Sonnet,
+    MaxOutputTokens = 4096,
+}.WithAdaptiveThinking(ThinkingEffort.high);
+```
+
+When using the native API directly:
+
+```csharp
+var parameters = new MessageParameters()
+{
+    Messages = messages,
+    MaxTokens = 4096,
+    Model = AnthropicModels.Claude46Sonnet,
+    Thinking = new ThinkingParameters()
+    {
+        Type = ThinkingType.adaptive
+    },
+    OutputConfig = new OutputConfig()
+    {
+        Effort = ThinkingEffort.high
+    }
+};
+```
+
 ### Prompt Caching
 
 The `AnthropicClient` supports prompt caching of system messages, user messages (including images), assistant messages, tool_results, documents, and tools in accordance with model limitations. There are two primary mechanisms for prompt caching in the `AnthropicClient`. `FineGrained` and `AutomaticToolsAndSystem`. The former allows for complete control of all set-points of caching (up to the 4 set-points allowed) where-as `AutomaticToolsAndSystem` automatically caches the System prompt and Tools when present, leaving you the ability to add set-points in Messages yourself when you so choose.  When caching, be aware of the 5 minute expiry enforced by Anthropic, as well as other limitations that can cause a cache miss.  You can check the Token Usage data in results to ensure you are indeed receiving the benefits of caching. 
@@ -447,7 +494,7 @@ var parameters = new MessageParameters()
 {
     Messages = messages,
     MaxTokens = 1024,
-    Model = AnthropicModels.Claude35Sonnet,
+    Model = AnthropicModels.Claude46Sonnet,
     Stream = false,
     Temperature = 1.0m,
     System = systemMessages,
@@ -496,7 +543,7 @@ var parameters = new MessageParameters()
 {
     Messages = messages,
     MaxTokens = 1024,
-    Model = AnthropicModels.Claude35Sonnet,
+    Model = AnthropicModels.Claude46Sonnet,
     Stream = false,
     Temperature = 0m,
     System = systemMessages,
@@ -563,7 +610,7 @@ var parameters = new MessageParameters()
 {
     Messages = messages,
     MaxTokens = 1024,
-    Model = AnthropicModels.Claude35Sonnet,
+    Model = AnthropicModels.Claude46Sonnet,
     Stream = false,
     Temperature = 0m,
     PromptCaching = PromptCacheType.FineGrained
@@ -599,7 +646,7 @@ var parameters = new MessageParameters()
 {
     Messages = messages,
     MaxTokens = 1024,
-    Model = AnthropicModels.Claude35Sonnet,
+    Model = AnthropicModels.Claude46Sonnet,
     Stream = false,
     Temperature = 0m
 };
@@ -975,7 +1022,7 @@ var parameters = new MessageParameters()
 {
     Messages = messages,
     MaxTokens = 512,
-    Model = AnthropicModels.Claude35Sonnet,
+    Model = AnthropicModels.Claude46Sonnet,
     Stream = false,
     Temperature = 1.0m,
 };
@@ -1042,7 +1089,7 @@ var parameters = new MessageParameters()
 {
     Messages = messages,
     MaxTokens = 2048,
-    Model = AnthropicModels.Claude3Sonnet,
+    Model = AnthropicModels.Claude46Sonnet,
     Stream = false,
     Temperature = 1.0m,
     Tools = tools.ToList()
@@ -1071,7 +1118,7 @@ var parameters = new MessageParameters()
 {
     Messages = messages,
     MaxTokens = 512,
-    Model = AnthropicModels.Claude35Sonnet,
+    Model = AnthropicModels.Claude46Sonnet,
     Stream = true,
     Temperature = 1.0m,
     Tools = tools.ToList()
@@ -1133,7 +1180,7 @@ var parameters = new MessageParameters()
 {
     Messages = messages,
     MaxTokens = 2048,
-    Model = AnthropicModels.Claude3Sonnet,
+    Model = AnthropicModels.Claude46Sonnet,
     Stream = false,
     Temperature = 1.0m,
     Tools = tools
@@ -1178,7 +1225,7 @@ var parameters = new MessageParameters()
 {
     Messages = messages,
     MaxTokens = 2048,
-    Model = AnthropicModels.Claude3Sonnet,
+    Model = AnthropicModels.Claude46Sonnet,
     Stream = false,
     Temperature = 1.0m,
     Tools = tools
@@ -1258,7 +1305,7 @@ var parameters = new MessageParameters()
 {
     Messages = messages,
     MaxTokens = 2048,
-    Model = AnthropicModels.Claude3Sonnet,
+    Model = AnthropicModels.Claude46Sonnet,
     Stream = false,
     Temperature = 1.0m,
     Tools = tools
@@ -1371,7 +1418,7 @@ var parameters = new MessageParameters()
 {
     Messages = messages,
     MaxTokens = 1024,
-    Model = AnthropicModels.Claude3Sonnet,
+    Model = AnthropicModels.Claude46Sonnet,
     Stream = false,
     Temperature = 1.0m,
     Tools = tools,
@@ -1674,7 +1721,7 @@ var parameters = new MessageParameters
 {
     Messages = messages,
     MaxTokens = 1024,
-    Model = AnthropicModels.Claude35Sonnet
+    Model = AnthropicModels.Claude46Sonnet
 };
 
 var response = await client.Messages.GetClaudeMessageAsync(parameters);
@@ -1837,7 +1884,7 @@ var parameters = new MessageParameters
 {
     Messages = messages,
     MaxTokens = 1024,
-    Model = AnthropicModels.Claude35Sonnet
+    Model = AnthropicModels.Claude46Sonnet
 };
 
 var response = await client.Messages.GetClaudeMessageAsync(parameters);
@@ -1999,16 +2046,15 @@ Console.WriteLine($"Response: {response.Content[0]}");
 
 Vertex AI provides access to the following Claude models:
 
-- `VertexAIModels.Claude3Opus`: Powerful model for complex tasks
-- `VertexAIModels.Claude3Sonnet`: Balanced Claude model for a wide range of tasks
-- `VertexAIModels.Claude3Haiku`: Fastest and most compact model for near-instant responsiveness
-- `VertexAIModels.Claude35Sonnet`: High level of intelligence and capability
-- `VertexAIModels.Claude35Haiku`: Intelligence at blazing speeds
-- `VertexAIModels.Claude46Sonnet`: Highest level of intelligence and capability with toggleable extended thinking
-- `VertexAIModels.Claude4Sonnet`: Sonnet model with toggleable extended thinking
-- `VertexAIModels.Claude45Sonnet`: Newest Sonnet model with toggleable extended thinking
-- `VertexAIModels.Claude4Opus`: Previous Opus Model and powerful thinking model
-- `VertexAIModels.Claude41Opus`: Newest Opus Model and most powerful thinking model
+- `VertexAIModels.Claude46Opus`: Latest Opus model with adaptive thinking
+- `VertexAIModels.Claude46Sonnet`: Latest Sonnet model with adaptive thinking
+- `VertexAIModels.Claude45Opus`: Opus 4.5 model
+- `VertexAIModels.Claude45Sonnet`: Sonnet 4.5 model with extended thinking
+- `VertexAIModels.Claude45Haiku`: Fast and cost-effective model
+- `VertexAIModels.Claude41Opus`: Opus 4.1 with extended thinking
+- `VertexAIModels.Claude4Opus`: Opus 4 with extended thinking
+- `VertexAIModels.Claude4Sonnet`: Sonnet 4 with extended thinking
+- `VertexAIModels.Claude3Haiku`: Compact model for near-instant responsiveness
 
 ### Streaming Support
 
