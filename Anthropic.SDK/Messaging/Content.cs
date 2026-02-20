@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.Json.Nodes;
@@ -85,6 +85,12 @@ namespace Anthropic.SDK.Messaging
         /// </summary>
         [JsonPropertyName("file_text")]
         public string FileText { get; set; }
+
+        /// <summary>
+        /// URL for web_fetch tool
+        /// </summary>
+        [JsonPropertyName("url")]
+        public string Url { get; set; }
     }
 
 
@@ -849,6 +855,69 @@ namespace Anthropic.SDK.Messaging
         /// </summary>
         [JsonPropertyName("old_start")]
         public int? OldStart { get; set; }
+    }
+
+    /// <summary>
+    /// Web Fetch Tool Result Content Returned From Claude
+    /// </summary>
+    public class WebFetchToolResultContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (web_fetch_tool_result, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.web_fetch_tool_result;
+
+        /// <summary>
+        /// Tool Use Id
+        /// </summary>
+        [JsonPropertyName("tool_use_id")]
+        public string ToolUseId { get; set; }
+
+        /// <summary>
+        /// Content of the Tool Result
+        /// </summary>
+        [JsonPropertyName("content")]
+        public ContentBase Content { get; set; }
+    }
+
+    /// <summary>
+    /// Web Fetch Result Content containing the fetched document
+    /// </summary>
+    public class WebFetchResultContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (web_fetch_result, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.web_fetch_result;
+
+        [JsonPropertyName("url")]
+        public string Url { get; set; }
+
+        [JsonPropertyName("content")]
+        public ContentBase Content { get; set; }
+
+        [JsonPropertyName("title")]
+        public string Title { get; set; }
+
+        [JsonPropertyName("retrieved_at")]
+        public string RetrievedAt { get; set; }
+    }
+
+    /// <summary>
+    /// Web Fetch Tool Error Content
+    /// </summary>
+    public class WebFetchToolErrorContent : ContentBase
+    {
+        /// <summary>
+        /// Type of Content (web_fetch_tool_error, pre-set)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public override ContentType Type => ContentType.web_fetch_tool_error;
+
+        [JsonPropertyName("error_code")]
+        public string ErrorCode { get; set; }
     }
 
     /// <summary>

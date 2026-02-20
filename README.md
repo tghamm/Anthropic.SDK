@@ -26,6 +26,7 @@ Note: This package is not affiliated with, endorsed by, or sponsored by Anthropi
     - [MCP Connector](#mcp-connector)
     - [MCP Client Integration](#mcp-client-integration)
     - [Web Search](#web-search)
+    - [Web Fetch](#web-fetch)
     - [Cost Calculation](#cost-calculation)
     - [List Models](#list-models)
     - [Batching](#batching)
@@ -762,15 +763,16 @@ See the `McpClientTests.cs` in the test project for comprehensive examples.
 
 ### Web Search
 
-The `AnthropicClient` supports the Web Search API.
-Please note that citations are automatically turned on when Web search is used and you are responsible for displaying links to sources in a production setting per Anthropic documentation.
+The `AnthropicClient` supports the Web Search API. The default tool version (`web_search_20260209`) supports **dynamic filtering** with Claude Opus 4.6 and Sonnet 4.6, which allows Claude to write and execute code to filter search results before they reach the context window. Dynamic filtering requires the code execution tool to be enabled alongside web search.
+
+Please note that citations are automatically turned on when web search is used and you are responsible for displaying links to sources in a production setting per Anthropic documentation.
 
 ```csharp
 var client = new AnthropicClient();
 var parameters = new MessageParameters()
 {
-    Model = AnthropicModels.Claude37Sonnet,
-    MaxTokens = 3000,
+    Model = AnthropicModels.Claude46Sonnet,
+    MaxTokens = 4096,
     Temperature = 1,
     Tools = new List<Common.Tool>()
     {
@@ -780,7 +782,8 @@ var parameters = new MessageParameters()
             Region = "California",
             Country = "US",
             Timezone = "America/Los_Angeles"
-        })
+        }),
+        ServerTools.GetCodeExecutionTool() // Required for dynamic filtering
     },
     ToolChoice = new ToolChoice()
     {
@@ -809,7 +812,85 @@ Console.WriteLine("----------------------------------------------");
 Console.WriteLine("Final Result:");
 Console.WriteLine(res.Content.OfType<TextContent>().Last().Text);
 ```
+
+To use the older web search version without dynamic filtering:
+
+```csharp
+ServerTools.GetWebSearchTool(toolVersion: ServerTools.WebSearchVersionLegacy)
+```
+
 See integration tests for more examples like streaming.
+
+### Web Fetch
+
+The `AnthropicClient` supports the Web Fetch API, which allows Claude to retrieve full content from specified web pages and PDF documents. Like web search, the default version (`web_fetch_20260209`) supports dynamic filtering with Claude Opus 4.6 and Sonnet 4.6. Use `ServerTools.WebFetchVersionLegacy` for the version without dynamic filtering.
+
+```csharp
+var client = new AnthropicClient();
+var parameters = new MessageParameters()
+{
+    Model = AnthropicModels.Claude46Sonnet,
+    MaxTokens = 4096,
+    Temperature = 1,
+    Tools = new List<Common.Tool>()
+    {
+        ServerTools.GetWebFetchTool(maxUses: 5, enableCitations: true,
+            toolVersion: ServerTools.WebFetchVersionLegacy)
+    },
+    ToolChoice = new ToolChoice()
+    {
+        Type = ToolChoiceType.Auto
+    },
+};
+var messages = new List<Message>
+{
+    new Message
+    {
+        Role = RoleType.User,
+        Content = new List<ContentBase>
+        {
+            new TextContent { Text = "Fetch the content at https://example.com and tell me what it says." }
+        }
+    }
+};
+parameters.Messages = messages;
+var res = await client.Messages.GetClaudeMessageAsync(parameters);
+Console.WriteLine(res.Content.OfType<TextContent>().Last().Text);
+```
+
+**Combined Web Search + Web Fetch:**
+
+```csharp
+var tools = new List<Common.Tool>()
+{
+    ServerTools.GetWebSearchTool(maxUses: 3),
+    ServerTools.GetWebFetchTool(maxUses: 5, enableCitations: true)
+};
+```
+
+**IChatClient Usage:**
+
+Since `Microsoft.Extensions.AI` does not have a built-in `HostedWebFetchTool`, the SDK provides the `WithWebFetch()` extension method on `ChatOptions`:
+
+```csharp
+using Anthropic.SDK.Extensions;
+
+IChatClient client = new AnthropicClient().Messages
+    .AsBuilder()
+    .UseFunctionInvocation()
+    .Build();
+
+ChatOptions options = new ChatOptions()
+{
+    ModelId = AnthropicModels.Claude46Sonnet,
+    MaxOutputTokens = 4096,
+}.WithWebFetch(maxUses: 5, enableCitations: true);
+
+var res = await client.GetResponseAsync("Fetch https://example.com and summarize it.", options);
+Console.WriteLine(res.Text);
+```
+
+See integration tests for more examples including streaming.
 
 ### Cost Calculation
 

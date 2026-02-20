@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text;
@@ -34,6 +34,12 @@ namespace Anthropic.SDK.Messaging
         web_search_result,
 
         web_search_tool_result_error,
+
+        web_fetch_tool_result,
+
+        web_fetch_result,
+
+        web_fetch_tool_error,
 
         mcp_tool_use,
 
