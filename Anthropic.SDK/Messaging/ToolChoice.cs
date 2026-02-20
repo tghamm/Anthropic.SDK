@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -13,5 +13,8 @@ namespace Anthropic.SDK.Messaging
         public ToolChoiceType Type { get; set; } = ToolChoiceType.Auto;
         [JsonPropertyName("name")]
         public string Name { get; set; }
+        [JsonPropertyName("disable_parallel_tool_use")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? DisableParallelToolUse { get; set; }
     }
 }
