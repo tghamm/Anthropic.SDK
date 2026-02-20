@@ -16,7 +16,7 @@ namespace Anthropic.SDK
         /// <summary>
         /// The base URL format for the Vertex AI API
         /// </summary>
-        public string ApiUrlFormat { get; set; } = "https://{0}-aiplatform.googleapis.com/v1/projects/{1}/locations/{0}/publishers/anthropic/models/{2}";
+        public string ApiUrlFormat { get; set; } = "https://aiplatform.googleapis.com/v1/projects/{1}/locations/{0}/publishers/anthropic/models/{2}";
 
         /// <summary>
         /// The API authentication information to use for API calls

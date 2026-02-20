@@ -54,6 +54,10 @@ namespace Anthropic.SDK.Extensions
                         return JsonSerializer.Deserialize<MCPToolUseContent>(root.GetRawText(), options);
                     case "mcp_tool_result":
                         return JsonSerializer.Deserialize<MCPToolResultContent>(root.GetRawText(), options);
+                    case "code_execution_tool_result":
+                        return JsonSerializer.Deserialize<CodeExecutionToolResultContent>(root.GetRawText(), options);
+                    case "code_execution_tool_result_error":
+                        return JsonSerializer.Deserialize<CodeExecutionToolResultErrorContent>(root.GetRawText(), options);
                     case "bash_code_execution_tool_result":
                         return JsonSerializer.Deserialize<BashCodeExecutionToolResultContent>(root.GetRawText(), options);
                     case "bash_code_execution_result":
@@ -87,6 +91,12 @@ namespace Anthropic.SDK.Extensions
 
         public override void Write(Utf8JsonWriter writer, ContentBase value, JsonSerializerOptions options)
         {
+            if (value is UnknownContent unknown && !string.IsNullOrEmpty(unknown.RawJson))
+            {
+                using var doc = JsonDocument.Parse(unknown.RawJson);
+                doc.RootElement.WriteTo(writer);
+                return;
+            }
             JsonSerializer.Serialize(writer, value, value.GetType(), options);
         }
     }

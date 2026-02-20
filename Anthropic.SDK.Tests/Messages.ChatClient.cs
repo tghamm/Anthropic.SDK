@@ -411,7 +411,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = AnthropicModels.Claude4Sonnet,
+                ModelId = AnthropicModels.Claude46Sonnet,
                 MaxOutputTokens = 5000,
                 Tools = [new HostedWebSearchTool()]
             };
@@ -551,16 +551,16 @@ namespace Anthropic.SDK.Tests
 #pragma warning disable MEAI001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
             ChatOptions options = new()
             {
-                ModelId = AnthropicModels.Claude4Sonnet,
+                ModelId = AnthropicModels.Claude46Sonnet,
                 MaxOutputTokens = 512,
                 Temperature = 1.0f,
-                Tools = [new HostedMcpServerTool("DeepWiki", "https://mcp.deepwiki.com/sse")]
+                Tools = [new HostedMcpServerTool("MSFT", "https://learn.microsoft.com/api/mcp")]
             };
 #pragma warning restore MEAI001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
-            var res = await client.GetResponseAsync("Tell me about the repo tghamm/Anthropic.SDK", options);
+            var res = await client.GetResponseAsync("Tell me about the Latest Microsoft.Extensions.AI Library", options);
 
-            Assert.IsTrue(res.Text.ToLower().Contains("anthropic") is true, res.Text);
+            Assert.IsTrue(res.Text.ToLower().Contains("microsoft") is true, res.Text);
         }
     }
 }
