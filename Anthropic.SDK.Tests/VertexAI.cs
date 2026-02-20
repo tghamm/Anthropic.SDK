@@ -24,7 +24,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 512,
-                Model = Constants.VertexAIModels.Claude37Sonnet,
+                Model = Constants.VertexAIModels.Claude46Sonnet,
                 Stream = false,
                 Temperature = 1.0m,
             };
@@ -51,7 +51,7 @@ namespace Anthropic.SDK.Tests
                 MaxTokens = 512,
                 Stream = false,
                 Temperature = 1.0m,
-                Model = Constants.VertexAIModels.Claude37Sonnet
+                Model = Constants.VertexAIModels.Claude46Sonnet
             };
             
             var res = await client.Messages.GetClaudeMessageAsync(parameters);
@@ -74,7 +74,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 512,
-                Model = Constants.VertexAIModels.Claude37Sonnet,
+                Model = Constants.VertexAIModels.Claude46Sonnet,
                 Stream = true,
                 Temperature = 1.0m,
             };
@@ -142,7 +142,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 512,
-                Model = Constants.VertexAIModels.Claude37Sonnet,
+                Model = Constants.VertexAIModels.Claude46Sonnet,
                 Stream = false,
                 Temperature = 0.0m, // Use deterministic output for testing
             };
@@ -199,7 +199,7 @@ namespace Anthropic.SDK.Tests
             {
                 Messages = messages,
                 MaxTokens = 512,
-                Model = Constants.VertexAIModels.Claude37Sonnet,
+                Model = Constants.VertexAIModels.Claude46Sonnet,
                 Stream = true,
                 Temperature = 0.0m, // Use deterministic output for testing
             };
@@ -238,7 +238,7 @@ namespace Anthropic.SDK.Tests
                 Messages = messages,
                 System = new List<SystemMessage> { systemPrompt },
                 MaxTokens = 512,
-                Model = Constants.VertexAIModels.Claude37Sonnet,
+                Model = Constants.VertexAIModels.Claude46Sonnet,
                 Stream = false,
                 Temperature = 0.7m,
             };
@@ -280,7 +280,7 @@ namespace Anthropic.SDK.Tests
                 Messages = messages,
                 System = systemPrompts,
                 MaxTokens = 512,
-                Model = Constants.VertexAIModels.Claude37Sonnet,
+                Model = Constants.VertexAIModels.Claude46Sonnet,
                 Stream = false,
                 Temperature = 0.7m,
             };
@@ -323,7 +323,7 @@ namespace Anthropic.SDK.Tests
                 Messages = messages,
                 System = systemPrompts,
                 MaxTokens = 512,
-                Model = Constants.VertexAIModels.Claude37Sonnet,
+                Model = Constants.VertexAIModels.Claude46Sonnet,
                 Stream = false,
                 Temperature = 0.7m,
                 PromptCaching = PromptCacheType.FineGrained // Use fine-grained caching since we're setting cache control explicitly

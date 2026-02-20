@@ -18,7 +18,7 @@ namespace Anthropic.SDK.Tests
 
             var mp = new MessageParameters()
             {
-                Model = AnthropicModels.Claude37Sonnet,
+                Model = AnthropicModels.Claude46Sonnet,
                 MaxTokens = 1024,
                 Messages = new List<Message>()
                 {

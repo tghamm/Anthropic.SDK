@@ -12,11 +12,7 @@ namespace Anthropic.SDK.Constants
         public const string Claude3Haiku = "claude-3-haiku@20240307";
 
                 
-        /// <summary>
-        /// Claude 3.7 Sonnet on Vertex AI - Highest level of intelligence and capability with toggleable extended thinking
-        /// </summary>
-        public const string Claude37Sonnet = "claude-3-7-sonnet@20250219";
-
+        
         /// <summary>
         /// Claude 4 Sonnet on Vertex AI
         /// </summary>

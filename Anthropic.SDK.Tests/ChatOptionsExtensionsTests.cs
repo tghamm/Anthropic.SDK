@@ -231,13 +231,13 @@ namespace Anthropic.SDK.Tests
             // Arrange & Act
             var options = new ChatOptions
             {
-                ModelId = AnthropicModels.Claude37Sonnet,
+                ModelId = AnthropicModels.Claude46Sonnet,
                 MaxOutputTokens = 4096,
                 Temperature = 1.0f
             }.WithThinking(4000);
 
             // Assert
-            Assert.AreEqual(AnthropicModels.Claude37Sonnet, options.ModelId);
+            Assert.AreEqual(AnthropicModels.Claude46Sonnet, options.ModelId);
             Assert.AreEqual(4096, options.MaxOutputTokens);
             Assert.AreEqual(1.0f, options.Temperature);
 
@@ -253,13 +253,13 @@ namespace Anthropic.SDK.Tests
             // Arrange & Act
             var options = new ChatOptions
             {
-                ModelId = AnthropicModels.Claude37Sonnet,
+                ModelId = AnthropicModels.Claude46Sonnet,
                 MaxOutputTokens = 4096,
                 Temperature = 1.0f
             }.WithInterleavedThinking(8000);
 
             // Assert
-            Assert.AreEqual(AnthropicModels.Claude37Sonnet, options.ModelId);
+            Assert.AreEqual(AnthropicModels.Claude46Sonnet, options.ModelId);
             Assert.AreEqual(4096, options.MaxOutputTokens);
             Assert.AreEqual(1.0f, options.Temperature);
 
@@ -280,7 +280,7 @@ namespace Anthropic.SDK.Tests
             };
             var options = new ChatOptions
             {
-                ModelId = AnthropicModels.Claude37Sonnet,
+                ModelId = AnthropicModels.Claude46Sonnet,
                 MaxOutputTokens = 4096,
                 Temperature = 1.0f
             }.WithThinking(3000);
@@ -293,7 +293,7 @@ namespace Anthropic.SDK.Tests
             Assert.AreEqual(3000, messageParams.Thinking.BudgetTokens);
             Assert.AreEqual(ThinkingType.enabled, messageParams.Thinking.Type);
             Assert.IsFalse(messageParams.Thinking.UseInterleavedThinking);
-            Assert.AreEqual(AnthropicModels.Claude37Sonnet, messageParams.Model);
+            Assert.AreEqual(AnthropicModels.Claude46Sonnet, messageParams.Model);
             Assert.AreEqual(4096, messageParams.MaxTokens);
         }
 
@@ -308,7 +308,7 @@ namespace Anthropic.SDK.Tests
             };
             var options = new ChatOptions
             {
-                ModelId = AnthropicModels.Claude37Sonnet,
+                ModelId = AnthropicModels.Claude46Sonnet,
                 MaxOutputTokens = 4096,
                 Temperature = 1.0f
             }.WithInterleavedThinking(8000);
@@ -321,7 +321,7 @@ namespace Anthropic.SDK.Tests
             Assert.AreEqual(8000, messageParams.Thinking.BudgetTokens);
             Assert.AreEqual(ThinkingType.enabled, messageParams.Thinking.Type);
             Assert.IsTrue(messageParams.Thinking.UseInterleavedThinking);
-            Assert.AreEqual(AnthropicModels.Claude37Sonnet, messageParams.Model);
+            Assert.AreEqual(AnthropicModels.Claude46Sonnet, messageParams.Model);
             Assert.AreEqual(4096, messageParams.MaxTokens);
         }
 

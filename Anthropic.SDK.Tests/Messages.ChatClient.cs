@@ -91,7 +91,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new ChatOptions()
             {
-                ModelId = AnthropicModels.Claude37Sonnet,
+                ModelId = AnthropicModels.Claude46Sonnet,
                 MaxOutputTokens = 20000,
                 Temperature = 1.0f,
             }.WithThinking(16000);
@@ -166,7 +166,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new ChatOptions()
             {
-                ModelId = AnthropicModels.Claude37Sonnet,
+                ModelId = AnthropicModels.Claude46Sonnet,
                 MaxOutputTokens = 20000,
                 Temperature = 1.0f,
             }.WithThinking(16000);
@@ -210,7 +210,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = AnthropicModels.Claude37Sonnet,
+                ModelId = AnthropicModels.Claude46Sonnet,
                 MaxOutputTokens = 20000,
                 Temperature = 1.0f,
                 RawRepresentationFactory = static _ => new MessageParameters()
@@ -239,7 +239,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = AnthropicModels.Claude37Sonnet,
+                ModelId = AnthropicModels.Claude46Sonnet,
                 MaxOutputTokens = 20000,
                 Temperature = 1.0f,
                 RawRepresentationFactory = static _ => new MessageParameters()
@@ -287,7 +287,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = AnthropicModels.Claude37Sonnet,
+                ModelId = AnthropicModels.Claude46Sonnet,
                 MaxOutputTokens = 20000,
                 Temperature = 1.0f,
                 RawRepresentationFactory = static _ => new MessageParameters()
@@ -357,7 +357,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = AnthropicModels.Claude37Sonnet,
+                ModelId = AnthropicModels.Claude46Sonnet,
                 MaxOutputTokens = 20000,
                 Tools = [AIFunctionFactory.Create((string personName) => personName switch {
                     "Alice" => "25",
@@ -484,7 +484,7 @@ namespace Anthropic.SDK.Tests
 
             ChatOptions options = new()
             {
-                ModelId = AnthropicModels.Claude37Sonnet,
+                ModelId = AnthropicModels.Claude46Sonnet,
                 MaxOutputTokens = 20000,
                 Tools = [AIFunctionFactory.Create((string personName) => personName switch {
                     "Alice" => "25",
