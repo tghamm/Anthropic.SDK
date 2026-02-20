@@ -242,7 +242,12 @@ namespace Anthropic.SDK.Messaging
                                 currentMessage.Content.Add(new ToolResultContent()
                                 {
                                     ToolUseId = frc.CallId,
-                                    Content = new List<ContentBase>() { new TextContent () { Text = frc.Result?.ToString() ?? string.Empty } },
+                                    Content = new List<ContentBase>() { new TextContent () { Text = frc.Result switch
+                                    {
+                                        string s => s,
+                                        null => string.Empty,
+                                        _ => JsonSerializer.Serialize(frc.Result)
+                                    } } },
                                     IsError = frc.Exception is not null,
                                 });
                                 break;
