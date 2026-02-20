@@ -1,4 +1,4 @@
-﻿using Anthropic.SDK.Messaging;
+using Anthropic.SDK.Messaging;
 using System;
 using System.Text.Json.Serialization;
 using System.Text.Json;
@@ -44,6 +44,12 @@ namespace Anthropic.SDK.Extensions
                         return JsonSerializer.Deserialize<WebSearchResultContent>(root.GetRawText(), options);
                     case "web_search_tool_result_error":
                         return JsonSerializer.Deserialize<WebSearchToolResultErrorContent>(root.GetRawText(), options);
+                    case "web_fetch_tool_result":
+                        return JsonSerializer.Deserialize<WebFetchToolResultContent>(root.GetRawText(), options);
+                    case "web_fetch_result":
+                        return JsonSerializer.Deserialize<WebFetchResultContent>(root.GetRawText(), options);
+                    case "web_fetch_tool_error":
+                        return JsonSerializer.Deserialize<WebFetchToolErrorContent>(root.GetRawText(), options);
                     case "mcp_tool_use":
                         return JsonSerializer.Deserialize<MCPToolUseContent>(root.GetRawText(), options);
                     case "mcp_tool_result":

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -247,7 +247,19 @@ namespace Anthropic.SDK.Messaging
                 
             }
 
-            
+            foreach (var result in asyncResponses)
+            {
+                if (result.ContentBlock != null && result.ContentBlock.Type == "web_fetch_tool_result")
+                {
+                    var webFetchContent = new WebFetchToolResultContent()
+                    {
+                        ToolUseId = result.ContentBlock.ToolUseId,
+                        Content = result.ContentBlock.Content?.FirstOrDefault()
+                    };
+                    Content.Add(webFetchContent);
+                }
+            }
+
             BashCodeExecutionToolResultContent bashCodeExecutionToolResultContent = null;
             foreach (var result in asyncResponses)
             {

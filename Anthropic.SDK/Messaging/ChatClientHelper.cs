@@ -112,7 +112,7 @@ namespace Anthropic.SDK.Messaging
                                 tools.Add(ServerTools.GetCodeExecutionTool());
                                 break;
 
-                            case HostedWebSearchTool:
+                            case HostedWebSearchTool hwst:
                                 tools.Add(ServerTools.GetWebSearchTool(5));
                                 break;
 
@@ -136,6 +136,19 @@ namespace Anthropic.SDK.Messaging
 #pragma warning restore MEAI001
                         }
                     }
+                }
+
+                // Map web fetch configuration from ChatOptions extension
+                var webFetchConfig = options.GetWebFetchConfiguration();
+                if (webFetchConfig != null)
+                {
+                    IList<Common.Tool> tools = parameters.Tools ??= [];
+                    tools.Add(ServerTools.GetWebFetchTool(
+                        maxUses: webFetchConfig.MaxUses,
+                        allowedDomains: webFetchConfig.AllowedDomains,
+                        blockedDomains: webFetchConfig.BlockedDomains,
+                        enableCitations: webFetchConfig.EnableCitations,
+                        maxContentTokens: webFetchConfig.MaxContentTokens));
                 }
 
                 // Map thinking parameters from ChatOptions
@@ -374,6 +387,34 @@ namespace Anthropic.SDK.Messaging
                         contents.Add(new FunctionResultContent(
                             trc.ToolUseId,
                             trc.Content));
+                        break;
+
+                    case WebSearchToolResultContent wsResult:
+                        var wsText = new Microsoft.Extensions.AI.TextContent($"[Web Search Results: {wsResult.Content?.Count ?? 0} results]")
+                        {
+                            RawRepresentation = wsResult
+                        };
+                        if (wsResult.Content != null)
+                        {
+                            wsText.Annotations ??= new List<AIAnnotation>();
+                            foreach (var item in wsResult.Content.OfType<WebSearchResultContent>())
+                            {
+                                wsText.Annotations.Add(new CitationAnnotation
+                                {
+                                    RawRepresentation = item,
+                                    FileId = item.Title
+                                });
+                            }
+                        }
+                        contents.Add(wsText);
+                        break;
+
+                    case WebFetchToolResultContent wfResult:
+                        var wfText = new Microsoft.Extensions.AI.TextContent("[Web Fetch Result]")
+                        {
+                            RawRepresentation = wfResult
+                        };
+                        contents.Add(wfText);
                         break;
                 }
             }

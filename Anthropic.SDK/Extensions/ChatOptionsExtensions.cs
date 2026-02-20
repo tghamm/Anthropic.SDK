@@ -1,9 +1,22 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.Extensions.AI;
 using Anthropic.SDK.Messaging;
 
 namespace Anthropic.SDK.Extensions
 {
+    /// <summary>
+    /// Configuration for the web fetch tool when used via IChatClient.
+    /// </summary>
+    public class WebFetchConfiguration
+    {
+        public int? MaxUses { get; set; }
+        public List<string> AllowedDomains { get; set; }
+        public List<string> BlockedDomains { get; set; }
+        public bool EnableCitations { get; set; }
+        public int? MaxContentTokens { get; set; }
+    }
+
     /// <summary>
     /// Extensions for ChatOptions to support Anthropic-specific features
     /// </summary>
@@ -11,6 +24,7 @@ namespace Anthropic.SDK.Extensions
     {
         private const string ThinkingParametersKey = "Anthropic.ThinkingParameters";
         private const string StrictToolsKey = "Anthropic.StrictTools";
+        private const string WebFetchKey = "Anthropic.WebFetch";
 
         /// <summary>
         /// Sets thinking parameters for extended thinking support in compatible models like Claude 3.7 Sonnet
@@ -186,6 +200,55 @@ namespace Anthropic.SDK.Extensions
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Enables the web fetch tool for IChatClient requests. Since Microsoft.Extensions.AI does not
+        /// have a built-in HostedWebFetchTool, this extension method provides an Anthropic-specific way
+        /// to enable web fetch capability.
+        /// </summary>
+        /// <param name="options">The ChatOptions instance</param>
+        /// <param name="maxUses">Optional limit on the number of fetches per request</param>
+        /// <param name="allowedDomains">Optional list of domains to allow fetching from</param>
+        /// <param name="blockedDomains">Optional list of domains to block fetching from</param>
+        /// <param name="enableCitations">Whether to enable citations for fetched content</param>
+        /// <param name="maxContentTokens">Optional maximum content length in tokens</param>
+        /// <returns>The ChatOptions instance for fluent chaining</returns>
+        public static ChatOptions WithWebFetch(this ChatOptions options,
+            int? maxUses = null,
+            List<string> allowedDomains = null,
+            List<string> blockedDomains = null,
+            bool enableCitations = false,
+            int? maxContentTokens = null)
+        {
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
+
+            (options.AdditionalProperties ??= new())[WebFetchKey] = new WebFetchConfiguration
+            {
+                MaxUses = maxUses,
+                AllowedDomains = allowedDomains,
+                BlockedDomains = blockedDomains,
+                EnableCitations = enableCitations,
+                MaxContentTokens = maxContentTokens
+            };
+
+            return options;
+        }
+
+        /// <summary>
+        /// Gets the web fetch configuration from ChatOptions, if set.
+        /// </summary>
+        /// <param name="options">The ChatOptions instance</param>
+        /// <returns>The web fetch configuration, or null if not set</returns>
+        public static WebFetchConfiguration GetWebFetchConfiguration(this ChatOptions options)
+        {
+            if (options?.AdditionalProperties?.TryGetValue(WebFetchKey, out var value) == true)
+            {
+                return value as WebFetchConfiguration;
+            }
+
+            return null;
         }
     }
 }
