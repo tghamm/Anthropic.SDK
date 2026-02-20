@@ -34,12 +34,12 @@
 
   <ItemGroup>
     <PackageReference Include="Google.Cloud.AIPlatform.V1" Version="3.65.0" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="11.0.0-preview.1.26104.118" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.3" />
     <PackageReference Include="Microsoft.Extensions.AI" Version="10.3.0" />
     <PackageReference Include="ModelContextProtocol" Version="0.8.0-preview.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="11.0.0-preview.1.26104.118" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="11.0.0-preview.1.26104.118" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="11.0.0-preview.1.26104.118" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.3" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.71.0" />
     <PackageReference Include="Microsoft.SemanticKernel.Abstractions" Version="1.71.0" />
