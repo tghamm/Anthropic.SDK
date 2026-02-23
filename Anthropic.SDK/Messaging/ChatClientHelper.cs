@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -460,9 +460,12 @@ namespace Anthropic.SDK.Messaging
             if (node is not JsonObject obj)
                 return;
 
-            // If this is an object type, ensure additionalProperties is false
+            // If this is an object type, ensure additionalProperties is false.
+            // Check for JsonValue first: nullable types produce "type": ["string", "null"] (a JsonArray),
+            // and calling GetValue<string>() on a JsonArray throws InvalidOperationException.
             if (obj.TryGetPropertyValue("type", out var typeNode) &&
-                typeNode?.GetValue<string>() == "object")
+                typeNode is JsonValue typeValue &&
+                typeValue.GetValue<string>() == "object")
             {
                 obj["additionalProperties"] = false;
             }

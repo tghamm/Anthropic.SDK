@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using Anthropic.SDK;
@@ -292,6 +292,124 @@ namespace Anthropic.SDK.Tests
             Assert.IsNotNull(messageParams.Tools);
             Assert.IsTrue(messageParams.Tools.Count > 0);
             Assert.IsNull(messageParams.Tools[0].Function.Strict);
+        }
+
+        #endregion
+
+        #region Nullable Type Schema Tests
+
+        [TestMethod]
+        public void ChatClientHelper_WithNullableTypeInSchema_DoesNotThrow()
+        {
+            // Arrange - schema with "type": ["string", "null"] (nullable type)
+            // This previously threw InvalidOperationException in ProcessSchemaNode
+            // because GetValue<string>() was called on a JsonArray node.
+            var client = new AnthropicClient().Messages;
+            var messages = new List<ChatMessage>
+            {
+                new ChatMessage(ChatRole.User, "Test message")
+            };
+
+            var schema = JsonSerializer.SerializeToElement(new
+            {
+                type = "object",
+                properties = new
+                {
+                    name = new { type = "string" },
+                    nickname = new { type = new[] { "string", "null" } }
+                },
+                required = new[] { "name", "nickname" },
+                additionalProperties = false
+            });
+
+            var options = new ChatOptions
+            {
+                ModelId = AnthropicModels.Claude45Sonnet,
+                ResponseFormat = ChatResponseFormat.ForJsonSchema(schema, "PersonInfo", "Person with nullable nickname")
+            };
+
+            // Act - should not throw
+            var messageParams = ChatClientHelper.CreateMessageParameters(client, messages, options);
+
+            // Assert
+            Assert.IsNotNull(messageParams.OutputFormat);
+            Assert.AreEqual("json_schema", messageParams.OutputFormat.Type);
+        }
+
+        [TestMethod]
+        public void ChatClientHelper_WithNullableNestedObjectInSchema_DoesNotThrow()
+        {
+            // Arrange - nested object with nullable types in properties
+            var client = new AnthropicClient().Messages;
+            var messages = new List<ChatMessage>
+            {
+                new ChatMessage(ChatRole.User, "Test message")
+            };
+
+            var schema = JsonSerializer.SerializeToElement(new
+            {
+                type = "object",
+                properties = new
+                {
+                    address = new
+                    {
+                        type = "object",
+                        properties = new
+                        {
+                            street = new { type = "string" },
+                            city = new { type = "string" },
+                            zip = new { type = new[] { "string", "null" } }
+                        },
+                        required = new[] { "street", "city", "zip" }
+                    }
+                },
+                required = new[] { "address" },
+                additionalProperties = false
+            });
+
+            var options = new ChatOptions
+            {
+                ModelId = AnthropicModels.Claude45Sonnet,
+                ResponseFormat = ChatResponseFormat.ForJsonSchema(schema, "Address", "Address with nullable zip")
+            };
+
+            // Act - should not throw
+            var messageParams = ChatClientHelper.CreateMessageParameters(client, messages, options);
+
+            // Assert
+            Assert.IsNotNull(messageParams.OutputFormat);
+            // The nested object should have additionalProperties: false added
+            var outputSchema = messageParams.OutputFormat.Schema;
+            Assert.AreEqual("object", outputSchema.GetProperty("type").GetString());
+        }
+
+        [TestMethod]
+        public void ChatClientHelper_WithStrictToolsAndNullableType_DoesNotThrow()
+        {
+            // Arrange - tool schema with nullable type in properties
+            var client = new AnthropicClient().Messages;
+            var messages = new List<ChatMessage>
+            {
+                new ChatMessage(ChatRole.User, "Test message")
+            };
+
+            var testFunction = AIFunctionFactory.Create(
+                (string name, string? nickname) => $"{name} ({nickname})",
+                "greet",
+                "Greet a person");
+
+            var options = new ChatOptions
+            {
+                ModelId = AnthropicModels.Claude45Sonnet,
+                Tools = new List<AITool> { testFunction }
+            }.WithStrictTools();
+
+            // Act - should not throw even if function schema contains nullable types
+            var messageParams = ChatClientHelper.CreateMessageParameters(client, messages, options);
+
+            // Assert
+            Assert.IsNotNull(messageParams.Tools);
+            Assert.IsTrue(messageParams.Tools.Count > 0);
         }
 
         #endregion
